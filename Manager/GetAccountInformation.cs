@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AargonTools.Interfaces;
@@ -12,13 +13,13 @@ namespace AargonTools.Manager
     public class GetAccountInformation : IGetAccountInformation
     {
         private static ExistingDataDbContext _context;
+        private static ResponseModel _response;
 
-        public GetAccountInformation(ExistingDataDbContext context)
+        public GetAccountInformation(ExistingDataDbContext context,ResponseModel response)
         {
             _context = context;
+            _response = response;
         }
-
-
         async Task<decimal> IGetAccountInformation.GetAccountBalanceByDebtorAccount(string debtorAcct)
         {
             var account = debtorAcct.Substring(0, 4);
@@ -123,5 +124,74 @@ namespace AargonTools.Manager
             return approvalStatus>0;
         }
 
+        async Task<ResponseModel> IGetAccountInformation.GetMultiples(string debtorAcct)
+        {
+            var account = debtorAcct.Substring(0, 4);
+       
+            if (await _context.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+            {
+                var listOfData = await (_context.DebtorAcctInfos
+                    .Join(_context.DebtorMultiples, accountInfo => accountInfo.DebtorAcct,
+                        debtorMultiples => debtorMultiples.DebtorAcct2,
+                        (accountInfo, debtorMultiples) => new {accountInfo, debtorMultiples})
+                    .Where(@t => @t.debtorMultiples.DebtorAcct == debtorAcct)
+                    .Select(@t => new {@t.accountInfo.DebtorAcct, @t.accountInfo.Balance})).ToListAsync();
+                return _response.Response(listOfData);
+            }
+            else if (await _context.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+            {
+                var listOfData = await (_context.DebtorAcctInfoDs
+                    .Join(_context.DebtorMultiples, accountInfo => accountInfo.DebtorAcct,
+                        debtorMultiples => debtorMultiples.DebtorAcct2,
+                        (accountInfo, debtorMultiples) => new { accountInfo, debtorMultiples })
+                    .Where(@t => @t.debtorMultiples.DebtorAcct == debtorAcct)
+                    .Select(@t => new { @t.accountInfo.DebtorAcct, @t.accountInfo.Balance })).ToListAsync();
+                return _response.Response(listOfData);
+            }
+            else if (await _context.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+            {
+                var listOfData = await (_context.DebtorAcctInfoHs
+                    .Join(_context.DebtorMultiples, accountInfo => accountInfo.DebtorAcct,
+                        debtorMultiples => debtorMultiples.DebtorAcct2,
+                        (accountInfo, debtorMultiples) => new { accountInfo, debtorMultiples })
+                    .Where(@t => @t.debtorMultiples.DebtorAcct == debtorAcct)
+                    .Select(@t => new { @t.accountInfo.DebtorAcct, @t.accountInfo.Balance })).ToListAsync();
+                return _response.Response(listOfData);
+            }
+            else if (await _context.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+            {
+                var listOfData = await (_context.DebtorAcctInfoLs
+                    .Join(_context.DebtorMultiples, accountInfo => accountInfo.DebtorAcct,
+                        debtorMultiples => debtorMultiples.DebtorAcct2,
+                        (accountInfo, debtorMultiples) => new { accountInfo, debtorMultiples })
+                    .Where(@t => @t.debtorMultiples.DebtorAcct == debtorAcct)
+                    .Select(@t => new { @t.accountInfo.DebtorAcct, @t.accountInfo.Balance })).ToListAsync();
+                return _response.Response(listOfData);
+            }
+            else if (await _context.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+            {
+                var listOfData = await (_context.DebtorAcctInfoTs
+                    .Join(_context.DebtorMultiples, accountInfo => accountInfo.DebtorAcct,
+                        debtorMultiples => debtorMultiples.DebtorAcct2,
+                        (accountInfo, debtorMultiples) => new { accountInfo, debtorMultiples })
+                    .Where(@t => @t.debtorMultiples.DebtorAcct == debtorAcct)
+                    .Select(@t => new { @t.accountInfo.DebtorAcct, @t.accountInfo.Balance })).ToListAsync();
+                return _response.Response(listOfData);
+            }
+            else if (await _context.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+            {
+                var listOfData = await (_context.DebtorAcctInfoWs
+                    .Join(_context.DebtorMultiples, accountInfo => accountInfo.DebtorAcct,
+                        debtorMultiples => debtorMultiples.DebtorAcct2,
+                        (accountInfo, debtorMultiples) => new { accountInfo, debtorMultiples })
+                    .Where(@t => @t.debtorMultiples.DebtorAcct == debtorAcct)
+                    .Select(@t => new { @t.accountInfo.DebtorAcct, @t.accountInfo.Balance })).ToListAsync();
+                return _response.Response(listOfData);
+            }
+            else
+            {
+                return _response.Response("No Data Available.");
+            }
+        }
     }
 }

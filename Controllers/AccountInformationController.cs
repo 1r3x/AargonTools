@@ -94,5 +94,23 @@ namespace AargonTools.Controllers
 
         }
 
+        [HttpGet("GetMultiples/{debtorAcct}")]
+        public async Task<IActionResult> GetMultiples(string debtorAcct)
+        {
+            Serilog.Log.Information(" GetMultiples => GET");
+            try
+            {
+                var item = await _context.GetMultiples(debtorAcct);
+
+                return Ok(item);
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Error(e.InnerException, e.Message);
+                throw;
+            }
+
+        }
+
     }
 }

@@ -34,7 +34,7 @@ namespace AargonTools.Models
         public virtual DbSet<DebtorPhoneInfo> DebtorPhoneInfos { get; set; }
         public virtual DbSet<NoteMaster> NoteMasters { get; set; }
         public virtual DbSet<CcPayment> CcPayments { get; set; }
-
+        public virtual DbSet<DebtorMultiple> DebtorMultiples { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)

@@ -104,10 +104,12 @@ namespace AargonTools
             //api services from here 
 
 
+
+            services.AddScoped<ResponseModel>();
             //injected getAccountInformation v1.0
-            services.AddScoped<IGetAccountInformation,GetAccountInformation>();
-            services.AddScoped<IAddNotes,AddNotes>();
-            services.AddScoped<IAddBadNumbers,AddBadNumbers>();
+            services.AddScoped<IGetAccountInformation, GetAccountInformation>();
+            services.AddScoped<IAddNotes, AddNotes>();
+            services.AddScoped<IAddBadNumbers, AddBadNumbers>();
 
 
 
