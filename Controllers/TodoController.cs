@@ -1,11 +1,20 @@
 using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Security.AccessControl;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AargonTools.Data;
+using AargonTools.Data.ADO;
 using AargonTools.Models;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace AargonTools.Controllers
 {
@@ -15,20 +24,42 @@ namespace AargonTools.Controllers
     public class TodoController : ControllerBase
     {
         private readonly ApiDbContext _context;
+        private readonly AdoDotNetConnection _adoConnection;
 
-        public TodoController(ApiDbContext context)
+        public TodoController(ApiDbContext context,AdoDotNetConnection adoConnection)
         {
             _context = context;
+            _adoConnection = adoConnection;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetItems()
+        public  IActionResult GetItems()
         {
             Serilog.Log.Information("  Todo => GET");
             try
             {
-                var items = await _context.Items.ToListAsync();
-                return Ok(items);
+                //LINQ
+                //var items = await _context.Items.ToListAsync();
+                //return Ok(items);
+
+                //vs
+
+                //ADO.NET
+                var rowAdo = _adoConnection.GetData("SELECT * FROM Items");
+                var listOfItems = new List<ItemData>();
+                for (var i = 0; i < rowAdo.Rows.Count; i++)
+                {
+                    var itemData = new ItemData
+                    {
+                        Id = Convert.ToInt32(rowAdo.Rows[i]["Id"]),
+                        Description = rowAdo.Rows[i]["Description"].ToString(),
+                        Title = rowAdo.Rows[i]["Title"].ToString(),
+                        Done = Convert.ToBoolean(rowAdo.Rows[i]["Done"])
+                    };
+                    listOfItems.Add(itemData);
+                }
+                return Ok(listOfItems);
+
             }
             catch (Exception e)
             {

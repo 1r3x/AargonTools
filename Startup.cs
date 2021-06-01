@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using AargonTools.Configuration;
 using AargonTools.Data;
+using AargonTools.Data.ADO;
 using AargonTools.Interfaces;
 using AargonTools.Manager;
 using AargonTools.Middleware;
@@ -106,6 +107,7 @@ namespace AargonTools
 
 
             services.AddScoped<ResponseModel>();
+            services.AddScoped<AdoDotNetConnection>();
             //injected getAccountInformation v1.0
             services.AddScoped<IGetAccountInformation, GetAccountInformation>();
             services.AddScoped<IAddNotes, AddNotes>();
