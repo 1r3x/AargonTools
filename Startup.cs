@@ -15,6 +15,7 @@ using AargonTools.Data;
 using AargonTools.Data.ADO;
 using AargonTools.Interfaces;
 using AargonTools.Manager;
+using AargonTools.Manager.GenericManager;
 using AargonTools.Middleware;
 using AargonTools.Models;
 using Microsoft.IdentityModel.Tokens;
@@ -105,9 +106,10 @@ namespace AargonTools
             //api services from here 
 
 
-
+            //injected common uses manages
             services.AddScoped<ResponseModel>();
             services.AddScoped<AdoDotNetConnection>();
+            services.AddScoped<DebtorAccountAreaManager>();
             //injected getAccountInformation v1.0
             services.AddScoped<IGetAccountInformation, GetAccountInformation>();
             services.AddScoped<IAddNotes, AddNotes>();

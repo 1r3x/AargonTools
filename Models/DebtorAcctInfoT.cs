@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using AargonTools.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 #nullable disable
@@ -13,7 +14,7 @@ namespace AargonTools.Models
     [Index(nameof(ActivityCode), Name = "x_activity_code")]
     [Index(nameof(Employee), nameof(ScheduleDate), Name = "x_emp_sched_date")]
     [Index(nameof(SuppliedAcct), Name = "x_supplied_acct")]
-    public partial class DebtorAcctInfoT
+    public partial class DebtorAcctInfoT : IDebtorAcctInfo
     {
         [Required]
         [Column("debtor_acct")]

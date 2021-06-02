@@ -112,5 +112,23 @@ namespace AargonTools.Controllers
 
         }
 
+        [HttpGet("GetAccountInfo/{debtorAcct}")]
+        public async Task<IActionResult> GetAccountInfo(string debtorAcct)
+        {
+            Serilog.Log.Information(" GetAccountInfo => GET");
+            try
+            {
+                var item = await _context.GetAccountInfo(debtorAcct);
+
+                return Ok(item);
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Error(e.InnerException, e.Message);
+                throw;
+            }
+
+        }
+
     }
 }

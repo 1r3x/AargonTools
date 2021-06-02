@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AargonTools.Data;
 using AargonTools.Data.ADO;
+using AargonTools.Interfaces;
 using AargonTools.Models;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Data.SqlClient;
@@ -24,12 +25,14 @@ namespace AargonTools.Controllers
     public class TodoController : ControllerBase
     {
         private readonly ApiDbContext _context;
+        private readonly IGetAccountInformation _context2;
         private readonly AdoDotNetConnection _adoConnection;
 
-        public TodoController(ApiDbContext context,AdoDotNetConnection adoConnection)
+        public TodoController(ApiDbContext context,AdoDotNetConnection adoConnection, IGetAccountInformation context2)
         {
             _context = context;
             _adoConnection = adoConnection;
+            _context2 = context2;
         }
 
         [HttpGet]
@@ -139,5 +142,6 @@ namespace AargonTools.Controllers
 
             return Ok(existItem);
         }
+
     }
 }
