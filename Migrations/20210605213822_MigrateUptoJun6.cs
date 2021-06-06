@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AargonTools.Migrations
 {
-    public partial class initialWithAuth : Migration
+    public partial class MigrateUptoJun6 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -47,7 +47,24 @@ namespace AargonTools.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Items",
+                name: "MoveAccountApiLogs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    DebtorAcct = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FromQueue = table.Column<int>(type: "int", nullable: false),
+                    ToQueue = table.Column<int>(type: "int", nullable: false),
+                    MoveDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Requestor = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MoveAccountApiLogs", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TestApiData",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -58,7 +75,26 @@ namespace AargonTools.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Items", x => x.Id);
+                    table.PrimaryKey("PK_TestApiData", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WebApiLogs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MessageTemplate = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Level = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: true),
+                    TimeStamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Exception = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Properties = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WebApiLogs", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -255,10 +291,16 @@ namespace AargonTools.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Items");
+                name: "MoveAccountApiLogs");
 
             migrationBuilder.DropTable(
                 name: "RefreshTokens");
+
+            migrationBuilder.DropTable(
+                name: "TestApiData");
+
+            migrationBuilder.DropTable(
+                name: "WebApiLogs");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

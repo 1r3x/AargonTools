@@ -35,6 +35,15 @@ namespace AargonTools.Models
         public virtual DbSet<NoteMaster> NoteMasters { get; set; }
         public virtual DbSet<CcPayment> CcPayments { get; set; }
         public virtual DbSet<DebtorMultiple> DebtorMultiples { get; set; }
+        public virtual DbSet<EmployeeInfo> EmployeeInfos { get; set; }
+        public virtual DbSet<QueueMaster> QueueMasters { get; set; }
+        public virtual DbSet<QueueMasterD> QueueMasterDs { get; set; }
+        public virtual DbSet<QueueMasterH> QueueMasterHs { get; set; }
+        public virtual DbSet<QueueMasterL> QueueMasterLs { get; set; }
+        public virtual DbSet<QueueMasterT> QueueMasterTs { get; set; }
+        public virtual DbSet<QueueMasterW> QueueMasterWs { get; set; }
+        public virtual DbSet<MoveAccountApiLogs> MoveAccountApiLogs { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)

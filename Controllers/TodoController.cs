@@ -42,17 +42,17 @@ namespace AargonTools.Controllers
             try
             {
                 //LINQ
-                //var items = await _context.Items.ToListAsync();
+                //var items = await _context.TestApiData.ToListAsync();
                 //return Ok(items);
 
                 //vs
 
                 //ADO.NET
-                var rowAdo = _adoConnection.GetData("SELECT * FROM Items");
-                var listOfItems = new List<ItemData>();
+                var rowAdo = _adoConnection.GetData("SELECT * FROM TestApiData");
+                var listOfItems = new List<TestApiData>();
                 for (var i = 0; i < rowAdo.Rows.Count; i++)
                 {
-                    var itemData = new ItemData
+                    var itemData = new TestApiData
                     {
                         Id = Convert.ToInt32(rowAdo.Rows[i]["Id"]),
                         Description = rowAdo.Rows[i]["Description"].ToString(),
@@ -73,12 +73,12 @@ namespace AargonTools.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateItem(ItemData data)
+        public async Task<IActionResult> CreateItem(TestApiData data)
         {
             Serilog.Log.Information("  Todo => POST");
             if (ModelState.IsValid)
             {
-                await _context.Items.AddAsync(data);
+                await _context.TestApiData.AddAsync(data);
                 await _context.SaveChangesAsync();
 
                 return CreatedAtAction("GetItem", new { data.Id }, data);
@@ -93,7 +93,7 @@ namespace AargonTools.Controllers
             Serilog.Log.Information("  Todo => POST");
             try
             {
-                var item = await _context.Items.FirstOrDefaultAsync(x => x.Id == id);
+                var item = await _context.TestApiData.FirstOrDefaultAsync(x => x.Id == id);
 
                 if (item == null)
                     return NotFound();
@@ -109,12 +109,12 @@ namespace AargonTools.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateItem(int id, ItemData item)
+        public async Task<IActionResult> UpdateItem(int id, TestApiData item)
         {
             if (id != item.Id)
                 return BadRequest();
 
-            var existItem = await _context.Items.FirstOrDefaultAsync(x => x.Id == id);
+            var existItem = await _context.TestApiData.FirstOrDefaultAsync(x => x.Id == id);
 
             if (existItem == null)
                 return NotFound();
@@ -132,12 +132,12 @@ namespace AargonTools.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteItem(int id)
         {
-            var existItem = await _context.Items.FirstOrDefaultAsync(x => x.Id == id);
+            var existItem = await _context.TestApiData.FirstOrDefaultAsync(x => x.Id == id);
 
             if (existItem == null)
                 return NotFound();
 
-            _context.Items.Remove(existItem);
+            _context.TestApiData.Remove(existItem);
             await _context.SaveChangesAsync();
 
             return Ok(existItem);

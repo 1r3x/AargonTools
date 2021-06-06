@@ -9,10 +9,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AargonTools.Models
 {
-    [Keyless]
+    //[Keyless]
     [Table("debtor_acct_info_w")]
     public partial class DebtorAcctInfoW : IDebtorAcctInfo
     {
+        [Key]//experimrnt
         [Required]
         [Column("debtor_acct")]
         [StringLength(15)]

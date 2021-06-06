@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AargonTools.Interfaces;
-
-namespace AargonTools.Manager
+﻿namespace AargonTools.Manager.GenericManager
 {
     public class ResponseModel:IResponseModel
     {

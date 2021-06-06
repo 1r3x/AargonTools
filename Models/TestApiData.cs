@@ -1,6 +1,6 @@
 namespace AargonTools.Models
 {
-    public class ItemData
+    public class TestApiData
     {
         public int Id { get; set; }
         public string Title { get; set; }

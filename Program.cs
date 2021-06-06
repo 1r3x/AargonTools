@@ -45,7 +45,7 @@ namespace AargonTools
             Log.Logger = new LoggerConfiguration()
                 .Enrich.FromLogContext()
                 .WriteTo.MSSqlServer(connectionString,
-                    sinkOptions: new SinkOptions { TableName = "webApiLogs" }
+                    sinkOptions: new SinkOptions { TableName = "WebApiLogs" }
                     , null, null, LogEventLevel.Information, null, columnOptions: columnOptions, null, null)
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
                 .CreateLogger();

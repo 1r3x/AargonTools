@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AargonTools.Manager;
+using AargonTools.Manager.GenericManager;
 
 namespace AargonTools.Interfaces
 {
@@ -17,6 +18,7 @@ namespace AargonTools.Interfaces
         Task<ResponseModel> GetRecentApprovalByDebtorAccount(string debtorAcct);
         //get the info of the related account and there balance ..
         Task<ResponseModel> GetMultiples(string debtorAcct);
+        //get some account infos with some logic applied 
         Task<ResponseModel> GetAccountInfo(string debtorAcct);
 
     }

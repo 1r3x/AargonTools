@@ -6,7 +6,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AargonTools.Interfaces;
-using AargonTools.Manager;
 using AargonTools.Manager.GenericManager;
 using AargonTools.Models;
 using Microsoft.EntityFrameworkCore;
@@ -17,18 +16,18 @@ namespace AargonTools.Manager
     {
         private static ExistingDataDbContext _context;
         private static ResponseModel _response;
-        private static DebtorAccountAreaManager _areaManager;
+        private static GetTheCompanyFlag _companyFlag;
 
-        public GetAccountInformation(ExistingDataDbContext context, ResponseModel response, DebtorAccountAreaManager areaManager)
+        public GetAccountInformation(ExistingDataDbContext context, ResponseModel response, GetTheCompanyFlag companyFlag)
         {
             _context = context;
             _response = response;
-            _areaManager = areaManager;
+            _companyFlag = companyFlag;
         }
         async Task<ResponseModel> IGetAccountInformation.GetAccountBalanceByDebtorAccount(string debtorAcct)
         {
           
-                var data = await _areaManager.GetTheProperTable(debtorAcct).Result.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.Balance).SingleOrDefaultAsync();
+                var data = await _companyFlag.GetFlagForDebtorAccount(debtorAcct).Result.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.Balance).SingleOrDefaultAsync();
                 return _response.Response(data);
         }
 
@@ -96,7 +95,7 @@ namespace AargonTools.Manager
         async Task<ResponseModel> IGetAccountInformation.GetMultiples(string debtorAcct)
         {
         
-                var listOfData = await (_areaManager.GetTheProperTable(debtorAcct).Result
+                var listOfData = await (_companyFlag.GetFlagForDebtorAccount(debtorAcct).Result
                     .Join(_context.DebtorMultiples, accountInfo => accountInfo.DebtorAcct,
                         debtorMultiples => debtorMultiples.DebtorAcct2,
                         (accountInfo, debtorMultiples) => new { accountInfo, debtorMultiples })
@@ -107,7 +106,7 @@ namespace AargonTools.Manager
 
         async Task<ResponseModel> IGetAccountInformation.GetAccountInfo(string debtorAcct)
         {
-            var data =await _areaManager.GetTheProperTable(debtorAcct)
+            var data =await _companyFlag.GetFlagForDebtorAccount(debtorAcct)
                 .Result.Where(a => a.DebtorAcct == debtorAcct)
                 .Select(a => new
                 {

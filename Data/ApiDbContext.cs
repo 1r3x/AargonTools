@@ -6,8 +6,10 @@ namespace AargonTools.Data
 {
     public class ApiDbContext : IdentityDbContext
     {
-        public virtual DbSet<ItemData> Items {get;set;}
+        public virtual DbSet<TestApiData> TestApiData {get;set;}
         public virtual DbSet<RefreshToken> RefreshTokens {get;set;}
+        public virtual DbSet<WebApiLogs> WebApiLogs { get;set;}
+        public virtual DbSet<MoveAccountApiLogs> MoveAccountApiLogs { get;set;}
 
         public ApiDbContext(DbContextOptions<ApiDbContext> options)
             : base(options)

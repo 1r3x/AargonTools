@@ -9,13 +9,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AargonTools.Models
 {
-    [Keyless]
+    //[Keyless]
     [Table("debtor_acct_info_h")]
     [Index(nameof(ActivityCode), Name = "x_activity_code")]
     [Index(nameof(Employee), nameof(ScheduleDate), Name = "x_emp_sched_date")]
     [Index(nameof(SuppliedAcct), Name = "x_supplied_acct")]
     public partial class DebtorAcctInfoH : IDebtorAcctInfo
     {
+        [Key]//experimrnt
         [Required]
         [Column("debtor_acct")]
         [StringLength(15)]

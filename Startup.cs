@@ -83,6 +83,10 @@ namespace AargonTools
                         .AddEntityFrameworkStores<ApiDbContext>();
 
             services.AddControllers();
+            //IHttpContextAccessor register
+            
+
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "AargonTools", Version = "v1" });
@@ -109,13 +113,14 @@ namespace AargonTools
             //injected common uses manages
             services.AddScoped<ResponseModel>();
             services.AddScoped<AdoDotNetConnection>();
-            services.AddScoped<DebtorAccountAreaManager>();
+            services.AddScoped<GetTheCompanyFlag>();
             //injected getAccountInformation v1.0
             services.AddScoped<IGetAccountInformation, GetAccountInformation>();
             services.AddScoped<IAddNotes, AddNotes>();
             services.AddScoped<IAddBadNumbers, AddBadNumbers>();
-
-
+            services.AddScoped<ISetMoveAccount, SetMoveAccount>();
+            services.AddHttpContextAccessor();
+            services.AddTransient<IUserService, UserService>();
 
         }
 
