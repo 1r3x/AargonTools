@@ -23,21 +23,6 @@ namespace AargonTools.Controllers
             _context = context;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> SetMoveAccount(string debtorAcct, int toQueue)
-        {
-            Serilog.Log.Information("  SetMoveAccount => POST");
-            try
-            {
-                var data = await _context.SetMoveAccount(debtorAcct, toQueue);
-                return Ok(data);
-            }
-            catch (Exception e)
-            {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
-                throw;
-            }
-
-        }
+       
     }
 }

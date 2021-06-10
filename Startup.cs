@@ -52,6 +52,9 @@ namespace AargonTools
             services.AddDbContext<ExistingDataDbContext>(
                 options => options.UseSqlServer("name=ConnectionStrings:DefaultConnection"));
 
+            services.AddDbContext<TestEnvironmentDbContext>(
+                options => options.UseSqlServer("name=ConnectionStrings:TestEnvironmentConnection"));
+
             var key = Encoding.ASCII.GetBytes(Configuration["JwtConfig:Secret"]);
 
             var tokenValidationParams = new TokenValidationParameters

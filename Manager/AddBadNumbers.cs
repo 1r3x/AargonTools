@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using AargonTools.Interfaces;
+using AargonTools.Manager.GenericManager;
 using AargonTools.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,12 +13,14 @@ namespace AargonTools.Manager
     public class AddBadNumbers : IAddBadNumbers
     {
         private static ExistingDataDbContext _context;
+        private static ResponseModel _response;
 
-        public AddBadNumbers(ExistingDataDbContext context)
+        public AddBadNumbers(ExistingDataDbContext context, ResponseModel response)
         {
             _context = context;
+            _response = response;
         }
-        async Task<DebtorPhoneInfo> IAddBadNumbers.AddBadNumbers(string accountNo, string phoneNo)
+        async Task<ResponseModel> IAddBadNumbers.AddBadNumbers(string accountNo, string phoneNo)
         {
 
             var debtorPhoneData = await _context.DebtorPhoneInfos.FirstOrDefaultAsync(x => x.DebtorAcct == accountNo);
@@ -69,7 +72,7 @@ namespace AargonTools.Manager
                 throw;
             }
 
-            return debtorPhoneData;
+            return _response.Response("Success.");
         }
     }
 }

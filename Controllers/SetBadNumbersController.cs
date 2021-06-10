@@ -23,29 +23,7 @@ namespace AargonTools.Controllers
             _context = context;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> SetBadNumbers(string accountNo, string phoneNo)
-        {
-            Serilog.Log.Information("  SetBadNumbers => POST");
-            try
-            {
-                if (ModelState.IsValid)
-                {
-                    var data = await _context.AddBadNumbers(accountNo, phoneNo);
-
-                    return Ok(data);
-
-                }
-            }
-            catch (Exception e)
-            {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
-                throw;
-            }
-
-
-            return new JsonResult("Something went wrong") { StatusCode = 500 };
-        }
+       //moved to a generic controller
 
 
     }

@@ -47,10 +47,11 @@ namespace AargonTools.Manager
             var targetQueue = await _companyFlag.GetFlagForQueueMaster(debtorAcct).Result
                 .FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
             if (targetQueue.Employee == null) return _response.Response("Invalid Request.[By any how data data corrupted for" + debtorAcct + " its not in the any queue master tables].");
+            var datetimeNow = DateTime.Now;
             var note = new NoteMaster()
             {
                 DebtorAcct = debtorAcct,
-                NoteDate = DateAndTime.Now,
+                NoteDate = datetimeNow.AddSeconds(-datetimeNow.Second).AddMilliseconds(-datetimeNow.Millisecond),
                 Employee = 1994,
                 ActivityCode = "RA",
                 NoteText = "ONLINE MOVE ACCOUNT (" + oldQueue.Employee + " -> " + toQueueResult.Employee + ")"
@@ -61,7 +62,7 @@ namespace AargonTools.Manager
 
 
             //datetime for remove seconds
-            var datetimeNow = DateTime.Now;
+           
             var log = new MoveAccountApiLogs()
             {
                 DebtorAcct = debtorAcct,

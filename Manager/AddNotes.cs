@@ -3,26 +3,38 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AargonTools.Interfaces;
+using AargonTools.Manager.GenericManager;
 using AargonTools.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic;
 
 namespace AargonTools.Manager
 {
     public class AddNotes:IAddNotes
     {
         private static ExistingDataDbContext _context;
+        private static ResponseModel _response;
 
-        public AddNotes(ExistingDataDbContext context)
+        public AddNotes(ExistingDataDbContext context, ResponseModel response)
         {
             _context = context;
+            _response = response;
         }
 
-        async Task<NoteMaster> IAddNotes.CreateNotes(NoteMaster notesData)
+        async Task<ResponseModel> IAddNotes.CreateNotes(string debtorAccount, string notes)
         {
             try
             {
-                
-                await _context.NoteMasters.AddAsync(notesData);
+                var datetimeNow = DateTime.Now;
+                var note = new NoteMaster()
+                {
+                    DebtorAcct = debtorAccount,
+                    NoteDate = datetimeNow.AddSeconds(-datetimeNow.Second).AddMilliseconds(-datetimeNow.Millisecond),
+                    Employee = 1994,
+                    ActivityCode = "RA",
+                    NoteText = notes
+                };
+                await _context.NoteMasters.AddAsync(note);
                 await _context.SaveChangesAsync();
             }
             catch (Exception e)
@@ -31,7 +43,7 @@ namespace AargonTools.Manager
                 throw;
             }
 
-            return notesData;
+            return _response.Response("Success.");
         }
 
 

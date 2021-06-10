@@ -24,29 +24,6 @@ namespace AargonTools.Controllers
         }
 
 
-        [HttpPost]
-        public async Task<IActionResult> SetNotes(NoteMaster notesData)
-        {
-            Serilog.Log.Information("  SetNotes => POST");
-            try
-            {
-                if (ModelState.IsValid)
-                {
-                    var data = await _context.CreateNotes(notesData);
-
-                    return Ok(data);
-
-                }
-            }
-            catch (Exception e)
-            {
-                Serilog.Log.Information(e.InnerException,e.Message,e.Data);
-                throw;
-            }
-           
-
-            return new JsonResult("Something went wrong") { StatusCode = 500 };
-        }
 
 
     }
