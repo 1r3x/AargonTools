@@ -1,14 +1,16 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AargonTools.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 
-namespace AargonTools.Controllers
+namespace AargonTools.Controllers.TestEnvironment
 {
-    [Route("api/[controller]")]
+    [Route("api/Test/[controller]")]
     [ApiController]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class AccountInformationController : ControllerBase
@@ -23,10 +25,11 @@ namespace AargonTools.Controllers
         [HttpGet("GetAccountBalance/{debtorAcct}")]
         public async Task<IActionResult> GetAccountBalance(string debtorAcct)
         {
-            Serilog.Log.Information(" GetAccountBalance => GET");
+            Serilog.Log.Information("Test GetAccountBalance => GET");
             try
             {
-                var item = await _context.GetAccountBalanceByDebtorAccount(debtorAcct,"P");
+                //T for test.
+                var item = await _context.GetAccountBalanceByDebtorAccount(debtorAcct, "T");
 
                 return Ok(item);
             }
@@ -42,11 +45,11 @@ namespace AargonTools.Controllers
         [HttpGet("GetAccountValidity/{debtorAcct}")]
         public IActionResult GetAccountValidity(string debtorAcct)
         {
-            Serilog.Log.Information(" GetAccountValidity => GET");
+            Serilog.Log.Information("Test GetAccountValidity => GET");
             try
             {
-                //P for prod.
-                var item = _context.CheckAccountValidityByDebtorAccount(debtorAcct,"P");
+                //T for test.
+                var item = _context.CheckAccountValidityByDebtorAccount(debtorAcct, "T");
 
                 return Ok(item);
             }
@@ -62,11 +65,11 @@ namespace AargonTools.Controllers
         [HttpGet("GetAccountExistences/{debtorAcct}")]
         public async Task<IActionResult> GetAccountExistences(string debtorAcct)
         {
-            Serilog.Log.Information(" GetAccountExistences => GET");
+            Serilog.Log.Information("Test GetAccountExistences => GET");
             try
             {
-                //P for prod.
-                var item = await _context.CheckAccountExistenceByDebtorAccount(debtorAcct, "P");
+                //T for test.
+                var item = await _context.CheckAccountExistenceByDebtorAccount(debtorAcct, "T");
 
                 return Ok(item);
             }
@@ -81,11 +84,11 @@ namespace AargonTools.Controllers
         [HttpGet("GetRecentApproval/{debtorAcct}")]
         public async Task<IActionResult> GetRecentApproval(string debtorAcct)
         {
-            Serilog.Log.Information(" GetRecentApproval => GET");
+            Serilog.Log.Information("Test GetRecentApproval => GET");
             try
             {
-                //P for prod.
-                var item = await _context.GetRecentApprovalByDebtorAccount(debtorAcct, "P");
+                //T for test.
+                var item = await _context.GetRecentApprovalByDebtorAccount(debtorAcct, "T");
 
                 return Ok(item);
             }
@@ -100,11 +103,11 @@ namespace AargonTools.Controllers
         [HttpGet("GetMultiples/{debtorAcct}")]
         public async Task<IActionResult> GetMultiples(string debtorAcct)
         {
-            Serilog.Log.Information(" GetMultiples => GET");
+            Serilog.Log.Information("Test GetMultiples => GET");
             try
             {
-                //P for prod.
-                var item = await _context.GetMultiples(debtorAcct, "P");
+                //T for test.
+                var item = await _context.GetMultiples(debtorAcct, "T");
 
                 return Ok(item);
             }
@@ -119,11 +122,11 @@ namespace AargonTools.Controllers
         [HttpGet("GetAccountInfo/{debtorAcct}")]
         public async Task<IActionResult> GetAccountInfo(string debtorAcct)
         {
-            Serilog.Log.Information(" GetAccountInfo => GET");
+            Serilog.Log.Information("Test GetAccountInfo => GET");
             try
             {
-                //P for prod.
-                var item = await _context.GetAccountInfo(debtorAcct, "P");
+                //T for test.
+                var item = await _context.GetAccountInfo(debtorAcct, "T");
 
                 return Ok(item);
             }

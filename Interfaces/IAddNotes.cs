@@ -10,6 +10,6 @@ namespace AargonTools.Interfaces
 {
     public interface IAddNotes
     {
-        Task<ResponseModel> CreateNotes(string debtorAccount, string notes);
+        Task<ResponseModel> CreateNotes(string debtorAccount, string notes, string environment);
     }
 }

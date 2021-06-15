@@ -9,6 +9,6 @@ namespace AargonTools.Interfaces
 {
     public interface IAddBadNumbers
     {
-        Task<ResponseModel> AddBadNumbers(string accountNo,String phoneNo);
+        Task<ResponseModel> AddBadNumbers(string accountNo,string phoneNo,string environment);
     }
 }

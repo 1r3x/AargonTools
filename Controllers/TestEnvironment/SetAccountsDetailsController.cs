@@ -1,17 +1,13 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Threading.Tasks;
 using AargonTools.Interfaces;
-using AargonTools.Manager.GenericManager;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
-namespace AargonTools.Controllers
+namespace AargonTools.Controllers.TestEnvironment
 {
-    [Route("api/[controller]")]
+    [Route("api/Test/[controller]")]
     [ApiController]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class SetAccountsDetailsController : ControllerBase
@@ -30,12 +26,12 @@ namespace AargonTools.Controllers
         [HttpPost("SetBadNumbers/{debtorAcct}&{phoneNo}")]
         public async Task<IActionResult> SetBadNumbers(string debtorAcct, string phoneNo)
         {
-            Serilog.Log.Information("  SetBadNumbers => POST");
+            Serilog.Log.Information("Test SetBadNumbers => POST");
             try
             {
                 if (ModelState.IsValid)
                 {
-                    var data = await _contextBadNumbers.AddBadNumbers(debtorAcct, phoneNo,"P");
+                    var data = await _contextBadNumbers.AddBadNumbers(debtorAcct, phoneNo,"T");
 
                     return Ok(data);
 
@@ -54,10 +50,10 @@ namespace AargonTools.Controllers
         [HttpPost("SetMoveAccount/{debtorAcct}&{toQueue}")]
         public async Task<IActionResult> SetMoveAccount(string debtorAcct, int toQueue)
         {
-            Serilog.Log.Information("  SetMoveAccount => POST");
+            Serilog.Log.Information("Test SetMoveAccount => POST");
             try
             {
-                var data = await _contextSetMoveAccount.SetMoveAccount(debtorAcct, toQueue,"P");
+                var data = await _contextSetMoveAccount.SetMoveAccount(debtorAcct, toQueue,"T");
                 return Ok(data);
             }
             catch (Exception e)
@@ -72,12 +68,12 @@ namespace AargonTools.Controllers
         [HttpPost("SetNotes/{debtorAcct}&{notes}")]
         public async Task<IActionResult> SetNotes(string debtorAcct, string notes)
         {
-            Serilog.Log.Information("  SetNotes => POST");
+            Serilog.Log.Information("Test SetNotes => POST");
             try
             {
                 if (ModelState.IsValid)
                 {
-                    var data = await _contextAddNotes.CreateNotes(debtorAcct, notes,"P");
+                    var data = await _contextAddNotes.CreateNotes(debtorAcct, notes,"T");
 
                     return Ok(data);
 
