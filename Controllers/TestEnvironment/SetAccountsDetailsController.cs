@@ -9,7 +9,7 @@ namespace AargonTools.Controllers.TestEnvironment
 {
     [Route("api/Test/[controller]")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class SetAccountsDetailsController : ControllerBase
     {
         private readonly IAddBadNumbers _contextBadNumbers;
