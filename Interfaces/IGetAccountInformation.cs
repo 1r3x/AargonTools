@@ -20,6 +20,7 @@ namespace AargonTools.Interfaces
         Task<ResponseModel> GetMultiples(string debtorAcct, string environment);
         //get some account infos with some logic applied 
         Task<ResponseModel> GetAccountInfo(string debtorAcct, string environment);
+        Task<ResponseModel> GetSIF(string debtorAcct, string environment);
 
     }
 }

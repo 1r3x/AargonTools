@@ -26,7 +26,7 @@ namespace AargonTools.Controllers
             Serilog.Log.Information(" GetAccountBalance => GET");
             try
             {
-                var item = await _context.GetAccountBalanceByDebtorAccount(debtorAcct,"P");
+                var item = await _context.GetAccountBalanceByDebtorAccount(debtorAcct, "P");
 
                 return Ok(item);
             }
@@ -46,7 +46,7 @@ namespace AargonTools.Controllers
             try
             {
                 //P for prod.
-                var item = _context.CheckAccountValidityByDebtorAccount(debtorAcct,"P");
+                var item = _context.CheckAccountValidityByDebtorAccount(debtorAcct, "P");
 
                 return Ok(item);
             }
@@ -135,5 +135,23 @@ namespace AargonTools.Controllers
 
         }
 
+        [HttpGet("GetSIF/{debtorAcct}")]
+        public async Task<IActionResult> GetSIF(string debtorAcct)
+        {
+            Serilog.Log.Information("GetSIF => GET");
+            try
+            {
+                //P for prod.
+                var item = await _context.GetSIF(debtorAcct, "P");
+
+                return Ok(item);
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Error(e.InnerException, e.Message);
+                throw;
+            }
+
+        }
     }
 }

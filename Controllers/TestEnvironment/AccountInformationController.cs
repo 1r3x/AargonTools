@@ -138,5 +138,25 @@ namespace AargonTools.Controllers.TestEnvironment
 
         }
 
+
+        [HttpGet("GetSIF/{debtorAcct}")]
+        public async Task<IActionResult> GetSIF(string debtorAcct)
+        {
+            Serilog.Log.Information("Test GetSIF => GET");
+            try
+            {
+                //T for test.
+                var item = await _context.GetSIF(debtorAcct, "T");
+
+                return Ok(item);
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Error(e.InnerException, e.Message);
+                throw;
+            }
+
+        }
+
     }
 }
