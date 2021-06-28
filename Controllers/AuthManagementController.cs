@@ -40,8 +40,9 @@ namespace AargonTools.Controllers
         }
 
         [HttpPost]
-        [Route("Register")]
-        public async Task<IActionResult> Register([FromBody] UserRegistrationDto user)
+        [Route("Register_Hide_Out")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> Register_Hide_Out([FromBody] UserRegistrationDto user)
         {
             if (ModelState.IsValid)
             {
