@@ -117,6 +117,7 @@ namespace AargonTools
             services.AddScoped<ResponseModel>();
             services.AddScoped<AdoDotNetConnection>();
             services.AddScoped<GetTheCompanyFlag>();
+
             //injected getAccountInformation v1.0
             services.AddScoped<IGetAccountInformation, GetAccountInformation>();
             services.AddScoped<IAddNotes, AddNotes>();
