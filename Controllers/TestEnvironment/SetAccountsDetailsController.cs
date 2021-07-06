@@ -15,12 +15,15 @@ namespace AargonTools.Controllers.TestEnvironment
         private readonly IAddBadNumbers _contextBadNumbers;
         private readonly ISetMoveAccount _contextSetMoveAccount;
         private readonly IAddNotes _contextAddNotes;
+        private readonly ISetDoNotCall _setDoNotCall;
 
-        public SetAccountsDetailsController(IAddBadNumbers contextBadNumbers, ISetMoveAccount contextSetMoveAccount, IAddNotes contextAddNotes)
+        public SetAccountsDetailsController(IAddBadNumbers contextBadNumbers, ISetMoveAccount contextSetMoveAccount, IAddNotes contextAddNotes
+        ,ISetDoNotCall setDoNotCall)
         {
             _contextBadNumbers = contextBadNumbers;
             _contextSetMoveAccount = contextSetMoveAccount;
             _contextAddNotes = contextAddNotes;
+            _setDoNotCall = setDoNotCall;
         }
 
         [HttpPost("SetBadNumbers/{debtorAcct}&{phoneNo}")]
@@ -91,7 +94,29 @@ namespace AargonTools.Controllers.TestEnvironment
 
 
 
+        [HttpPost("SetDoNotCall/{debtorAcct}&{cellPhoneNo}")]
+        public async Task<IActionResult> SetDoNotCall(string debtorAcct, string cellPhoneNo)
+        {
+            Serilog.Log.Information("  SetDoNotCall => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = await _setDoNotCall.SetDoNotCallManager(debtorAcct, cellPhoneNo, "T");
 
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
 
 
 

@@ -126,7 +126,21 @@ namespace AargonTools.Controllers.TestEnvironment
         }
 
 
-
+        /// <summary>
+        ///  Returns the recent approval of debtor account.
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// You can use this end point to check any recent approval of any debtor account by passing the parametrize debtor account no. You need a valid token
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/GetRecentApproval/GetAccountExistences/1850-190058
+        /// and please don't forget about valid token.
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        ///<param name="debtorAcct"> Enter Debtor Account</param>
+        /// 
+        [ProducesResponseType(typeof(GetRecentApprovalResponseModel), 200)]
 
         [HttpGet("GetRecentApproval/{debtorAcct}")]
         public async Task<IActionResult> GetRecentApproval(string debtorAcct)
@@ -146,7 +160,21 @@ namespace AargonTools.Controllers.TestEnvironment
             }
 
         }
-
+        /// <summary>
+        ///  Returns the Multiples account and its balance of debtor account.
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// You can use this end point to check Multiples account and its balance of any debtor account by passing the parametrize debtor account no. You need a valid token
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/Test/api/GetRecentApproval/GetMultiples/1850-190058
+        /// and please don't forget about valid token.
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        ///<param name="debtorAcct"> Enter Debtor Account</param>
+        /// 
+        [ProducesResponseType(typeof(GetMultiplesResponseModel), 200)]
         [HttpGet("GetMultiples/{debtorAcct}")]
         public async Task<IActionResult> GetMultiples(string debtorAcct)
         {

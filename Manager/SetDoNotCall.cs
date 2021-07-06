@@ -36,7 +36,7 @@ namespace AargonTools.Manager
                     {
                         targetData.CellPhoneDontCall = "Y";
                         _context.Update(targetData);
-                        await _addNotes.CreateNotes(debtorAcct, "PUT ON NOTICE (" + cellPhoneNo + ") BY CUSTOMER.", "P");
+                        await _addNotes.CreateNotes(debtorAcct, "PUT ON NOTICE (" + cellPhoneNo + ") BY CUSTOMER.", environment);
                     }
                     else
                     {
@@ -51,7 +51,7 @@ namespace AargonTools.Manager
                     {
                         targetData.CellPhoneDontCall = "Y";
                         _contextTest.Update(targetData);
-                        await _addNotes.CreateNotes(debtorAcct, "PUT ON NOTICE (" + cellPhoneNo + ") BY CUSTOMER.", "T");
+                        await _addNotes.CreateNotes(debtorAcct, "PUT ON NOTICE (" + cellPhoneNo + ") BY CUSTOMER.", environment);
                     }
                     else
                     {
