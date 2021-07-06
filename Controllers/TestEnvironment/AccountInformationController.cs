@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace AargonTools.Controllers.TestEnvironment
 {
     [Route("api/Test/[controller]")]
+    [Produces("application/json")]
     [ApiController]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class AccountInformationController : ControllerBase
@@ -21,7 +23,21 @@ namespace AargonTools.Controllers.TestEnvironment
         {
             _context = context;
         }
-
+        /// <summary>
+        ///  Returns the balance of the debtor account(Test Environment).
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// You can use this end point to check the balance of any debtor account by passing the parametrize debtor account no. You need a valid token
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/Test/AccountInformation/GetAccountBalance/0001-000001
+        /// and please don't forget about valid token.
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        ///<param name="debtorAcct"> Enter Debtor Account</param>
+        ///
+        [ProducesResponseType(typeof(GetAccountBalanceResponseModel), 200)]
         [HttpGet("GetAccountBalance/{debtorAcct}")]
         public async Task<IActionResult> GetAccountBalance(string debtorAcct)
         {
@@ -41,7 +57,21 @@ namespace AargonTools.Controllers.TestEnvironment
 
         }
 
-
+        /// <summary>
+        ///  Returns the account validity of the debtor account(Test Environment).
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// You can use this end point to check the validity of any debtor account by passing the parametrize debtor account no. You need a valid token
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/Test/GetAccountValidity/GetAccountBalance/0001-000001
+        /// and please don't forget about valid token.
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        ///<param name="debtorAcct"> Enter Debtor Account</param>
+        ///
+        [ProducesResponseType(typeof(GetAccountValidityResponseModel), 200)]
         [HttpGet("GetAccountValidity/{debtorAcct}")]
         public IActionResult GetAccountValidity(string debtorAcct)
         {
@@ -61,7 +91,21 @@ namespace AargonTools.Controllers.TestEnvironment
 
         }
 
-
+        /// <summary>
+        ///  Returns the account existences of the debtor account(Test Environment).
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// You can use this end point to check the existences of any debtor account by passing the parametrize debtor account no. You need a valid token
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/Test/GetAccountExistences/GetAccountExistences/0001-000001
+        /// and please don't forget about valid token.
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        ///<param name="debtorAcct"> Enter Debtor Account</param>
+        ///
+        [ProducesResponseType(typeof(GetAccountExistenceResponseModel), 200)]
         [HttpGet("GetAccountExistences/{debtorAcct}")]
         public async Task<IActionResult> GetAccountExistences(string debtorAcct)
         {
@@ -80,6 +124,9 @@ namespace AargonTools.Controllers.TestEnvironment
             }
 
         }
+
+
+
 
         [HttpGet("GetRecentApproval/{debtorAcct}")]
         public async Task<IActionResult> GetRecentApproval(string debtorAcct)

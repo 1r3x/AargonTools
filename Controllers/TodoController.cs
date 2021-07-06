@@ -1,26 +1,19 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Security.AccessControl;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AargonTools.Data;
 using AargonTools.Data.ADO;
 using AargonTools.Interfaces;
 using AargonTools.Models;
-using Microsoft.AspNetCore.Http.Features;
-using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace AargonTools.Controllers
 {
     [Route("api/[controller]")] // api/todo
     [ApiController]
+    [Produces("application/json")]
+    [ApiExplorerSettings(IgnoreApi = true)]
     //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class TodoController : ControllerBase
     {
@@ -34,8 +27,18 @@ namespace AargonTools.Controllers
             _adoConnection = adoConnection;
             _context2 = context2;
         }
-
+        /// <summary>
+        ///  This GetItems Endpoint returns all the items from the Prod Db test table.
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// You can use this end point to check data flow from prod db. You don't required any authentication
+        /// for this endpoint .  
+        /// </remarks>
+        /// <response code="200">Successfully get the data.</response>
         [HttpGet]
+        [ProducesResponseType(typeof(List<TestApiData>),200)]
         public  IActionResult GetItems()
         {
             Serilog.Log.Information("  Todo => GET");

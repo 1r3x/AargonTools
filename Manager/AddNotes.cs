@@ -63,7 +63,7 @@ namespace AargonTools.Manager
                 throw;
             }
 
-            return _response.Response("Success.");
+            return _response.Response("Status.");
         }
 
 

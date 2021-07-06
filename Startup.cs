@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -23,6 +25,7 @@ using Microsoft.AspNetCore.Identity;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.AspNetCore.Authorization;
 using Serilog.Context;
+using Swashbuckle.AspNetCore.Filters;
 
 namespace AargonTools
 {
@@ -93,6 +96,8 @@ namespace AargonTools
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "AargonTools", Version = "v1" });
+                //register the filters
+                c.ExampleFilters();
                 c.AddSecurityDefinition("BearerAuth", new OpenApiSecurityScheme
                 {
                     Type = SecuritySchemeType.Http,
@@ -104,7 +109,15 @@ namespace AargonTools
                 });
 
                 c.OperationFilter<AuthResponsesOperationFilter>();
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
+
             });
+            //this service is for swagger example 
+            services.AddSwaggerExamplesFromAssemblyOf<Startup>();
+
+
 
             services.AddCors(options =>
             {
@@ -120,9 +133,14 @@ namespace AargonTools
 
             //injected getAccountInformation v1.0
             services.AddScoped<IGetAccountInformation, GetAccountInformation>();
+            //injected setAccountInformation v1.0
+            services.AddScoped<ISetMoveAccount, SetMoveAccount>();
             services.AddScoped<IAddNotes, AddNotes>();
             services.AddScoped<IAddBadNumbers, AddBadNumbers>();
-            services.AddScoped<ISetMoveAccount, SetMoveAccount>();
+            services.AddScoped<ISetDoNotCall, SetDoNotCall>();
+
+
+            //
             services.AddHttpContextAccessor();
             services.AddTransient<IUserService, UserService>();
 

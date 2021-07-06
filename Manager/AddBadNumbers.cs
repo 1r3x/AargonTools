@@ -68,7 +68,7 @@ namespace AargonTools.Manager
                 try
                 {
                     await _context.SaveChangesAsync();
-                    return _response.Response("Success.");
+                    return _response.Response("Status.");
                 }
                 catch (Exception e)
                 {
@@ -120,7 +120,7 @@ namespace AargonTools.Manager
                 try
                 {
                     await _contextTest.SaveChangesAsync();
-                    return _response.Response("Success.");
+                    return _response.Response("Status.");
                 }
                 catch (Exception e)
                 {

@@ -12,6 +12,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using AargonTools.Configuration;
 using AargonTools.Data;
+using AargonTools.Data.ExamplesForDocumentation.Request;
+using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Models;
 using AargonTools.Models.DTOs.Requests;
 using AargonTools.Models.DTOs.Responses;
@@ -20,6 +22,7 @@ namespace AargonTools.Controllers
 {
     [Route("api/[controller]")] // api/authManagement
     [ApiController]
+    [Produces("application/json")]
     public class AuthManagementController : ControllerBase
     {
         private readonly UserManager<IdentityUser> _userManager;
@@ -87,8 +90,23 @@ namespace AargonTools.Controllers
             });
         }
 
+
+
+        /// <summary>
+        ///  This endpoint give you a token and a refresh token.
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can get token and refresh token.
+        /// So that you can use it for later authentication process or request for a new token using refresh token.
+        /// </remarks>
+        /// <response code="200">Successful request.</response>
+        /// <response code="400">Something went wrong</response>
         [HttpPost]
         [Route("Login")]
+        [ProducesResponseType(typeof(RegistrationResponse), 200)]
+        [ProducesResponseType(typeof(LoginErrorResponse), 400)]
         public async Task<IActionResult> Login([FromBody] UserLoginRequest user)
         {
             Serilog.Log.Information("Login => POST");
@@ -103,7 +121,7 @@ namespace AargonTools.Controllers
                         return BadRequest(new RegistrationResponse()
                         {
                             Errors = new List<string>() {
-                                "Invalid login request"
+                                "User not exists"
                             },
                             Success = false
                         });
@@ -116,7 +134,7 @@ namespace AargonTools.Controllers
                         return BadRequest(new RegistrationResponse()
                         {
                             Errors = new List<string>() {
-                                "Invalid login request"
+                                "Invalid login request, password or user doesn't match"
                             },
                             Success = false
                         });
@@ -143,8 +161,23 @@ namespace AargonTools.Controllers
            
         }
 
+
+
+        /// <summary>
+        /// This endpoint is for refreshing your token 
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        ///  This can refresh a expired tokens carry the information necessary to get a new access token.
+        /// In other words, whenever an access token is required to access a specific resource,
+        /// a client may use a refresh token to get a new access token issued by the authentication server.
+        /// </remarks>
+        /// <response code="200">Successful request</response>
+        /// <response code="400">Something went wrong</response>
         [HttpPost]
         [Route("RefreshToken")]
+        [ProducesResponseType(typeof(AuthResult), 200)]
         public async Task<IActionResult> RefreshToken([FromBody] TokenRequest tokenRequest)
         {
             if (ModelState.IsValid)
