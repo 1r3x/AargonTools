@@ -138,6 +138,8 @@ namespace AargonTools
             services.AddScoped<IAddNotes, AddNotes>();
             services.AddScoped<IAddBadNumbers, AddBadNumbers>();
             services.AddScoped<ISetDoNotCall, SetDoNotCall>();
+            services.AddScoped<ISetNumber, SetNumberManager>();
+            services.AddScoped<ISetMoveToHouse, SetMoveToHouseManager>();
 
 
             //

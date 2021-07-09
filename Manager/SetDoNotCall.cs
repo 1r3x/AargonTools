@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AargonTools.Interfaces;
 using AargonTools.Manager.GenericManager;
@@ -30,33 +31,61 @@ namespace AargonTools.Manager
             {
                 if (environment == "P")
                 {
+                    var rxCellPhoneUs = new Regex(@"(?<!\d)\d{10}(?!\d)");
 
-                    var targetData = await _context.DebtorPhoneInfos.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
-                    if (targetData.CellPhone != null && targetData.CellPhone == cellPhoneNo)
+                    if (rxCellPhoneUs.IsMatch(cellPhoneNo))
                     {
-                        targetData.CellPhoneDontCall = "Y";
-                        _context.Update(targetData);
-                        await _addNotes.CreateNotes(debtorAcct, "PUT ON NOTICE (" + cellPhoneNo + ") BY CUSTOMER.", environment);
+                        var areaCode = cellPhoneNo.Substring(0, 3);
+                        var cellNo = cellPhoneNo.Substring(3, 7);
+
+                        var targetData = await _context.DebtorPhoneInfos.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
+                        if (targetData.CellPhone != null && targetData.CellPhone == cellNo && targetData.CellAreaCode == areaCode)
+                        {
+                            targetData.CellPhoneDontCall = "Y";
+                            _context.Update(targetData);
+                            await _context.SaveChangesAsync();
+                            await _addNotes.CreateNotes(debtorAcct, "PUT ON NOTICE (" + areaCode + "-" + cellNo + ") BY CUSTOMER.", environment);
+                        }
+                        else
+                        {
+                            return _response.Response("This account is not associate with this cell number");
+                        }
                     }
                     else
                     {
-                        return _response.Response("This account is not associate with this cell number");
+                        return _response.Response("This is not a valid cell number for US.Just put areaCode+centralOffice+lineNumber. ex. 7025052773");
                     }
+
+
 
                 }
                 else
                 {
-                    var targetData = await _context.DebtorPhoneInfos.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
-                    if (targetData.CellPhone == cellPhoneNo)
+                    var rxCellPhoneUs = new Regex(@"(?<!\d)\d{10}(?!\d)");
+
+                    if (rxCellPhoneUs.IsMatch(cellPhoneNo))
                     {
-                        targetData.CellPhoneDontCall = "Y";
-                        _contextTest.Update(targetData);
-                        await _addNotes.CreateNotes(debtorAcct, "PUT ON NOTICE (" + cellPhoneNo + ") BY CUSTOMER.", environment);
+                        var areaCode = cellPhoneNo.Substring(0, 3);
+                        var cellNo = cellPhoneNo.Substring(3, 7);
+
+                        var targetData = await _contextTest.DebtorPhoneInfos.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
+                        if (targetData.CellPhone != null && targetData.CellPhone == cellNo && targetData.CellAreaCode == areaCode)
+                        {
+                            targetData.CellPhoneDontCall = "Y";
+                            _contextTest.Update(targetData);
+                            await _context.SaveChangesAsync();
+                            await _addNotes.CreateNotes(debtorAcct, "PUT ON NOTICE (" + areaCode + "-" + cellNo + ") BY CUSTOMER.", environment);
+                        }
+                        else
+                        {
+                            return _response.Response("This account is not associate with this cell number");
+                        }
                     }
                     else
                     {
-                        return _response.Response("This account is not associate with this cell number");
+                        return _response.Response("This is not a valid cell number for US.Just put areaCode+centralOffice+lineNumber. ex. 7025052773");
                     }
+
                 }
 
             }
@@ -66,7 +95,7 @@ namespace AargonTools.Manager
                 throw;
             }
 
-            return _response.Response("Successfully set do not call.");
+            return _response.Response("Successfully set do not call. ");
         }
     }
 }

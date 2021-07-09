@@ -68,7 +68,7 @@ namespace AargonTools.Manager
                 try
                 {
                     await _context.SaveChangesAsync();
-                    return _response.Response("Status.");
+                    return _response.Response("Successfully enlisted a bad number.");
                 }
                 catch (Exception e)
                 {

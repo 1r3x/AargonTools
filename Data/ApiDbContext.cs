@@ -10,6 +10,8 @@ namespace AargonTools.Data
         public virtual DbSet<RefreshToken> RefreshTokens {get;set;}
         public virtual DbSet<WebApiLogs> WebApiLogs { get;set;}
         public virtual DbSet<MoveAccountApiLogs> MoveAccountApiLogs { get;set;}
+        public virtual DbSet<ApiMoveSetting> ApiMoveSettings { get; set; }
+        public virtual DbSet<ApiMoveLog> ApiMoveLogs { get; set; }
 
         public ApiDbContext(DbContextOptions<ApiDbContext> options)
             : base(options)

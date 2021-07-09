@@ -43,6 +43,9 @@ namespace AargonTools.Models
         public virtual DbSet<QueueMasterT> QueueMasterTs { get; set; }
         public virtual DbSet<QueueMasterW> QueueMasterWs { get; set; }
         public virtual DbSet<MoveAccountApiLogs> MoveAccountApiLogs { get; set; }
+        public virtual DbSet<NewPhoneNumber> NewPhoneNumbers { get; set; }
+        public virtual DbSet<ApiMoveSetting> ApiMoveSettings { get; set; }
+        public virtual DbSet<ApiMoveLog> ApiMoveLogs { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

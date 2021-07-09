@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AargonTools.Interfaces;
 using AargonTools.Manager.GenericManager;
 using AargonTools.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualBasic;
 
 namespace AargonTools.Manager
 {
@@ -59,11 +55,10 @@ namespace AargonTools.Manager
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                return _response.Response(e);
             }
 
-            return _response.Response("Status.");
+            return _response.Response("Successfully added a notes.");
         }
 
 

@@ -7,6 +7,7 @@ using AargonTools.Data.ExamplesForDocumentation.Request;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
 using AargonTools.Models;
+using AargonTools.ViewModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -206,6 +207,21 @@ namespace AargonTools.Controllers
 
         }
 
+        /// <summary>
+        ///  Returns the Account Info of debtor account.
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// You can use this end point to check Account Info of any debtor account by passing the parametrize debtor account no. You need a valid token
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/GetAccountInfo/GetMultiples/1850-190058
+        /// and please don't forget about valid token.
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        ///<param name="debtorAcct"> Enter Debtor Account</param>
+        /// 
+        [ProducesResponseType(typeof(GetAccountInfoResponse), 200)]
         [HttpGet("GetAccountInfo/{debtorAcct}")]
         public async Task<IActionResult> GetAccountInfo(string debtorAcct)
         {
@@ -224,7 +240,21 @@ namespace AargonTools.Controllers
             }
 
         }
-
+        /// <summary>
+        ///  Returns the SIF of debtor account.
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// You can use this end point to check SIF of any debtor account by passing the parametrize debtor account no. You need a valid token
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/GetAccountInfo/GetSIF/0001-000001
+        /// and please don't forget about valid token.
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        ///<param name="debtorAcct"> Enter Debtor Account</param>
+        /// 
+        [ProducesResponseType(typeof(GetSifResponse), 200)]
         [HttpGet("GetSIF/{debtorAcct}")]
         public async Task<IActionResult> GetSIF(string debtorAcct)
         {

@@ -3,10 +3,42 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AargonTools.Migrations
 {
-    public partial class MigrateUptoJun6 : Migration
+    public partial class migrated10July21 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "api_move_logs",
+                columns: table => new
+                {
+                    debtor_acc = table.Column<string>(type: "nvarchar(11)", maxLength: 11, nullable: false),
+                    move_setup_id = table.Column<int>(type: "int", nullable: true),
+                    previous_employee = table.Column<int>(type: "int", nullable: false),
+                    new_employee = table.Column<int>(type: "int", nullable: false),
+                    move_date = table.Column<DateTime>(type: "datetime", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_api_move_logs", x => x.debtor_acc);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "api_move_settings",
+                columns: table => new
+                {
+                    move_setup_id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    company = table.Column<string>(type: "nvarchar(5)", maxLength: 5, nullable: false),
+                    from_employee = table.Column<int>(type: "int", nullable: false),
+                    to_employee = table.Column<int>(type: "int", nullable: false),
+                    target_employee = table.Column<int>(type: "int", nullable: false),
+                    is_active = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_api_move_settings", x => x.move_setup_id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
@@ -275,6 +307,12 @@ namespace AargonTools.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "api_move_logs");
+
+            migrationBuilder.DropTable(
+                name: "api_move_settings");
+
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 

@@ -19,6 +19,69 @@ namespace AargonTools.Migrations
                 .HasAnnotation("ProductVersion", "5.0.6")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+            modelBuilder.Entity("AargonTools.Models.ApiMoveLog", b =>
+                {
+                    b.Property<string>("DebtorAcc")
+                        .HasMaxLength(11)
+                        .HasColumnType("nvarchar(11)")
+                        .HasColumnName("debtor_acc");
+
+                    b.Property<DateTime>("MoveDate")
+                        .HasColumnType("datetime")
+                        .HasColumnName("move_date");
+
+                    b.Property<int?>("MoveSetupId")
+                        .HasColumnType("int")
+                        .HasColumnName("move_setup_id");
+
+                    b.Property<int>("NewEmployee")
+                        .HasColumnType("int")
+                        .HasColumnName("new_employee");
+
+                    b.Property<int>("PreviousEmployee")
+                        .HasColumnType("int")
+                        .HasColumnName("previous_employee");
+
+                    b.HasKey("DebtorAcc");
+
+                    b.ToTable("api_move_logs");
+                });
+
+            modelBuilder.Entity("AargonTools.Models.ApiMoveSetting", b =>
+                {
+                    b.Property<int>("MoveSetupId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("move_setup_id")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)")
+                        .HasColumnName("company");
+
+                    b.Property<int>("FromEmployee")
+                        .HasColumnType("int")
+                        .HasColumnName("from_employee");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_active");
+
+                    b.Property<int>("TargetEmployee")
+                        .HasColumnType("int")
+                        .HasColumnName("target_employee");
+
+                    b.Property<int>("ToEmployee")
+                        .HasColumnType("int")
+                        .HasColumnName("to_employee");
+
+                    b.HasKey("MoveSetupId");
+
+                    b.ToTable("api_move_settings");
+                });
+
             modelBuilder.Entity("AargonTools.Models.MoveAccountApiLogs", b =>
                 {
                     b.Property<int>("Id")
