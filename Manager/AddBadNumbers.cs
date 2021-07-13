@@ -72,8 +72,7 @@ namespace AargonTools.Manager
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
-                    throw;
+                    return _response.Response(e);
                 }
             }
             else

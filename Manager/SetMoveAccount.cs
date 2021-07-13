@@ -49,7 +49,7 @@ namespace AargonTools.Manager
                 }
                 var targetQueue = await _companyFlag.GetFlagForQueueMaster(debtorAcct, environment).Result
                     .FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
-                if (targetQueue.Employee == null) return _response.Response("Invalid Request.[By any how data data corrupted for" + debtorAcct + " its not in the any queue master tables].");
+                if (targetQueue.Employee == null) return _response.Response("Invalid Request.[By any how data corrupted for" + debtorAcct + " its not in the any queue master tables].");
                 var datetimeNow = DateTime.Now;
                 var note = new NoteMaster()
                 {
@@ -85,7 +85,7 @@ namespace AargonTools.Manager
 
                 await _context.SaveChangesAsync();
 
-                return _response.Response("Status.");
+                return _response.Response("Account moved successfully.");
             }
             else
             {

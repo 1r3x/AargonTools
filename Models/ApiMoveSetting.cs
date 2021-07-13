@@ -15,6 +15,10 @@ namespace AargonTools.Models
         [Column("move_setup_id")]
         public int MoveSetupId { get; set; }
         [Required]
+        [Column("type")]
+        [StringLength(20)]
+        public string Type { get; set; }
+        [Required]
         [Column("company")]
         [StringLength(5)]
         public string Company { get; set; }

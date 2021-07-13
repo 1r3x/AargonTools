@@ -33,20 +33,19 @@ namespace AargonTools.Controllers.TestEnvironment
         }
 
         /// <summary>
-        ///  Set a bad number.(Test Environment)
+        ///  This endpoint can set a bad number.
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// You can use this end point to Set a bad number. of any debtor account by passing the parametrize debtor account no. & phone number You need a valid token
-        /// for this endpoint . You can pass the parameter with API client like  https://g14.aargontools.com/api/Test/SetAccountsDetails/SetBadNumbers/0001-000001&7025052773
-        /// (pass both parameter separated by '&')
-        /// and please don't forget about valid token.
+        /// By using this endpoint you can add a bad number , and the bad number will remove from debtor account and add a notes about the action.
+        /// And please don't forget about a valid token.
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetBadNumbers/0001-000001&amp;7025052773
+        /// (pass both parameter separated by '&amp;')
         /// </remarks>
-        /// <response code="200">Execution Successful</response>
-        /// <response code="401">Unauthorized , please login or refresh your token.</response>
-        ///<param name="debtorAcct"> Enter Debtor Account</param>
-        ///<param name="phoneNo"> Enter phoneNo</param>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
         /// 
         [ProducesResponseType(typeof(AddBadNumberResponse), 200)]
         [HttpPost("SetBadNumbers/{debtorAcct}&{phoneNo}")]
@@ -73,6 +72,25 @@ namespace AargonTools.Controllers.TestEnvironment
             return new JsonResult("Something went wrong") { StatusCode = 500 };
         }
 
+
+
+
+        /// <summary>
+        ///  This endpoint can move debtor account to a queue.
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can move debtor account to a queue if the queue is available and the account is active
+        /// then add a notes about the action and make a log to a specific log table.
+        /// And please don't forget about a valid token.
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/Test/SetAccountsDetails/SetMoveAccount/0001-000001&amp;70
+        /// (pass both parameter separated by '&amp;')
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [ProducesResponseType(typeof(SetMoveAccountResponse), 200)]
         [HttpPost("SetMoveAccount/{debtorAcct}&{toQueue}")]
         public async Task<IActionResult> SetMoveAccount(string debtorAcct, int toQueue)
         {

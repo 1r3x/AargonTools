@@ -32,7 +32,7 @@ namespace AargonTools.Manager
             {
                 var targetAcctInfo = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
                 var targetAcctFlag = await _companyFlag.GetStringFlag(debtorAcct, environment);
-                var apiMoveSetting = await _context.ApiMoveSettings.SingleOrDefaultAsync(x => x.Company == targetAcctFlag);
+                var apiMoveSetting = await _context.ApiMoveSettings.SingleOrDefaultAsync(x => x.Company == targetAcctFlag && x.Type== "HOUSE");//for move to house only
                 if (targetAcctInfo.Employee != null && targetAcctInfo.Employee >= apiMoveSetting.FromEmployee && targetAcctInfo.Employee <= apiMoveSetting.ToEmployee)
                 {
                     var logForMove = new ApiMoveLog()
@@ -59,7 +59,7 @@ namespace AargonTools.Manager
             {
                 var targetAcctInfo = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
                 var targetAcctFlag = await _companyFlag.GetStringFlag(debtorAcct, environment);
-                var apiMoveSetting = await _contextTest.ApiMoveSettings.SingleOrDefaultAsync(x => x.Company == targetAcctFlag);
+                var apiMoveSetting = await _contextTest.ApiMoveSettings.SingleOrDefaultAsync(x => x.Company == targetAcctFlag && x.Type == "HOUSE");//for move to house only
                 if (targetAcctInfo.Employee != null && targetAcctInfo.Employee >= apiMoveSetting.FromEmployee && targetAcctInfo.Employee <= apiMoveSetting.ToEmployee)
                 {
                     var logForMove = new ApiMoveLog()
