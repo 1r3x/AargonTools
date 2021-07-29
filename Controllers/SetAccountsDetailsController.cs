@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
+using AargonTools.Data.ExamplesForDocumentation;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,9 +21,10 @@ namespace AargonTools.Controllers
         private readonly ISetDoNotCall _setDoNotCall;
         private readonly ISetNumber _setNumber;
         private readonly ISetMoveToHouse _setMoveToHouse;
+        private readonly ISetMoveToDispute _setMoveToDispute;
 
         public SetAccountsDetailsController(IAddBadNumbers contextBadNumbers, ISetMoveAccount contextSetMoveAccount, IAddNotes contextAddNotes
-        ,ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse)
+        ,ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute)
         {
             _contextBadNumbers = contextBadNumbers;
             _contextSetMoveAccount = contextSetMoveAccount;
@@ -30,6 +32,7 @@ namespace AargonTools.Controllers
             _setDoNotCall = setDoNotCall;
             _setNumber = setNumber;
             _setMoveToHouse = setMoveToHouse;
+            _setMoveToDispute = setMoveToDispute;
         }
 
         /// <summary>
@@ -107,7 +110,21 @@ namespace AargonTools.Controllers
 
         }
 
-
+        /// <summary>
+        ///  This endpoint can add a note.
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can add a note to a specific debtor account.
+        /// And please don't forget about a valid token.
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetNotes/0001-000001&amp;This is the notes
+        /// (pass both parameter separated by '&amp;')
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [ProducesResponseType(typeof(SetAddNotesResponse), 200)]
         [HttpPost("SetNotes/{debtorAcct}&{notes}")]
         public async Task<IActionResult> SetNotes(string debtorAcct, string notes)
         {
@@ -132,7 +149,21 @@ namespace AargonTools.Controllers
             return new JsonResult("Something went wrong") { StatusCode = 500 };
         }
 
-
+        /// <summary>
+        ///  This endpoint can set a phone number's status [don't call].
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can can set a phone number's status [don't call].
+        /// And please don't forget about a valid token.
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetDoNotCall/0001-000001&amp;7025052773
+        /// (pass both parameter separated by '&amp;')
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [ProducesResponseType(typeof(SetDoNotCallResponse), 200)]
         [HttpPost("SetDoNotCall/{debtorAcct}&{cellPhoneNo}")]
         public async Task<IActionResult> SetDoNotCall(string debtorAcct, string cellPhoneNo)
         {
@@ -158,7 +189,21 @@ namespace AargonTools.Controllers
         }
 
 
-
+        /// <summary>
+        ///  This endpoint can set a phone number for a debtor.
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can set a phone number for a debtor.
+        /// And please don't forget about a valid token.
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetNumber/0001-000001&amp;7025052773
+        /// (pass both parameter separated by '&amp;')
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [ProducesResponseType(typeof(SetNumberResponses), 200)]
         [HttpPost("SetNumber/{debtorAcct}&{cellPhoneNo}")]
         public async Task<IActionResult> SetNumber(string debtorAcct, string cellPhoneNo)
         {
@@ -184,7 +229,20 @@ namespace AargonTools.Controllers
         }
 
 
-
+        /// <summary>
+        ///  This endpoint can set move to house.
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can set move to house and make a movement log for a debtor acccount.
+        /// And please don't forget about a valid token.
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetMoveToHouse/0001-000001
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [ProducesResponseType(typeof(SetMoveToHouseResponses), 200)]
         [HttpPost("SetMoveToHouse/{debtorAcct}")]
         public async Task<IActionResult> SetMoveToHouse(string debtorAcct)
         {
@@ -209,6 +267,44 @@ namespace AargonTools.Controllers
             return new JsonResult("Something went wrong") { StatusCode = 500 };
         }
 
+
+        /// <summary>
+        ///  This endpoint can set move to dispute.
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can set move to dispute and make a movement log for a debtor acccount.
+        /// And please don't forget about a valid token.
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetMoveToDispute/0001-000001
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [ProducesResponseType(typeof(SetMoveToDisputeResponses), 200)]
+        [HttpPost("SetMoveToDispute/{debtorAcct}")]
+        public async Task<IActionResult> SetMoveToDispute(string debtorAcct,decimal amountDisputed)
+        {
+            Serilog.Log.Information("SetMoveToDispute => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = await _setMoveToDispute.SetMoveToDispute(debtorAcct, amountDisputed, "P");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
 
 
 

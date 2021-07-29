@@ -140,6 +140,7 @@ namespace AargonTools
             services.AddScoped<ISetDoNotCall, SetDoNotCall>();
             services.AddScoped<ISetNumber, SetNumberManager>();
             services.AddScoped<ISetMoveToHouse, SetMoveToHouseManager>();
+            services.AddScoped<ISetMoveToDispute, SetMoveToDisputeManager>();
 
 
             //

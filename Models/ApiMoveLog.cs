@@ -12,6 +12,8 @@ namespace AargonTools.Models
     public partial class ApiMoveLog
     {
         [Key]
+        [Column("id")]
+        public int Id { get; set; }
         [Column("debtor_acc")]
         [StringLength(11)]
         public string DebtorAcc { get; set; }

@@ -45,6 +45,7 @@ namespace AargonTools.Manager
                             _context.Update(targetData);
                             await _context.SaveChangesAsync();
                             await _addNotes.CreateNotes(debtorAcct, "PUT ON NOTICE (" + areaCode + "-" + cellNo + ") BY CUSTOMER.", environment);
+                            return _response.Response("Successfully set the number to don't call status.");
                         }
                         else
                         {
