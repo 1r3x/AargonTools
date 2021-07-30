@@ -309,7 +309,21 @@ namespace AargonTools.Controllers
         }
 
 
-
+        /// <summary>
+        ///  This endpoint can set post date checks and take necessary actions.
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can set post date checks and take necessary actions.
+        /// And please don't forget about a valid token.
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetPostDateChecks/0001-000001&amp;12-20-2021&amp;10&amp;102&amp;9&amp;10&amp;Y
+        /// (pass both parameter separated by '&amp;')
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [ProducesResponseType(typeof(SetPostDateChecksResponse), 200)]
         [HttpPost("SetPostDateChecks/{debtorAcct}&{postDate}&{amount}&{accountNumber}&{routingNumber}&{totalPd}&{sif}")]
         public async Task<IActionResult> SetPostDateChecks(string debtorAcct, DateTime postDate, decimal amount, string accountNumber, string routingNumber,
         int totalPd, char sif)

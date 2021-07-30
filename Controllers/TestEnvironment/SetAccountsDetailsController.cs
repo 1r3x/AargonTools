@@ -22,9 +22,10 @@ namespace AargonTools.Controllers.TestEnvironment
         private readonly ISetNumber _setNumber;
         private readonly ISetMoveToHouse _setMoveToHouse;
         private readonly ISetMoveToDispute _setMoveToDispute;
+        private readonly ISetPostDateChecks _setPostDateChecks;
 
         public SetAccountsDetailsController(IAddBadNumbers contextBadNumbers, ISetMoveAccount contextSetMoveAccount, IAddNotes contextAddNotes
-            , ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute)
+            , ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute, ISetPostDateChecks setPostDateChecks)
         {
             _contextBadNumbers = contextBadNumbers;
             _contextSetMoveAccount = contextSetMoveAccount;
@@ -33,6 +34,7 @@ namespace AargonTools.Controllers.TestEnvironment
             _setNumber = setNumber;
             _setMoveToHouse = setMoveToHouse;
             _setMoveToDispute = setMoveToDispute;
+            _setPostDateChecks = setPostDateChecks;
         }
 
         /// <summary>
@@ -289,6 +291,49 @@ namespace AargonTools.Controllers.TestEnvironment
                 if (ModelState.IsValid)
                 {
                     var data = await _setMoveToDispute.SetMoveToDispute(debtorAcct, amountDisputed, "P");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
+
+
+        /// <summary>
+        ///  This endpoint can set post date checks and take necessary actions.(Test Environment)
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can set post date checks and take necessary actions.
+        /// And please don't forget about a valid token.
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/Test/SetAccountsDetails/SetPostDateChecks/0001-000001&amp;12-20-2021&amp;10&amp;102&amp;9&amp;10&amp;Y
+        /// (pass both parameter separated by '&amp;')
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [ProducesResponseType(typeof(SetPostDateChecksResponse), 200)]
+        [HttpPost("SetPostDateChecks/{debtorAcct}&{postDate}&{amount}&{accountNumber}&{routingNumber}&{totalPd}&{sif}")]
+        public async Task<IActionResult> SetPostDateChecks(string debtorAcct, DateTime postDate, decimal amount, string accountNumber, string routingNumber,
+            int totalPd, char sif)
+        {
+            Serilog.Log.Information("Test SetPostDateChecks => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = await _setPostDateChecks.SetPostDateChecks(debtorAcct, postDate, amount, accountNumber,
+                        routingNumber, totalPd, sif, "T");
 
                     return Ok(data);
 
