@@ -51,7 +51,7 @@ namespace AargonTools.Controllers
                 //vs
 
                 //ADO.NET
-                var rowAdo = _adoConnection.GetData("SELECT * FROM TestApiData");
+                var rowAdo = _adoConnection.GetData("SELECT * FROM TestApiData","P");
                 var listOfItems = new List<TestApiData>();
                 for (var i = 0; i < rowAdo.Rows.Count; i++)
                 {

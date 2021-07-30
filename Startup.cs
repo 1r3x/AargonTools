@@ -141,6 +141,7 @@ namespace AargonTools
             services.AddScoped<ISetNumber, SetNumberManager>();
             services.AddScoped<ISetMoveToHouse, SetMoveToHouseManager>();
             services.AddScoped<ISetMoveToDispute, SetMoveToDisputeManager>();
+            services.AddScoped<ISetPostDateChecks, SetPostDateChecksManager>();
 
 
             //

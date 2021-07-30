@@ -248,7 +248,7 @@ namespace AargonTools.Manager
             {
                 var flag = await _companyFlag.GetStringFlag(debtorAcct, environment);
 
-                var rowAdo = _adoConnection.GetData("SELECT * FROM func_sif('" + debtorAcct + "', '" + flag + "')");
+                var rowAdo = _adoConnection.GetData("SELECT * FROM func_sif('" + debtorAcct + "', '" + flag + "')", environment);
                 var listOfItems = new List<SIFViewModel>();
                 for (var i = 0; i < rowAdo.Rows.Count; i++)
                 {
@@ -268,7 +268,7 @@ namespace AargonTools.Manager
             {
                 var flag = await _companyFlag.GetStringFlag(debtorAcct, environment);
 
-                var rowAdo = _adoConnection.GetData("SELECT * FROM func_sif('" + debtorAcct + "', '" + flag + "')");
+                var rowAdo = _adoConnection.GetData("SELECT * FROM func_sif('" + debtorAcct + "', '" + flag + "')", environment);
                 var listOfItems = new List<SIFViewModel>();
                 for (var i = 0; i < rowAdo.Rows.Count; i++)
                 {

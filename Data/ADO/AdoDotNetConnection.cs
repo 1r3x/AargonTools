@@ -14,16 +14,27 @@ namespace AargonTools.Data.ADO
         }
 
 
-        public DataTable GetData(string cmdText)
+        public DataTable GetData(string cmdText, string environment)
         {
             var objResult = new DataTable();
             try
             {
-                var connectionString = _configuration.GetConnectionString("DefaultConnection");
-                using var myCon = new SqlConnection(connectionString);
-                using var myCommand = new SqlCommand(cmdText, myCon);
-                var da = new SqlDataAdapter(myCommand);
-                da.Fill(objResult);
+                if (environment == "P")
+                {
+                    var connectionString = _configuration.GetConnectionString("DefaultConnection");
+                    using var myCon = new SqlConnection(connectionString);
+                    using var myCommand = new SqlCommand(cmdText, myCon);
+                    var da = new SqlDataAdapter(myCommand);
+                    da.Fill(objResult);
+                }
+                else
+                {
+                    var connectionString = _configuration.GetConnectionString("TestEnvironmentConnection");
+                    using var myCon = new SqlConnection(connectionString);
+                    using var myCommand = new SqlCommand(cmdText, myCon);
+                    var da = new SqlDataAdapter(myCommand);
+                    da.Fill(objResult);
+                }
             }
             catch (Exception)
             {

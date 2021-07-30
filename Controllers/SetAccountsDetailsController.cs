@@ -22,9 +22,10 @@ namespace AargonTools.Controllers
         private readonly ISetNumber _setNumber;
         private readonly ISetMoveToHouse _setMoveToHouse;
         private readonly ISetMoveToDispute _setMoveToDispute;
+        private readonly ISetPostDateChecks _setPostDateChecks;
 
         public SetAccountsDetailsController(IAddBadNumbers contextBadNumbers, ISetMoveAccount contextSetMoveAccount, IAddNotes contextAddNotes
-        ,ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute)
+        ,ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute, ISetPostDateChecks setPostDateChecks)
         {
             _contextBadNumbers = contextBadNumbers;
             _contextSetMoveAccount = contextSetMoveAccount;
@@ -33,6 +34,7 @@ namespace AargonTools.Controllers
             _setNumber = setNumber;
             _setMoveToHouse = setMoveToHouse;
             _setMoveToDispute = setMoveToDispute;
+            _setPostDateChecks = setPostDateChecks;
         }
 
         /// <summary>
@@ -307,6 +309,32 @@ namespace AargonTools.Controllers
         }
 
 
+
+        [HttpPost("SetPostDateChecks/{debtorAcct}&{postDate}&{amount}&{accountNumber}&{routingNumber}&{totalPd}&{sif}")]
+        public async Task<IActionResult> SetPostDateChecks(string debtorAcct, DateTime postDate, decimal amount, string accountNumber, string routingNumber,
+        int totalPd, char sif)
+        {
+            Serilog.Log.Information("SetPostDateChecks => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = await _setPostDateChecks.SetPostDateChecks(debtorAcct, postDate, amount, accountNumber,
+                        routingNumber, totalPd, sif, "P");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
 
 
     }
