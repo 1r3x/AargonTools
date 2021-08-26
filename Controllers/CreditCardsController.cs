@@ -70,5 +70,32 @@ namespace AargonTools.Controllers
         }
 
 
+
+        [HttpPost("SchedulePostData/{debtorAcct}&{postDate}&{amount},&{cardNumber}&{numberOfPayments}&{expMonth}&{expYear}")]
+        public async Task<IActionResult> SchedulePostData(string debtorAcct, DateTime postDate, decimal amount, string cardNumber, int numberOfPayments,
+            string expMonth, string expYear)
+        {
+            Serilog.Log.Information("SchedulePostData => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = await _processCcPayment.SchedulePostData(debtorAcct, postDate, amount, cardNumber, numberOfPayments, expMonth, expYear, "P");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
+
     }
 }

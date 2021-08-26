@@ -186,6 +186,8 @@ namespace AargonTools.Manager
 
 
 
+
+
         public async Task<ResponseModel> ProcessCcPayment(string debtorAcc, string ccNumber, string expiredDate, string cvv, int numberOfPayments, decimal amount,string environment)
         {
             //todo (if the card already tokenize) 
