@@ -76,7 +76,7 @@ namespace AargonTools.Controllers
         /// <remarks>
         /// **Details**:
         /// You can use this end point to check the validity of any debtor account by passing the parametrize debtor account no. You need a valid token
-        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/GetAccountValidity/GetAccountBalance/0001-000001
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/AccountInformation/GetAccountValidity/0001-000001
         /// and please don't forget about valid token.
         /// </remarks>
         /// <response code="200">Execution Successful</response>
@@ -110,7 +110,7 @@ namespace AargonTools.Controllers
         /// <remarks>
         /// **Details**:
         /// You can use this end point to check the existences of any debtor account by passing the parametrize debtor account no. You need a valid token
-        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/GetAccountExistences/GetAccountExistences/0001-000001
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/AccountInformation/GetAccountExistences/0001-000001
         /// and please don't forget about valid token.
         /// </remarks>
         /// <response code="200">Execution Successful</response>
@@ -145,7 +145,7 @@ namespace AargonTools.Controllers
         /// <remarks>
         /// **Details**:
         /// You can use this end point to check any recent approval of any debtor account by passing the parametrize debtor account no. You need a valid token
-        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/GetRecentApproval/GetAccountExistences/1850-190058
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/AccountInformation/GetRecentApproval/1850-190058
         /// and please don't forget about valid token.
         /// </remarks>
         /// <response code="200">Execution Successful</response>
@@ -180,7 +180,7 @@ namespace AargonTools.Controllers
         /// <remarks>
         /// **Details**:
         /// You can use this end point to check Multiples account and its balance of any debtor account by passing the parametrize debtor account no. You need a valid token
-        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/GetRecentApproval/GetMultiples/1850-190058
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/AccountInformation/GetMultiples/1850-190058
         /// and please don't forget about valid token.
         /// </remarks>
         /// <response code="200">Execution Successful</response>
@@ -214,7 +214,7 @@ namespace AargonTools.Controllers
         /// <remarks>
         /// **Details**:
         /// You can use this end point to check Account Info of any debtor account by passing the parametrize debtor account no. You need a valid token
-        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/GetAccountInfo/GetMultiples/1850-190058
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/AccountInformation/GetAccountInfo/1850-190058
         /// and please don't forget about valid token.
         /// </remarks>
         /// <response code="200">Execution Successful</response>
@@ -247,7 +247,7 @@ namespace AargonTools.Controllers
         /// <remarks>
         /// **Details**:
         /// You can use this end point to check SIF of any debtor account by passing the parametrize debtor account no. You need a valid token
-        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/GetAccountInfo/GetSIF/0001-000001
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/AccountInformation/GetSIF/0001-000001
         /// and please don't forget about valid token.
         /// </remarks>
         /// <response code="200">Execution Successful</response>
