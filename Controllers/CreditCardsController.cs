@@ -32,7 +32,7 @@ namespace AargonTools.Controllers
         /// **Details**:
         /// You can use this end point to Process a credit card payment of any debtor account by passing the parameters. You need a valid token
         /// for this endpoint .
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetBadNumbers/0001-000001&amp;4929000000006&amp;1221&amp;124&amp;1&amp;9.99
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/CreditCards/SetProcessCcPayments/0001-000001&amp;4929000000006&amp;1221&amp;124&amp;1&amp;9.99
         /// (pass parameters separated by '&amp;')
         /// </remarks>
         /// <response code="200">Execution Successful</response>
@@ -77,7 +77,7 @@ namespace AargonTools.Controllers
         /// **Details**:
         /// You can Schedule Post Data of any debtor account by passing the parameters. You need a valid token
         /// for this endpoint .
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/test/SetAccountsDetails/SchedulePostData/0001-000001&amp;21-12-2012&amp;10&amp;4929000000006&amp;7&amp;12
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/CreditCards/SchedulePostData/0001-000001&amp;21-12-2012&amp;10&amp;4929000000006&amp;7&amp;12
         /// (pass parameters separated by '&amp;')
         /// </remarks>
         /// <response code="200">Execution Successful</response>
