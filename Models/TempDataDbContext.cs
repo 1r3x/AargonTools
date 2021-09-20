@@ -17,15 +17,14 @@ namespace AargonTools.Models
         {
         }
 
-        public virtual DbSet<ApiMoveLog> ApiMoveLogs { get; set; }
-        public virtual DbSet<ApiMoveSetting> ApiMoveSettings { get; set; }
+       
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-                optionsBuilder.UseSqlServer("Server=DESKTOP-LUO2I0N;Database=AargonToolsR&D;User Id=sa;Password=catchmeifuc@n;");
+                optionsBuilder.UseSqlServer("Server=10.56.71.2;Database=collect;User Id=stephen;Password=Arizona2020!;");
             }
         }
 
@@ -33,14 +32,17 @@ namespace AargonTools.Models
         {
             modelBuilder.HasAnnotation("Relational:Collation", "SQL_Latin1_General_CP1_CI_AS");
 
-            modelBuilder.Entity<ApiMoveLog>(entity =>
+            modelBuilder.Entity<EmployeeTimeLog>(entity =>
             {
-                entity.Property(e => e.DebtorAcc).IsUnicode(false);
-            });
+                entity.HasIndex(e => e.Employee, "x_employee")
+                    .HasFillFactor((byte)90);
 
-            modelBuilder.Entity<ApiMoveSetting>(entity =>
-            {
-                entity.Property(e => e.Company).IsUnicode(false);
+                entity.HasIndex(e => e.LogTime, "x_log_time")
+                    .HasFillFactor((byte)90);
+
+                entity.Property(e => e.Reason).IsUnicode(false);
+
+                entity.Property(e => e.StationName).IsUnicode(false);
             });
 
             OnModelCreatingPartial(modelBuilder);

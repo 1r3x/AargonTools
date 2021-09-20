@@ -46,6 +46,7 @@ namespace AargonTools.Models
         public virtual DbSet<NewPhoneNumber> NewPhoneNumbers { get; set; }
         public virtual DbSet<ApiMoveSetting> ApiMoveSettings { get; set; }
         public virtual DbSet<ApiMoveLog> ApiMoveLogs { get; set; }
+        public virtual DbSet<EmployeeTimeLog> EmployeeTimeLogs { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

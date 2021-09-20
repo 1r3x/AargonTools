@@ -143,7 +143,9 @@ namespace AargonTools
             services.AddScoped<ISetMoveToDispute, SetMoveToDisputeManager>();
             services.AddScoped<ISetPostDateChecks, SetPostDateChecksManager>();
             services.AddScoped<IProcessCcPayment, ProcessCcPaymentManager>();
-
+            //injected HrmData v1.0
+            services.AddScoped<IGetHrm, GetHrmManager>();
+            services.AddScoped<ISetEmployeeTimeLogEntry, SetHrmManager>();
 
             //
             services.AddHttpContextAccessor();
