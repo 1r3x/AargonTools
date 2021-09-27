@@ -1,17 +1,14 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Threading.Tasks;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
-namespace AargonTools.Controllers.TestEnvironment
+namespace AargonTools.Controllers.prod_old
 {
-    [Route("api/Test/[controller]")]
+    [Route("api/prod_old/[controller]")]
     [Produces("application/json")]
     [ApiController]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -23,16 +20,14 @@ namespace AargonTools.Controllers.TestEnvironment
             _getHrmData = getHrm;
         }
 
-
-
         /// <summary>
-        ///  Returns time log for an employee on a specific date(Test Environment).
+        ///  Returns time log for an employee on a specific date(prod_old environment).
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
         /// You can use this end point to check the time log for an employee on a specific date by passing the parametrize emp id ann date. You need a valid token
-        /// for this endpoint . You can pass the param with API client like  https://localhost:44357/api/Test/Hrm/GetEmployeeTimeLog/65&amp;2020-02-22 
+        /// for this endpoint . You can pass the param with API client like  https://localhost:44357/api/prod_old/Hrm/GetEmployeeTimeLog/65&amp;2020-02-22 
         /// and please don't forget about valid token.
         /// </remarks>
         /// <response code="200">Execution Successful</response>
@@ -42,15 +37,17 @@ namespace AargonTools.Controllers.TestEnvironment
         /// 
 
         [ProducesResponseType(typeof(GetEmployeeTimeLogResponse), 200)]
+
         [HttpGet("GetEmployeeTimeLog/{employeeId}&{date}")]
+
         public async Task<IActionResult> GetEmployeeTimeLog(int employeeId, DateTime date)
         {
-            Serilog.Log.Information("Test GetEmployeeTimeLog => GET");
+            Serilog.Log.Information("prod_old GetEmployeeTimeLog => GET");
             try
             {
                 if (ModelState.IsValid)
                 {
-                    var data = await _getHrmData.GetEmployeeTimeLog(employeeId,date,"T");
+                    var data = await _getHrmData.GetEmployeeTimeLog(employeeId,date,"PO");
 
                     return Ok(data);
 

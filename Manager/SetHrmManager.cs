@@ -20,18 +20,20 @@ namespace AargonTools.Manager
 
         private static ExistingDataDbContext _context;
         private static TestEnvironmentDbContext _contextTest;
+        private static ProdOldDbContext _contextProdOld;
         private static ResponseModel _response;
         private static GetTheCompanyFlag _companyFlag;
         private readonly AdoDotNetConnection _adoConnection;
 
         public SetHrmManager(ExistingDataDbContext context, ResponseModel response, GetTheCompanyFlag companyFlag,
-            TestEnvironmentDbContext contextText, AdoDotNetConnection adoConnection)
+            TestEnvironmentDbContext contextText, AdoDotNetConnection adoConnection, ProdOldDbContext contextProdOld)
         {
             _context = context;
             _contextTest = contextText;
             _response = response;
             _companyFlag = companyFlag;
             _adoConnection = adoConnection;
+            _contextProdOld = contextProdOld;
         }
         public async Task<ResponseModel> SetEmployeeTimeLogEntry(int employeeId, string stationName, DateTime dateTime, string reasons, string environment)
         {
@@ -110,6 +112,77 @@ namespace AargonTools.Manager
 
 
                 }
+                else if (environment=="PO")
+                {
+                    if (reasons == "END DAY")
+                    {
+                        var startDayTime = await _contextProdOld.EmployeeTimeLogs.SingleOrDefaultAsync(x => x.Employee == employeeId && x.StationName == stationName
+                             && x.Reason == "START DAY" && x.LogTime.Date == dateTime.Date);
+
+                        var lastLoginDayTime = await _contextProdOld.EmployeeTimeLogs.OrderByDescending(p => p.LogTime).FirstOrDefaultAsync(x => x.Employee == employeeId && x.StationName == stationName
+                            && x.Reason == "LOGIN" && x.LogTime.Date == dateTime.Date);
+
+                        if (lastLoginDayTime == null)
+                        {
+                            var employeeTimeLog = new EmployeeTimeLog()
+                            {
+                                Employee = employeeId,
+                                LogTime = dateTime,
+                                StationName = stationName,
+                                NumMinutes = Convert.ToInt32(dateTime.Subtract(startDayTime.LogTime).TotalMinutes),
+                                Reason = reasons
+                            };
+                            await _contextProdOld.EmployeeTimeLogs.AddAsync(employeeTimeLog);
+                            await _contextProdOld.SaveChangesAsync();
+                        }
+                        else
+                        {
+                            var employeeTimeLog = new EmployeeTimeLog()
+                            {
+                                Employee = employeeId,
+                                LogTime = dateTime,
+                                StationName = stationName,
+                                NumMinutes = Convert.ToInt32(dateTime.Subtract(lastLoginDayTime.LogTime).TotalMinutes),
+                                Reason = reasons
+                            };
+                            await _contextProdOld.EmployeeTimeLogs.AddAsync(employeeTimeLog);
+                            await _contextProdOld.SaveChangesAsync();
+                        }
+
+                    }
+                    else if (reasons == "LUNCH")
+                    {
+                        var startDayTime = await _contextProdOld.EmployeeTimeLogs.SingleOrDefaultAsync(x => x.Employee == employeeId && x.StationName == stationName
+                            && x.Reason == "START DAY" && x.LogTime.Date == dateTime.Date);
+
+
+
+                        var employeeTimeLog = new EmployeeTimeLog()
+                        {
+                            Employee = employeeId,
+                            LogTime = dateTime,
+                            StationName = stationName,
+                            NumMinutes = Convert.ToInt32(dateTime.Subtract(startDayTime.LogTime).TotalMinutes),
+                            Reason = reasons
+                        };
+                        await _contextProdOld.EmployeeTimeLogs.AddAsync(employeeTimeLog);
+                        await _contextProdOld.SaveChangesAsync();
+
+                    }
+                    else
+                    {
+                        var employeeTimeLog = new EmployeeTimeLog()
+                        {
+                            Employee = employeeId,
+                            LogTime = dateTime,
+                            StationName = stationName,
+                            NumMinutes = 0,
+                            Reason = reasons
+                        };
+                        await _contextProdOld.EmployeeTimeLogs.AddAsync(employeeTimeLog);
+                        await _contextProdOld.SaveChangesAsync();
+                    }
+                }
                 else
                 {
                     if (reasons == "END DAY")
@@ -185,7 +258,7 @@ namespace AargonTools.Manager
                 }
 
 
-                return _response.Response("Saved Successfully.");
+                return _response.Response("Time Log Saved Successfully.");
             }
             catch (Exception e)
             {

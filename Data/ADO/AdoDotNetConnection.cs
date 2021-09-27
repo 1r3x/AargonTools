@@ -27,6 +27,14 @@ namespace AargonTools.Data.ADO
                     var da = new SqlDataAdapter(myCommand);
                     da.Fill(objResult);
                 }
+                else if (environment=="PO")
+                {
+                    var connectionString = _configuration.GetConnectionString("ProdOldConnection");
+                    using var myCon = new SqlConnection(connectionString);
+                    using var myCommand = new SqlCommand(cmdText, myCon);
+                    var da = new SqlDataAdapter(myCommand);
+                    da.Fill(objResult);
+                }
                 else
                 {
                     var connectionString = _configuration.GetConnectionString("TestEnvironmentConnection");

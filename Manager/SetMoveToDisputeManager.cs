@@ -13,16 +13,18 @@ namespace AargonTools.Manager
     {
         private static ExistingDataDbContext _context;
         private static TestEnvironmentDbContext _contextTest;
+        private static ProdOldDbContext _contextProdOld;
         private static ResponseModel _response;
         private static GetTheCompanyFlag _companyFlag;
 
         public SetMoveToDisputeManager(ExistingDataDbContext context, ResponseModel response,
-            GetTheCompanyFlag companyFlag, TestEnvironmentDbContext contextTest)
+            GetTheCompanyFlag companyFlag, TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld)
         {
             _context = context;
             _contextTest = contextTest;
             _response = response;
             _companyFlag = companyFlag;
+            _contextProdOld = contextProdOld;
         }
         //amountDisputed doesn't have any implementation 
         public async Task<ResponseModel> SetMoveToDispute(string debtorAcct, decimal amountDisputed, string environment)
@@ -53,6 +55,32 @@ namespace AargonTools.Manager
 
                 return _response.Response(targetAcctInfo.DebtorAcct + " setup employee is out of the range from current move to dispute setup.");
 
+            }
+            else if (environment=="PO")
+            {
+                var targetAcctInfo = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
+                var targetAcctFlag = await _companyFlag.GetStringFlag(debtorAcct, environment);
+                var apiMoveSetting = await _contextProdOld.ApiMoveSettings.SingleOrDefaultAsync(x => x.Company == targetAcctFlag && x.Type == "DISPUTE");//for move to DISPUTE only
+                if (targetAcctInfo.Employee != null && targetAcctInfo.Employee >= apiMoveSetting.FromEmployee && targetAcctInfo.Employee <= apiMoveSetting.ToEmployee)
+                {
+                    var logForMove = new ApiMoveLog()
+                    {
+                        DebtorAcc = debtorAcct,
+                        MoveSetupId = apiMoveSetting.MoveSetupId,
+                        PreviousEmployee = (int)targetAcctInfo.Employee,
+                        NewEmployee = apiMoveSetting.TargetEmployee,
+                        MoveDate = DateTime.Now
+                    };
+
+
+                    targetAcctInfo.Employee = apiMoveSetting.TargetEmployee;
+                    _contextProdOld.Update(targetAcctInfo);
+                    await _contextProdOld.ApiMoveLogs.AddAsync(logForMove);
+                    await _contextProdOld.SaveChangesAsync();
+                    return _response.Response("Successfully Move " + targetAcctInfo.DebtorAcct + "  to dispute.");
+                }
+
+                return _response.Response(targetAcctInfo.DebtorAcct + " setup employee is out of the range from current move to dispute setup.");
             }
             else
             {

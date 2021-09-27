@@ -12,10 +12,12 @@ namespace AargonTools.Manager.GenericManager
     {
         private static ExistingDataDbContext _context;
         private static TestEnvironmentDbContext _contextTest;
-        public GetTheCompanyFlag(ExistingDataDbContext context, TestEnvironmentDbContext contextTest)
+        private static ProdOldDbContext _contextProdOld;
+        public GetTheCompanyFlag(ExistingDataDbContext context, TestEnvironmentDbContext contextTest,ProdOldDbContext contextProdOld)
         {
             _context = context;
             _contextTest = contextTest;
+            _contextProdOld = contextProdOld;
         }
 
         private IQueryable<IDebtorAcctInfo> _debtorTable;
@@ -50,6 +52,37 @@ namespace AargonTools.Manager.GenericManager
                 else if (await _context.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
                 {
                     return _debtorTable = _context.DebtorAcctInfoWs;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (environment=="PO")
+            {
+                if (await _contextProdOld.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _debtorTable = _contextProdOld.DebtorAcctInfos;
+                }
+                else if (await _contextProdOld.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _debtorTable = _contextProdOld.DebtorAcctInfoDs;
+                }
+                else if (await _contextProdOld.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _debtorTable = _contextProdOld.DebtorAcctInfoHs;
+                }
+                else if (await _contextProdOld.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _debtorTable = _contextProdOld.DebtorAcctInfoLs;
+                }
+                else if (await _contextProdOld.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _debtorTable = _contextProdOld.DebtorAcctInfoTs;
+                }
+                else if (await _contextProdOld.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _debtorTable = _contextProdOld.DebtorAcctInfoWs;
                 }
                 else
                 {
@@ -187,6 +220,37 @@ namespace AargonTools.Manager.GenericManager
                     return "T";
                 }
                 else if (await _context.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "W";
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (environment=="PO")
+            {
+                if (await _contextProdOld.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "A";
+                }
+                else if (await _contextProdOld.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "D";
+                }
+                else if (await _contextProdOld.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "H";
+                }
+                else if (await _contextProdOld.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "L";
+                }
+                else if (await _contextProdOld.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "T";
+                }
+                else if (await _contextProdOld.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
                 {
                     return "W";
                 }

@@ -10,13 +10,15 @@ namespace AargonTools.Manager
     {
         private static ExistingDataDbContext _context;
         private static TestEnvironmentDbContext _contextTest;
+        private static ProdOldDbContext _contextProdOld;
         private static ResponseModel _response;
 
-        public AddNotes(ExistingDataDbContext context, ResponseModel response, TestEnvironmentDbContext contextTest)
+        public AddNotes(ExistingDataDbContext context, ResponseModel response, TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld)
         {
             _context = context;
             _response = response;
             _contextTest = contextTest;
+            _contextProdOld = contextProdOld;
         }
 
         async Task<ResponseModel> IAddNotes.CreateNotes(string debtorAccount, string notes,string environment)
@@ -36,6 +38,20 @@ namespace AargonTools.Manager
                     };
                     await _context.NoteMasters.AddAsync(note);
                     await _context.SaveChangesAsync();
+                }
+                else if (environment=="PO")
+                {
+                    var datetimeNow = DateTime.Now;
+                    var note = new NoteMaster()
+                    {
+                        DebtorAcct = debtorAccount,
+                        NoteDate = datetimeNow.AddSeconds(-datetimeNow.Second).AddMilliseconds(-datetimeNow.Millisecond),
+                        Employee = 1994,
+                        ActivityCode = "RA",
+                        NoteText = notes
+                    };
+                    await _contextProdOld.NoteMasters.AddAsync(note);
+                    await _contextProdOld.SaveChangesAsync();
                 }
                 else
                 {

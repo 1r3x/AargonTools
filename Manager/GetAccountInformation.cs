@@ -18,19 +18,21 @@ namespace AargonTools.Manager
     public class GetAccountInformation : IGetAccountInformation
     {
         private static ExistingDataDbContext _context;
-        private static TestEnvironmentDbContext _contextText;
+        private static TestEnvironmentDbContext _contextTest;
+        private static ProdOldDbContext _contextProdOld;
         private static ResponseModel _response;
         private static GetTheCompanyFlag _companyFlag;
         private readonly AdoDotNetConnection _adoConnection;
 
         public GetAccountInformation(ExistingDataDbContext context, ResponseModel response, GetTheCompanyFlag companyFlag,
-            TestEnvironmentDbContext contextText, AdoDotNetConnection adoConnection)
+            TestEnvironmentDbContext contextTest, AdoDotNetConnection adoConnection, ProdOldDbContext contextProdOld)
         {
             _context = context;
-            _contextText = contextText;
+            _contextTest = contextTest;
             _response = response;
             _companyFlag = companyFlag;
             _adoConnection = adoConnection;
+            _contextProdOld = contextProdOld;
         }
         async Task<ResponseModel> IGetAccountInformation.GetAccountBalanceByDebtorAccount(string debtorAcct, string environment)
         {
@@ -91,40 +93,79 @@ namespace AargonTools.Manager
                 }
                 return _response.Response(item);
             }
-
+            else if (environment == "PO")
+            {
+                item.Clear();
+                if (await _contextProdOld.DebtorAcctInfos.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
+                {
+                    item.Add("A");
+                    item.Add("True");
+                }
+                else if (await _contextProdOld.DebtorAcctInfoDs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
+                {
+                    item.Add("D");
+                    item.Add("True");
+                }
+                else if (await _contextProdOld.DebtorAcctInfoHs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
+                {
+                    item.Add("H");
+                    item.Add("True");
+                }
+                else if (await _context.DebtorAcctInfoLs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
+                {
+                    item.Add("L");
+                    item.Add("True");
+                }
+                else if (await _contextProdOld.DebtorAcctInfoTs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
+                {
+                    item.Add("T");
+                    item.Add("True");
+                }
+                else if (await _contextProdOld.DebtorAcctInfoWs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
+                {
+                    item.Add("W");
+                    item.Add("True");
+                }
+                else
+                {
+                    item.Add("Not Found");
+                    return _response.Response(item);
+                }
+                return _response.Response(item);
+            }
             else
             {
-                if (await _contextText.DebtorAcctInfos.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
+                if (await _contextTest.DebtorAcctInfos.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
                 {
                     item.Remove("Not Found");
                     item.Add("A");
                     item.Add("True");
                 }
-                else if (await _contextText.DebtorAcctInfoDs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
+                else if (await _contextTest.DebtorAcctInfoDs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
                 {
                     item.Remove("Not Found");
                     item.Add("D");
                     item.Add("True");
                 }
-                else if (await _contextText.DebtorAcctInfoHs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
+                else if (await _contextTest.DebtorAcctInfoHs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
                 {
                     item.Remove("Not Found");
                     item.Add("H");
                     item.Add("True");
                 }
-                else if (await _contextText.DebtorAcctInfoLs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
+                else if (await _contextTest.DebtorAcctInfoLs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
                 {
                     item.Remove("Not Found");
                     item.Add("L");
                     item.Add("True");
                 }
-                else if (await _contextText.DebtorAcctInfoTs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
+                else if (await _contextTest.DebtorAcctInfoTs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
                 {
                     item.Remove("Not Found");
                     item.Add("T");
                     item.Add("True");
                 }
-                else if (await _contextText.DebtorAcctInfoWs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
+                else if (await _contextTest.DebtorAcctInfoWs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
                 {
                     item.Remove("Not Found");
                     item.Add("W");
@@ -150,9 +191,16 @@ namespace AargonTools.Manager
 
                 return _response.Response(approvalStatus > 0);
             }
+            else if (environment=="PO")
+            {
+                var approvalStatus = await _contextProdOld.CcPayments.CountAsync(x =>
+                    x.DebtorAcct == debtorAcct && x.PaymentDate == DateTime.Now.AddMinutes(-5) && x.ApprovalStatus == "APPROVED");
+
+                return _response.Response(approvalStatus > 0);
+            }
             else
             {
-                var approvalStatus = await _contextText.CcPayments.CountAsync(x =>
+                var approvalStatus = await _contextTest.CcPayments.CountAsync(x =>
                     x.DebtorAcct == debtorAcct && x.PaymentDate == DateTime.Now.AddMinutes(-5) && x.ApprovalStatus == "APPROVED");
 
                 return _response.Response(approvalStatus > 0);
@@ -173,10 +221,20 @@ namespace AargonTools.Manager
                     .Select(@t => new { @t.accountInfo.DebtorAcct, @t.accountInfo.Balance })).ToListAsync();
                 return _response.Response(listOfData);
             }
+            else if (environment=="PO")
+            {
+                var listOfData = await (_companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result
+                    .Join(_contextProdOld.DebtorMultiples, accountInfo => accountInfo.DebtorAcct,
+                        debtorMultiples => debtorMultiples.DebtorAcct2,
+                        (accountInfo, debtorMultiples) => new { accountInfo, debtorMultiples })
+                    .Where(@t => @t.debtorMultiples.DebtorAcct == debtorAcct)
+                    .Select(@t => new { @t.accountInfo.DebtorAcct, @t.accountInfo.Balance })).ToListAsync();
+                return _response.Response(listOfData);
+            }
             else
             {
                 var listOfData = await (_companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result
-                    .Join(_contextText.DebtorMultiples, accountInfo => accountInfo.DebtorAcct,
+                    .Join(_contextTest.DebtorMultiples, accountInfo => accountInfo.DebtorAcct,
                         debtorMultiples => debtorMultiples.DebtorAcct2,
                         (accountInfo, debtorMultiples) => new { accountInfo, debtorMultiples })
                     .Where(@t => @t.debtorMultiples.DebtorAcct == debtorAcct)
@@ -213,6 +271,30 @@ namespace AargonTools.Manager
                    }).ToListAsync();
                 return _response.Response(data);
             }
+            else if (environment=="PO")
+            {
+                var data = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment)
+                    .Result.Where(a => a.DebtorAcct == debtorAcct)
+                    .Select(a => new
+                    {
+                        a.DebtorAcct,
+                        a.SuppliedAcct,
+                        AcountStatus =
+                            a.AcctStatus == Convert.ToString('A') ? "ACTIVE" :
+                            a.AcctStatus == Convert.ToString('M') ? "ACTIVE" : "INACTIVE",
+                        a.Balance,
+                        a.MailReturn,
+                        a.Employee,
+                        a.DateOfService,
+                        a.DatePlaced,
+                        a.LastPaymentAmt,
+                        TotalPayments = a.PaymentAmtLife,
+                        LastPayDate = a.LastPaymentAmt != null
+                            ? Convert.ToString(a.BeginAgeDate, CultureInfo.InvariantCulture)
+                            : null
+                    }).ToListAsync();
+                return _response.Response(data);
+            }
             else
             {
                 var data = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment)
@@ -245,6 +327,26 @@ namespace AargonTools.Manager
         {
             //P for prod.
             if (environment == "P")
+            {
+                var flag = await _companyFlag.GetStringFlag(debtorAcct, environment);
+
+                var rowAdo = _adoConnection.GetData("SELECT * FROM func_sif('" + debtorAcct + "', '" + flag + "')", environment);
+                var listOfItems = new List<SIFViewModel>();
+                for (var i = 0; i < rowAdo.Rows.Count; i++)
+                {
+                    var itemData = new SIFViewModel
+                    {
+                        AccountBalance = Convert.ToDecimal(rowAdo.Rows[i]["account_balance"]),
+                        SifDiscount = Convert.ToDecimal(rowAdo.Rows[i]["sif_discount"]),
+                        SifPayNow = Convert.ToDecimal(rowAdo.Rows[i]["sif_pay_now"]),
+                        SifPct = Convert.ToDecimal(rowAdo.Rows[i]["sif_pct"])
+                    };
+                    listOfItems.Add(itemData);
+                }
+
+                return _response.Response(listOfItems);
+            }
+            else if (environment=="PO")
             {
                 var flag = await _companyFlag.GetStringFlag(debtorAcct, environment);
 

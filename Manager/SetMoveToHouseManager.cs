@@ -14,16 +14,18 @@ namespace AargonTools.Manager
 
         private static ExistingDataDbContext _context;
         private static TestEnvironmentDbContext _contextTest;
+        private static ProdOldDbContext _contextProdOld;
         private static ResponseModel _response;
         private static GetTheCompanyFlag _companyFlag;
 
         public SetMoveToHouseManager(ExistingDataDbContext context, ResponseModel response,
-            GetTheCompanyFlag companyFlag, TestEnvironmentDbContext contextTest)
+            GetTheCompanyFlag companyFlag, TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld)
         {
             _context = context;
             _contextTest = contextTest;
             _response = response;
             _companyFlag = companyFlag;
+            _contextProdOld = contextProdOld;
         }
 
         public async Task<ResponseModel> SetMoveToHouse(string debtorAcct, string environment)
@@ -49,6 +51,33 @@ namespace AargonTools.Manager
                     _context.Update(targetAcctInfo);
                     await _context.ApiMoveLogs.AddAsync(logForMove);
                     await _context.SaveChangesAsync();
+                    return _response.Response("Successfully Move " + targetAcctInfo.DebtorAcct + "  to House.");
+                }
+
+                return _response.Response(targetAcctInfo.DebtorAcct + " setup employee is out of the range from current move to house setup.");
+
+            }
+            else if (environment=="PO")
+            {
+                var targetAcctInfo = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
+                var targetAcctFlag = await _companyFlag.GetStringFlag(debtorAcct, environment);
+                var apiMoveSetting = await _contextProdOld.ApiMoveSettings.SingleOrDefaultAsync(x => x.Company == targetAcctFlag && x.Type == "HOUSE");//for move to house only
+                if (targetAcctInfo.Employee != null && targetAcctInfo.Employee >= apiMoveSetting.FromEmployee && targetAcctInfo.Employee <= apiMoveSetting.ToEmployee)
+                {
+                    var logForMove = new ApiMoveLog()
+                    {
+                        DebtorAcc = debtorAcct,
+                        MoveSetupId = apiMoveSetting.MoveSetupId,
+                        PreviousEmployee = (int)targetAcctInfo.Employee,
+                        NewEmployee = apiMoveSetting.TargetEmployee,
+                        MoveDate = DateTime.Now
+                    };
+
+
+                    targetAcctInfo.Employee = apiMoveSetting.TargetEmployee;
+                    _contextProdOld.Update(targetAcctInfo);
+                    await _contextProdOld.ApiMoveLogs.AddAsync(logForMove);
+                    await _contextProdOld.SaveChangesAsync();
                     return _response.Response("Successfully Move " + targetAcctInfo.DebtorAcct + "  to House.");
                 }
 
