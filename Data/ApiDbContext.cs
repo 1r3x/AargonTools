@@ -12,6 +12,7 @@ namespace AargonTools.Data
         public virtual DbSet<MoveAccountApiLogs> MoveAccountApiLogs { get;set;}
         public virtual DbSet<ApiMoveSetting> ApiMoveSettings { get; set; }
         public virtual DbSet<ApiMoveLog> ApiMoveLogs { get; set; }
+        public virtual DbSet<InteractResult> InteractResults { get; set; }
 
         public ApiDbContext(DbContextOptions<ApiDbContext> options)
             : base(options)

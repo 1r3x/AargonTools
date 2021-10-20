@@ -28,7 +28,7 @@ namespace AargonTools.Controllers.prod_old
         /// <remarks>
         /// **Details**:
         /// You can use this end point to set the time log for an employee on a specific date by passing the parameters. You need a valid token
-        /// for this endpoint . You can pass the param with API client like  https://localhost:44357/api/SetHrm/prod_old/GetEmployeeTimeLog/65&amp;Station07&amp;2020-02-22 07:55:23.300&amp;Resons 
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/prod_old/SetHrm/SetEmployeeTimeLog/65&amp;Station07&amp;2020-02-22 07:55:23&amp;Reasons 
         /// and please don't forget about valid token.
         /// </remarks>
         /// <response code="200">Execution Successful</response>

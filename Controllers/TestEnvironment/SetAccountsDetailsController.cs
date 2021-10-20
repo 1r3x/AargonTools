@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using AargonTools.Data.ExamplesForDocumentation;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
+using AargonTools.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,9 +24,12 @@ namespace AargonTools.Controllers.TestEnvironment
         private readonly ISetMoveToHouse _setMoveToHouse;
         private readonly ISetMoveToDispute _setMoveToDispute;
         private readonly ISetPostDateChecks _setPostDateChecks;
+        private readonly ISetMoveToQueue _setMoveToQueue;
+        private readonly ISetInteractResults _setInteractionResults;
 
         public SetAccountsDetailsController(IAddBadNumbers contextBadNumbers, ISetMoveAccount contextSetMoveAccount, IAddNotes contextAddNotes
-            , ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute, ISetPostDateChecks setPostDateChecks)
+            , ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute, ISetPostDateChecks setPostDateChecks
+            , ISetMoveToQueue setMoveToQueue, ISetInteractResults setInteractionResults)
         {
             _contextBadNumbers = contextBadNumbers;
             _contextSetMoveAccount = contextSetMoveAccount;
@@ -35,6 +39,8 @@ namespace AargonTools.Controllers.TestEnvironment
             _setMoveToHouse = setMoveToHouse;
             _setMoveToDispute = setMoveToDispute;
             _setPostDateChecks = setPostDateChecks;
+            _setMoveToQueue = setMoveToQueue;
+            _setInteractionResults = setInteractionResults;
         }
 
         /// <summary>
@@ -45,7 +51,7 @@ namespace AargonTools.Controllers.TestEnvironment
         /// **Details**:
         /// By using this endpoint you can add a bad number , and the bad number will remove from debtor account and add a notes about the action.
         /// And please don't forget about a valid token.
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetBadNumbers/0001-000001&amp;7025052773
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/Test/SetAccountsDetails/SetBadNumbers/0001-000001&amp;7025052773
         /// (pass both parameter separated by '&amp;')
         /// </remarks>
         /// <response code="200">Successful Request.</response>
@@ -349,5 +355,86 @@ namespace AargonTools.Controllers.TestEnvironment
             return new JsonResult("Something went wrong") { StatusCode = 500 };
         }
 
+
+
+        /// <summary>
+        ///  This endpoint can set move to queue.(Test Environment)
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can set move to house and make a movement log for a debtor acccount.
+        /// And please don't forget about a valid token.
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/Test/SetAccountsDetails/SetMoveToQueue/0001-000001&amp;'TYPE'
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [ProducesResponseType(typeof(SetMoveToQueueResponse), 200)]
+        [HttpPost("SetMoveToQueue/{debtorAcct}&{type}")]
+        public async Task<IActionResult> SetMoveToQueue(string debtorAcct,string type)
+        {
+            Serilog.Log.Information(" Test SetMoveToQueue => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = await _setMoveToQueue.SetMoveToQueue(debtorAcct,type,"T");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
+
+
+
+        /// <summary>
+        ///  This endpoint can set Interaction Results.(Test Environment)
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can set set Interaction Results.
+        /// And please don't forget about a valid token.
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        /// 
+        [ProducesResponseType(typeof(SetInteractionResultsResponse), 200)]
+        [HttpPost]
+        [Route("SetInteractionResults")]
+        public async Task<IActionResult> SetInteractionResults([FromBody] InteractResult interactResultModel)
+        {
+            Serilog.Log.Information("SetInteractionResults => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = await _setInteractionResults.SetInteractResults(interactResultModel, "T");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
     }
 }

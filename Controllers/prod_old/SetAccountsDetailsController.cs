@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
 using AargonTools.Data.ExamplesForDocumentation;
+using AargonTools.Data.ExamplesForDocumentation.Request;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
+using AargonTools.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,9 +25,12 @@ namespace AargonTools.Controllers.prod_old
         private readonly ISetMoveToHouse _setMoveToHouse;
         private readonly ISetMoveToDispute _setMoveToDispute;
         private readonly ISetPostDateChecks _setPostDateChecks;
+        private readonly ISetMoveToQueue _setMoveToQueue;
+        private readonly ISetInteractResults _setInteractionResults;
 
         public SetAccountsDetailsController(IAddBadNumbers contextBadNumbers, ISetMoveAccount contextSetMoveAccount, IAddNotes contextAddNotes
-            , ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute, ISetPostDateChecks setPostDateChecks)
+            , ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute, ISetPostDateChecks setPostDateChecks
+            , ISetMoveToQueue setMoveToQueue, ISetInteractResults setInteractionResults)
         {
             _contextBadNumbers = contextBadNumbers;
             _contextSetMoveAccount = contextSetMoveAccount;
@@ -35,8 +40,9 @@ namespace AargonTools.Controllers.prod_old
             _setMoveToHouse = setMoveToHouse;
             _setMoveToDispute = setMoveToDispute;
             _setPostDateChecks = setPostDateChecks;
+            _setMoveToQueue = setMoveToQueue;
+            _setInteractionResults = setInteractionResults;
         }
-
         /// <summary>
         ///  This endpoint can set a bad number(prod_old environment).
         /// </summary>
@@ -326,7 +332,7 @@ namespace AargonTools.Controllers.prod_old
         /// By using this endpoint you can set post date checks and take necessary actions.
         /// And please don't forget about a valid token.
         ///You can pass the parameter with API client like https://g14.aargontools.com/api/prod_old/SetAccountsDetails/SetPostDateChecks/0001-000001&amp;12-20-2021&amp;10&amp;102&amp;9&amp;10&amp;Y
-        /// (pass both parameter separated by '&amp;')
+        /// (pass all the parameters separated by '&amp;')
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -358,5 +364,84 @@ namespace AargonTools.Controllers.prod_old
             return new JsonResult("Something went wrong") { StatusCode = 500 };
         }
 
+
+        /// <summary>
+        ///  This endpoint can set move to queue.(prod_old)
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can set move to house and make a movement log for a debtor acccount.
+        /// And please don't forget about a valid token.
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/prod_old/SetAccountsDetails/SetMoveToQueue/0001-000001&amp;'TYPE'
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [ProducesResponseType(typeof(SetMoveToQueueResponse), 200)]
+        [HttpPost("SetMoveToQueue/{debtorAcct}&{type}")]
+        public async Task<IActionResult> SetMoveToQueue(string debtorAcct, string type)
+        {
+            Serilog.Log.Information("prod_old SetMoveToQueue => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = await _setMoveToQueue.SetMoveToQueue(debtorAcct, type, "PO");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
+
+        /// <summary>
+        ///  This endpoint can set Interaction Results.(prod_old)
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can set set Interaction Results.
+        /// And please don't forget about a valid token.
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        /// 
+        [ProducesResponseType(typeof(SetInteractionResultsResponse), 200)]
+        [HttpPost]
+        [Route("SetInteractionResults")]
+        
+        public async Task<IActionResult> SetInteractionResults([FromBody] InteractResult interactResultModel)
+        {
+            Serilog.Log.Information("SetInteractionResults => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = await _setInteractionResults.SetInteractResults(interactResultModel, "PO");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
     }
 }

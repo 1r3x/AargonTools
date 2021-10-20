@@ -30,7 +30,7 @@ namespace AargonTools.Controllers
         /// <remarks>
         /// **Details**:
         /// You can use this end point to check the time log for an employee on a specific date by passing the parametrize emp id ann date. You need a valid token
-        /// for this endpoint . You can pass the param with API client like  https://localhost:44357/api/Hrm/GetEmployeeTimeLog/65&amp;2020-02-22 
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/Hrm/GetEmployeeTimeLog/65&amp;2020-02-22 
         /// and please don't forget about valid token.
         /// </remarks>
         /// <response code="200">Execution Successful</response>

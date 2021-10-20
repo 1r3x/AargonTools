@@ -14,6 +14,7 @@ using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
 using AargonTools.Manager.GenericManager;
 using AargonTools.Models;
+using AargonTools.ViewModel;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
@@ -32,15 +33,20 @@ namespace AargonTools.Manager
         private static ResponseModel _response;
         private readonly AdoDotNetConnection _adoConnection;
         private readonly IUserService _userService;
+        private readonly ISetCCPayment _setCcPayment;//fro ccPayment Insert
+        private readonly IAddNotes _addNotes;//fro notes Insert
 
         public ProcessCcPaymentManager(ExistingDataDbContext context, ResponseModel response,
-            TestEnvironmentDbContext contextTest, IAddNotes addNotes, AdoDotNetConnection adoConnection, IUserService userService)
+            TestEnvironmentDbContext contextTest, IAddNotes addNotes, AdoDotNetConnection adoConnection, IUserService userService,
+            ISetCCPayment setCcPayment)
         {
             _context = context;
             _response = response;
             _contextTest = contextTest;
             _adoConnection = adoConnection;
             _userService = userService;
+            _setCcPayment = setCcPayment;
+            _addNotes = addNotes;
         }
         //models
         private class SaveCard
@@ -294,9 +300,10 @@ namespace AargonTools.Manager
                                                                   "'Y'," +
                                                                   "NULL," +
                                                                   "NULL," +
+
                                                                   "1," +//_userService.GetLoginUserName() + "," +//user name from api but no implementation default 1 
 
-                                                                  "1," +//_userService.GetLoginUserName() + "," +// no implementation default 1 
+                                                                 "'"+debtorData.Rows[0]["employee"] + "'," +//the queue set from the debtor account's employee 
                                                                   statusCode +
                                                                   "'Y'," +
                                                                   "NULL," +
@@ -339,6 +346,7 @@ namespace AargonTools.Manager
                     "WHERE client_acct = '" + debtorAccount.Substring(0, 4) + "'"
                     , environment);
 
+               
 
 
                 var insertNotes = _adoConnection.GetData(
@@ -346,9 +354,9 @@ namespace AargonTools.Manager
                     "(debtor_acct,note_date,employee,activity_code,note_text)" +
                     "SELECT '" + debtorAccount + "'," +
                     "    CONVERT(DATETIME,CONVERT(VARCHAR,GETDATE(),101) + ' ' + SUBSTRING(CONVERT(VARCHAR,GETDATE(),108),1,5))," +
-                    1 +//this is static user id 
-                    "    'PM'," +
-                    "    'AUTOMATED AMCP DIRECT PAYMENT OF " + paymentAmount + "'"
+                    "1," +//this is static user id 
+                    "'PM'," +
+                    "'AUTOMATED AMCP DIRECT PAYMENT OF " + paymentAmount + "'"
                     , environment);
 
 
@@ -377,25 +385,59 @@ namespace AargonTools.Manager
         }
 
 
-        public async Task<ResponseModel> ProcessCcPayment(string debtorAcc, string ccNumber, string expiredDate, string cvv, int numberOfPayments, decimal amount, string environment)
+        public async Task<ResponseModel> ProcessCcPayment(ProcessCcPaymentRequestModel request, string environment)
         {
             //todo (if the card already tokenize) 
             //todo
 
-            var tokenizeDataJsonResult = TokenizeCc(ccNumber, expiredDate, environment).Result;
+            var tokenizeDataJsonResult = TokenizeCc(request.ccNumber, request.expiredDate, environment).Result;
             var tokenizeCObj = JsonConvert.DeserializeObject<SaveCard>(tokenizeDataJsonResult.Data.ToString() ?? string.Empty);
-            var processTransactionJsonResult = ProcessingTransaction(tokenizeCObj.Key, amount, environment).Result.Data;
-            if (numberOfPayments > 1)
+            var processTransactionJsonResult = ProcessingTransaction(tokenizeCObj.Key, request.amount, environment).Result.Data;
+
+
+            //var responseResults = JsonConvert.DeserializeObject<SetProcessCCResponse>(processTransactionJsonResult.ToString() ?? string.Empty);
+            
+            
+            //cc paymnet insert 
+            await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
             {
-                var spResult = await SchedulePostData(debtorAcc, DateTime.Now, amount, ccNumber, numberOfPayments, expiredDate.Substring(0, 2),
-                    expiredDate.Substring(2, 2), environment);
+                debtorAcc = request.debtorAcc,
+                approvalCode = "",
+                approvalStatus = "APPROVED",
+                chargeTotal = request.amount,
+                company = "AARGON AGENCY",
+                sif = "Y",
+                paymentDate = DateTime.Now,
+                refNo = "USAEPAY2",
+                orderNumber = "",
+                userId = "WEB",
+            }, environment);
+
+            if (request.numberOfPayments > 1)
+            {
+                var spResult = await SchedulePostData(request.debtorAcc, DateTime.Now, request.amount, request.ccNumber, request.numberOfPayments, request.expiredDate.Substring(0, 2),
+                    request.expiredDate.Substring(2, 2), environment);
             }
 
             if (processTransactionJsonResult.ToString() != "Oops something went wrong")
             {
                 try
                 {
-                    await PostPayment(debtorAcc, amount, DateAndTime.Now, "", Convert.ToDecimal(0), environment);
+                    await PostPayment(request.debtorAcc, request.amount, DateAndTime.Now, "", Convert.ToDecimal(0), environment);
+                    var debtorData = _adoConnection.GetData(
+                        "INSERT INTO note_master " +
+                        "( debtor_acct," +
+                        " note_date," +
+                        "employee," +
+                        "note_text," +
+                        "activity_code)" +
+                        //values
+                        "VALUES('"+request.debtorAcc+"'," +
+                        "GETDATE()," +
+                        "0," +
+                        "'API PAYMENT "+ "Successful"+ ": $" + request.amount + " - " + "auth" + "; CC - ' + UPPER('" +tokenizeCObj.Type + "') + ' - XXXX-" + request.ccNumber.Substring(request.ccNumber.Length-4) + "'," +
+                        "'PM')"
+                        , environment);
                 }
                 catch (Exception e)
                 {
@@ -405,7 +447,7 @@ namespace AargonTools.Manager
 
             }
 
-          
+
 
             return _response.Response(processTransactionJsonResult);
         }

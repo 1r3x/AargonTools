@@ -130,7 +130,7 @@ namespace AargonTools.Controllers.prod_old
         /// <remarks>
         /// **Details**:
         /// You can use this end point to check any recent approval of any debtor account by passing the parametrize debtor account no. You need a valid token
-        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/prod_old/api/AccountInformation/GetRecentApproval/1850-190058
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/prod_old/AccountInformation/GetRecentApproval/1850-190058
         /// and please don't forget about valid token.
         /// </remarks>
         /// <response code="200">Execution Successful</response>
@@ -158,13 +158,13 @@ namespace AargonTools.Controllers.prod_old
 
         }
         /// <summary>
-        ///  Returns the Multiples account and its balance of debtor account (Test Environment).
+        ///  Returns the Multiples account and its balance of debtor account (prod_old Environment).
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
         /// You can use this end point to check Multiples account and its balance of any debtor account by passing the parametrize debtor account no. You need a valid token
-        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/prod_old/api/AccountInformation/GetMultiples/1850-190058
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/prod_old/AccountInformation/GetMultiples/1850-190058
         /// and please don't forget about valid token.
         /// </remarks>
         /// <response code="200">Execution Successful</response>
@@ -197,7 +197,7 @@ namespace AargonTools.Controllers.prod_old
         /// <remarks>
         /// **Details**:
         /// You can use this end point to check Account Info of any debtor account by passing the parametrize debtor account no. You need a valid token
-        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/prod_old/api/AccountInformation/GetAccountInfo/1850-190058
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/prod_old/AccountInformation/GetAccountInfo/1850-190058
         /// and please don't forget about valid token.
         /// </remarks>
         /// <response code="200">Execution Successful</response>
@@ -231,7 +231,7 @@ namespace AargonTools.Controllers.prod_old
         /// <remarks>
         /// **Details**:
         /// You can use this end point to check SIF of any debtor account by passing the parametrize debtor account no. You need a valid token
-        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/prod_old/api/AccountInformation/GetSIF/0001-000001
+        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/prod_old/AccountInformation/GetSIF/0001-000001
         /// and please don't forget about valid token.
         /// </remarks>
         /// <response code="200">Execution Successful</response>

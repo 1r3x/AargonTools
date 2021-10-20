@@ -146,13 +146,16 @@ namespace AargonTools
             services.AddScoped<ISetMoveToDispute, SetMoveToDisputeManager>();
             services.AddScoped<ISetPostDateChecks, SetPostDateChecksManager>();
             services.AddScoped<IProcessCcPayment, ProcessCcPaymentManager>();
+            services.AddScoped<ISetCCPayment, SetCCPaymentManager>();
             //injected HrmData v1.0
             services.AddScoped<IGetHrm, GetHrmManager>();
             services.AddScoped<ISetEmployeeTimeLogEntry, SetHrmManager>();
+            services.AddScoped<ISetMoveToQueue, SetMoveToQueueManager>();
 
             //
             services.AddHttpContextAccessor();
             services.AddTransient<IUserService, UserService>();
+            services.AddTransient<ISetInteractResults, InteractResultsManager>();
 
         }
 
