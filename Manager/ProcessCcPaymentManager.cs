@@ -208,6 +208,33 @@ namespace AargonTools.Manager
         }
 
 
+        //for executing the sp_larry_cc_postdate
+        public async Task<ResponseModel> SchedulePostDataV2(SchedulePostDateRequest request, string environment)
+        {
+            var rawAdo = _adoConnection.GetData("DECLARE @return_value int EXEC " +
+                                                "@return_value = [dbo].[sp_larry_cc_postdate]" +
+                                                "@Debtor_Acct = N'" + request.debtorAcct + "'," +
+                                                "@Post_Date = N'" + request.postDate + "'," +
+                                                "@Amount = " + request.amount + "," +
+                                                "@Card_Num = N'" + request.cardNumber + "'," +
+                                                "@Exp_Month = N'" + request.expMonth + "'," +
+                                                "@Exp_Year = N'" + request.expYear + "'," +
+                                                "@Total_PD = " + request.numberOfPayments +
+                                                "SELECT  'Return Value' = @return_value;", environment);
+            await Task.CompletedTask;
+
+            if (Convert.ToDecimal(rawAdo.Rows[0]["Return Value"]) == 0)
+            {
+                return _response.Response(true,true,"Successfully Set Post Date Checks");
+            }
+            else
+            {
+                return _response.Response(true,false,"Oops Something went wrong.");
+            }
+
+
+        }
+
         //post payment
         private async Task<ResponseModel> PostPayment(string debtorAccount, decimal paymentAmount, DateTime tranDate, string tranDescription, decimal feePct, string environment)
         {
@@ -389,67 +416,76 @@ namespace AargonTools.Manager
         {
             //todo (if the card already tokenize) 
             //todo
-
-            var tokenizeDataJsonResult = TokenizeCc(request.ccNumber, request.expiredDate, environment).Result;
-            var tokenizeCObj = JsonConvert.DeserializeObject<SaveCard>(tokenizeDataJsonResult.Data.ToString() ?? string.Empty);
-            var processTransactionJsonResult = ProcessingTransaction(tokenizeCObj.Key, request.amount, environment).Result.Data;
-
-
-            //var responseResults = JsonConvert.DeserializeObject<SetProcessCCResponse>(processTransactionJsonResult.ToString() ?? string.Empty);
-            
-            
-            //cc paymnet insert 
-            await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
+            try
             {
-                debtorAcc = request.debtorAcc,
-                approvalCode = "",
-                approvalStatus = "APPROVED",
-                chargeTotal = request.amount,
-                company = "AARGON AGENCY",
-                sif = "Y",
-                paymentDate = DateTime.Now,
-                refNo = "USAEPAY2",
-                orderNumber = "",
-                userId = "WEB",
-            }, environment);
+                var tokenizeDataJsonResult = TokenizeCc(request.ccNumber, request.expiredDate, environment).Result;
+                var tokenizeCObj = JsonConvert.DeserializeObject<SaveCard>(tokenizeDataJsonResult.Data.ToString() ?? string.Empty);
+                var processTransactionJsonResult = ProcessingTransaction(tokenizeCObj.Key, request.amount, environment).Result.Data;
 
-            if (request.numberOfPayments > 1)
+
+                //var responseResults = JsonConvert.DeserializeObject<SetProcessCCResponse>(processTransactionJsonResult.ToString() ?? string.Empty);
+
+
+                //cc paymnet insert 
+                await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
+                {
+                    debtorAcc = request.debtorAcc,
+                    approvalCode = "",
+                    approvalStatus = "APPROVED",
+                    chargeTotal = request.amount,
+                    company = "AARGON AGENCY",
+                    sif = "Y",
+                    paymentDate = DateTime.Now,
+                    refNo = "USAEPAY2",
+                    orderNumber = "",
+                    userId = "WEB",
+                }, environment);
+
+                if (request.numberOfPayments > 1)
+                {
+                    var spResult = await SchedulePostData(request.debtorAcc, DateTime.Now, request.amount, request.ccNumber, request.numberOfPayments, request.expiredDate.Substring(0, 2),
+                        request.expiredDate.Substring(2, 2), environment);
+                }
+
+                if (processTransactionJsonResult.ToString() != "Oops something went wrong")
+                {
+                    try
+                    {
+                        await PostPayment(request.debtorAcc, request.amount, DateAndTime.Now, "", Convert.ToDecimal(0), environment);
+                        var debtorData = _adoConnection.GetData(
+                            "INSERT INTO note_master " +
+                            "( debtor_acct," +
+                            " note_date," +
+                            "employee," +
+                            "note_text," +
+                            "activity_code)" +
+                            //values
+                            "VALUES('" + request.debtorAcc + "'," +
+                            "GETDATE()," +
+                            "0," +
+                            "'API PAYMENT " + "Successful" + ": $" + request.amount + " - " + "auth" + "; CC - ' + UPPER('" + tokenizeCObj.Type + "') + ' - XXXX-" + request.ccNumber.Substring(request.ccNumber.Length - 4) + "'," +
+                            "'PM')"
+                            , environment);
+                    }
+                    catch (Exception e)
+                    {
+                        return _response.Response(true, false, e);
+                    }
+                    return _response.Response(true, true, processTransactionJsonResult);
+
+                }
+
+            }
+            catch (Exception e)
             {
-                var spResult = await SchedulePostData(request.debtorAcc, DateTime.Now, request.amount, request.ccNumber, request.numberOfPayments, request.expiredDate.Substring(0, 2),
-                    request.expiredDate.Substring(2, 2), environment);
+                return _response.Response(true,false,e);
+                throw;
             }
 
-            if (processTransactionJsonResult.ToString() != "Oops something went wrong")
-            {
-                try
-                {
-                    await PostPayment(request.debtorAcc, request.amount, DateAndTime.Now, "", Convert.ToDecimal(0), environment);
-                    var debtorData = _adoConnection.GetData(
-                        "INSERT INTO note_master " +
-                        "( debtor_acct," +
-                        " note_date," +
-                        "employee," +
-                        "note_text," +
-                        "activity_code)" +
-                        //values
-                        "VALUES('"+request.debtorAcc+"'," +
-                        "GETDATE()," +
-                        "0," +
-                        "'API PAYMENT "+ "Successful"+ ": $" + request.amount + " - " + "auth" + "; CC - ' + UPPER('" +tokenizeCObj.Type + "') + ' - XXXX-" + request.ccNumber.Substring(request.ccNumber.Length-4) + "'," +
-                        "'PM')"
-                        , environment);
-                }
-                catch (Exception e)
-                {
-                    return _response.Response(e);
-                }
-                return _response.Response(processTransactionJsonResult);
-
-            }
+            return _response.Response(true, false, "Oops something went wrong");
 
 
 
-            return _response.Response(processTransactionJsonResult);
         }
     }
 }

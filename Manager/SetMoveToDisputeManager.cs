@@ -50,10 +50,10 @@ namespace AargonTools.Manager
                     _context.Update(targetAcctInfo);
                     await _context.ApiMoveLogs.AddAsync(logForMove);
                     await _context.SaveChangesAsync();
-                    return _response.Response("Successfully Move " + targetAcctInfo.DebtorAcct + "  to dispute.");
+                    return _response.Response(true, true, "Successfully Move " + targetAcctInfo.DebtorAcct + "  to dispute.");
                 }
 
-                return _response.Response(targetAcctInfo.DebtorAcct + " setup employee is out of the range from current move to dispute setup.");
+                return _response.Response(true, false, targetAcctInfo.DebtorAcct + " setup employee is out of the range from current move to dispute setup.");
 
             }
             else if (environment=="PO")
@@ -77,10 +77,10 @@ namespace AargonTools.Manager
                     _contextProdOld.Update(targetAcctInfo);
                     await _contextProdOld.ApiMoveLogs.AddAsync(logForMove);
                     await _contextProdOld.SaveChangesAsync();
-                    return _response.Response("Successfully Move " + targetAcctInfo.DebtorAcct + "  to dispute.");
+                    return _response.Response(true, true, "Successfully Move " + targetAcctInfo.DebtorAcct + "  to dispute.");
                 }
 
-                return _response.Response(targetAcctInfo.DebtorAcct + " setup employee is out of the range from current move to dispute setup.");
+                return _response.Response(true, false, targetAcctInfo.DebtorAcct + " setup employee is out of the range from current move to dispute setup.");
             }
             else
             {
@@ -102,10 +102,10 @@ namespace AargonTools.Manager
                     _contextTest.Update(targetAcctInfo);
                     await _contextTest.ApiMoveLogs.AddAsync(logForMove);
                     await _contextTest.SaveChangesAsync();
-                    return _response.Response("Successfully Move " + targetAcctInfo.DebtorAcct + "  to dispute.");
+                    return _response.Response(true, true, "Successfully Move " + targetAcctInfo.DebtorAcct + "  to dispute.");
                 }
 
-                return _response.Response(targetAcctInfo.DebtorAcct + " setup employee is out of the range from current dispute to Dispute setup.");
+                return _response.Response(true, false, targetAcctInfo.DebtorAcct + " setup employee is out of the range from current dispute to Dispute setup.");
             }
         }
     }

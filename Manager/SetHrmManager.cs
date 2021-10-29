@@ -258,11 +258,11 @@ namespace AargonTools.Manager
                 }
 
 
-                return _response.Response("Time Log Saved Successfully.");
+                return _response.Response(true,true,"Time Log Saved Successfully.");
             }
             catch (Exception e)
             {
-                return _response.Response(e);
+                return _response.Response(true,false,e);
             }
         }
     }

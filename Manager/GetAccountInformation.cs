@@ -38,7 +38,7 @@ namespace AargonTools.Manager
         {
 
             var data = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.Balance).SingleOrDefaultAsync();
-            return _response.Response(data);
+            return _response.Response(true,data);
         }
 
         ResponseModel IGetAccountInformation.CheckAccountValidityByDebtorAccount(string debtorAcct, string environment)

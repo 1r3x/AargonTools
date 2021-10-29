@@ -53,10 +53,10 @@ namespace AargonTools.Manager
                     await _context.ApiMoveLogs.AddAsync(logForMove);
                     await _context.SaveChangesAsync();
                     await _addNotes.CreateNotes(debtorAcct, "PUT a custom Notes", environment);
-                    return _response.Response("Successfully Move " + targetAcctInfo.DebtorAcct + "  to House.");
+                    return _response.Response(true, true, "Successfully Move " + targetAcctInfo.DebtorAcct + "  to House.");
                 }
 
-                return _response.Response(targetAcctInfo.DebtorAcct + " setup employee is out of the range from current move to house setup.");
+                return _response.Response(true, false, targetAcctInfo.DebtorAcct + " setup employee is out of the range from current move to house setup.");
 
             }
             else if (environment == "PO")
@@ -81,10 +81,10 @@ namespace AargonTools.Manager
                     await _contextProdOld.ApiMoveLogs.AddAsync(logForMove);
                     await _contextProdOld.SaveChangesAsync();
                     await _addNotes.CreateNotes(debtorAcct, "PUT a custom Notes", environment);
-                    return _response.Response("Successfully Move " + targetAcctInfo.DebtorAcct + "  to House.");
+                    return _response.Response(true,true,"Successfully Move " + targetAcctInfo.DebtorAcct + "  to House.");
                 }
 
-                return _response.Response(targetAcctInfo.DebtorAcct + " setup employee is out of the range from current move to house setup.");
+                return _response.Response(true, false, targetAcctInfo.DebtorAcct + " setup employee is out of the range from current move to house setup.");
 
             }
             else
@@ -108,10 +108,10 @@ namespace AargonTools.Manager
                     await _contextTest.ApiMoveLogs.AddAsync(logForMove);
                     await _contextTest.SaveChangesAsync();
                     await _addNotes.CreateNotes(debtorAcct, "PUT a custom Notes", environment);
-                    return _response.Response("Successfully Move " + targetAcctInfo.DebtorAcct + "  to House.");
+                    return _response.Response(true, true, "Successfully Move " + targetAcctInfo.DebtorAcct + "  to House.");
                 }
 
-                return _response.Response(targetAcctInfo.DebtorAcct + " setup employee is out of the range from current move to house setup.");
+                return _response.Response(true, false, targetAcctInfo.DebtorAcct + " setup employee is out of the range from current move to house setup.");
             }
         }
     }

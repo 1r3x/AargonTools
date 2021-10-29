@@ -151,6 +151,7 @@ namespace AargonTools
             services.AddScoped<IGetHrm, GetHrmManager>();
             services.AddScoped<ISetEmployeeTimeLogEntry, SetHrmManager>();
             services.AddScoped<ISetMoveToQueue, SetMoveToQueueManager>();
+            services.AddScoped<IAddNotesV2, AddNotesV2Manager>();
 
             //
             services.AddHttpContextAccessor();

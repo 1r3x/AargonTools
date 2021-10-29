@@ -5,6 +5,7 @@ using AargonTools.Data.ExamplesForDocumentation;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
 using AargonTools.Models;
+using AargonTools.ViewModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 
@@ -26,10 +27,11 @@ namespace AargonTools.Controllers
         private readonly ISetPostDateChecks _setPostDateChecks;
         private readonly ISetMoveToQueue _setMoveToQueue;
         private readonly ISetInteractResults _setInteractionResults;
+        private readonly IAddNotesV2 _contextAddNotesV2;
 
         public SetAccountsDetailsController(IAddBadNumbers contextBadNumbers, ISetMoveAccount contextSetMoveAccount, IAddNotes contextAddNotes
         ,ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute, ISetPostDateChecks setPostDateChecks
-        , ISetMoveToQueue setMoveToQueue, ISetInteractResults setInteractionResults)
+        , ISetMoveToQueue setMoveToQueue, ISetInteractResults setInteractionResults, IAddNotesV2 contextAddNotesV2)
         {
             _contextBadNumbers = contextBadNumbers;
             _contextSetMoveAccount = contextSetMoveAccount;
@@ -41,6 +43,7 @@ namespace AargonTools.Controllers
             _setPostDateChecks = setPostDateChecks;
             _setMoveToQueue = setMoveToQueue;
             _setInteractionResults = setInteractionResults;
+            _contextAddNotesV2 = contextAddNotesV2;
         }
 
         /// <summary>
@@ -243,7 +246,7 @@ namespace AargonTools.Controllers
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can set move to house and make a movement log for a debtor acccount.
+        /// By using this endpoint you can set move to house and make a movement log for a debtor account.
         /// And please don't forget about a valid token.
         ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetMoveToHouse/0001-000001
         /// </remarks>
@@ -282,7 +285,7 @@ namespace AargonTools.Controllers
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can set move to dispute and make a movement log for a debtor acccount.
+        /// By using this endpoint you can set move to dispute and make a movement log for a debtor account.
         /// And please don't forget about a valid token.
         ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetMoveToDispute/0001-000001
         /// </remarks>
@@ -323,24 +326,22 @@ namespace AargonTools.Controllers
         /// **Details**:
         /// By using this endpoint you can set post date checks and take necessary actions.
         /// And please don't forget about a valid token.
-        ///You can pass parameters with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetPostDateChecks/0001-000001&amp;12-20-2021&amp;10&amp;102&amp;9&amp;10&amp;Y
-        /// (pass all the  parameter separated by '&amp;')
+        ///You can pass parameters with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetPostDateChecks
+        /// (pass JSON body like the request example)
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
         ///
         [ProducesResponseType(typeof(SetPostDateChecksResponse), 200)]
-        [HttpPost("SetPostDateChecks/{debtorAcct}&{postDate}&{amount}&{accountNumber}&{routingNumber}&{totalPd}&{sif}")]
-        public async Task<IActionResult> SetPostDateChecks(string debtorAcct, DateTime postDate, decimal amount, string accountNumber, string routingNumber,
-        int totalPd, char sif)
+        [HttpPost("SetPostDateChecks")]
+        public async Task<IActionResult> SetPostDateChecks([FromBody] SetPostDateChecksRequestModel requestModel)
         {
             Serilog.Log.Information("SetPostDateChecks => POST");
             try
             {
                 if (ModelState.IsValid)
                 {
-                    var data = await _setPostDateChecks.SetPostDateChecks(debtorAcct, postDate, amount, accountNumber,
-                        routingNumber, totalPd, sif, "P");
+                    var data = await _setPostDateChecks.SetPostDateChecks(requestModel, "P");
 
                     return Ok(data);
 
@@ -439,6 +440,42 @@ namespace AargonTools.Controllers
         }
 
 
+        /// <summary>
+        ///  This endpoint can add a note (JSON body request).
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can add a note to a specific debtor account.
+        /// And please don't forget about a valid token.
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetNotesV2
+        /// (pass JSON body like the request example)
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [HttpPost("SetNotesV2")]
+        public async Task<IActionResult> SetNotesV2([FromBody] AddNotesRequestModel request)
+        {
+            Serilog.Log.Information("  SetNotesV2 => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = await _contextAddNotesV2.CreateNotes(request, "P");
 
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
     }
 }

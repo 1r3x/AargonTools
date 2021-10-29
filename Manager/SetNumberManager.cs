@@ -59,8 +59,8 @@ namespace AargonTools.Manager
                             await _addNotes.CreateNotes(debtorAcct, "NEW PHONE NUMBER (API): " +
                                                                     " {" + areaCode + "-" + cellNo + "}",
                                 environment);
-                            return _response.Response("Successfully set a new number on new phone number directory " +
-                                                      "for debtor account " + debtorAcct + ".");
+                            return _response.Response(true, true, "Successfully set a new number on new phone number directory " +
+                                                                  "for debtor account " + debtorAcct + ".");
                         }
 
                         targetData.CellPhone = cellPhoneNo;
@@ -69,9 +69,9 @@ namespace AargonTools.Manager
                         await _addNotes.CreateNotes(debtorAcct, "NEW PHONE NUMBER (API): " +
                                                                 " {" + areaCode + "-" + cellNo + "}",
                              environment);
-                        return _response.Response("Successfully set the number for debtor account " + debtorAcct + ".");
+                        return _response.Response(true, true, "Successfully set the number for debtor account " + debtorAcct + ".");
                     }
-                    return _response.Response("This is not a valid US cell number.");
+                    return _response.Response(true, false, "This is not a valid US cell number.");
                 }
                 else if (environment=="PO")
                 {
@@ -100,8 +100,8 @@ namespace AargonTools.Manager
                             await _addNotes.CreateNotes(debtorAcct, "NEW PHONE NUMBER (API): " +
                                                                     " {" + areaCode + "-" + cellNo + "}",
                                 environment);
-                            return _response.Response("Successfully set a new number on new phone number directory " +
-                                                      "for debtor account " + debtorAcct + ".");
+                            return _response.Response(true, true, "Successfully set a new number on new phone number directory " +
+                                                                  "for debtor account " + debtorAcct + ".");
                         }
 
                         targetData.CellPhone = cellPhoneNo;
@@ -110,9 +110,9 @@ namespace AargonTools.Manager
                         await _addNotes.CreateNotes(debtorAcct, "NEW PHONE NUMBER (API): " +
                                                                 " {" + areaCode + "-" + cellNo + "}",
                              environment);
-                        return _response.Response("Successfully set the number for debtor account " + debtorAcct + ".");
+                        return _response.Response(true, true, "Successfully set the number for debtor account " + debtorAcct + ".");
                     }
-                    return _response.Response("This is not a valid US cell number.");
+                    return _response.Response(true, false, "This is not a valid US cell number.");
                 }
                 else
                 {
@@ -141,8 +141,8 @@ namespace AargonTools.Manager
                             await _addNotes.CreateNotes(debtorAcct, "NEW PHONE NUMBER (API): " +
                                                                     " {" + areaCode + "-" + cellNo + "}",
                                 environment);
-                            return _response.Response("Successfully set a new number on new phone number directory " +
-                                                      "for debtor account " + debtorAcct + ".");
+                            return _response.Response(true, true, "Successfully set a new number on new phone number directory " +
+                                                                  "for debtor account " + debtorAcct + ".");
                         }
 
                         targetData.CellPhone = cellPhoneNo;
@@ -151,16 +151,16 @@ namespace AargonTools.Manager
                         await _addNotes.CreateNotes(debtorAcct, "NEW PHONE NUMBER (API): " +
                                                                 " {" + areaCode + "-" + cellNo + "}",
                             environment);
-                        return _response.Response("Successfully set the number for debtor account " + debtorAcct + ".");
+                        return _response.Response(true, true, "Successfully set the number for debtor account " + debtorAcct + ".");
                     }
 
-                    return _response.Response("This is not a valid US cell number.");
+                    return _response.Response(true, false, "This is not a valid US cell number.");
                 }
 
             }
             catch (Exception e)
             {
-                return _response.Response(e);
+                return _response.Response(true, false, e);
             }
         }
     }

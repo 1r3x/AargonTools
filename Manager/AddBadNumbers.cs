@@ -70,11 +70,11 @@ namespace AargonTools.Manager
                 try
                 {
                     await _context.SaveChangesAsync();
-                    return _response.Response("Successfully enlisted a bad number.");
+                    return _response.Response(true, true, "Successfully enlisted a bad number.");
                 }
                 catch (Exception e)
                 {
-                    return _response.Response(e);
+                    return _response.Response(true, false, e);
                 }
             }
             else if (environment=="PO")
@@ -121,11 +121,11 @@ namespace AargonTools.Manager
                 try
                 {
                     await _contextProdOld.SaveChangesAsync();
-                    return _response.Response("Successfully enlisted a bad number.");
+                    return _response.Response(true, true, "Successfully enlisted a bad number.");
                 }
                 catch (Exception e)
                 {
-                    return _response.Response(e);
+                    return _response.Response(true, false, e);
                 }
             }
             else
@@ -172,11 +172,11 @@ namespace AargonTools.Manager
                 try
                 {
                     await _contextTest.SaveChangesAsync();
-                    return _response.Response("Status.");
+                    return _response.Response(true,true,"Successfully enlisted a bad number.");
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    return _response.Response(true, false, e);
                     throw;
                 }
             }

@@ -7,8 +7,8 @@ using AargonTools.ViewModel;
 
 namespace AargonTools.Interfaces
 {
-    public interface ISetPostDateChecks
+    public interface IAddNotesV2
     {
-        Task<ResponseModel> SetPostDateChecks(SetPostDateChecksRequestModel request,string environment);
+        Task<ResponseModel> CreateNotes( AddNotesRequestModel request,string environment);
     }
 }

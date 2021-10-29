@@ -86,10 +86,10 @@ namespace AargonTools.Manager
             }
             catch (Exception e)
             {
-                return _response.Response(e);
+                return _response.Response(true,false,e);
             }
 
-            return _response.Response("Successfully added interact results");
+            return _response.Response(true,true,"Successfully added interact results");
         }
 
       

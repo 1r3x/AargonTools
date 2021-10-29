@@ -33,12 +33,12 @@ namespace AargonTools.Controllers.prod_old
         /// **Details**:
         /// You can use this end point to Process a credit card payment of any debtor account by passing the parameters. You need a valid token
         /// for this endpoint .
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/prod_old/CreditCards/SetProcessCcPayments/0001-000001&amp;4929000000006&amp;1221&amp;124&amp;1&amp;9.99
-        /// (pass parameters separated by '&amp;')
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/prod_old/CreditCards/SetProcessCcPayments
+        /// (pass JSON body like the request example)
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
-       
+
         /// 
         [ProducesResponseType(typeof(SetProcessCCResponse), 200)]
         [HttpPost("SetProcessCcPayments")]
@@ -78,26 +78,18 @@ namespace AargonTools.Controllers.prod_old
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
-        ///<param name="debtorAcct"> Enter Debtor Account</param>
-        ///<param name="postDate"> Enter post date</param>
-        ///<param name="amount"> Enter amount</param>
-        ///<param name="cardNumber"> Enter card number </param>
-        ///<param name="numberOfPayments"> Enter number of payments</param>
-        ///<param name="expMonth"> Enter month ex: 3</param>
-        ///<param name="expYear"> Enter year ex: 12</param>
-        ///
+      
         [ProducesResponseType(typeof(SchedulePostDateResponse), 200)]
 
-        [HttpPost("SchedulePostData/{debtorAcct}&{postDate}&{amount}&{cardNumber}&{numberOfPayments}&{expMonth}&{expYear}")]
-        public async Task<IActionResult> SchedulePostData(string debtorAcct, DateTime postDate, decimal amount, string cardNumber, int numberOfPayments,
-            string expMonth, string expYear)
+        [HttpPost("SchedulePostData")]
+        public async Task<IActionResult> SchedulePostData([FromBody] SchedulePostDateRequest request)
         {
             Serilog.Log.Information("prod_old SchedulePostData => POST");
             try
             {
                 if (ModelState.IsValid)
                 {
-                    var data = await _processCcPayment.SchedulePostData(debtorAcct, postDate, amount, cardNumber, numberOfPayments, expMonth, expYear, "PO");
+                    var data = await _processCcPayment.SchedulePostDataV2(request, "PO");
 
                     return Ok(data);
 
@@ -121,12 +113,12 @@ namespace AargonTools.Controllers.prod_old
         /// **Details**:
         /// You can set cc payment by passing required parameters. You need a valid token
         /// for this endpoint .
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/prod_old/CreditCards/SetCcPayments/0001-000001&amp;AARGON AGENCY&amp;12&amp;12&amp;2021-10-8&amp;APPROVED&amp;1234&amp;124&amp;Y
-        /// (pass parameters separated by '&amp;')
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/prod_old/CreditCards/SetCcPayments
+        /// (pass JSON body like the request example)
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
-      
+
         ///
 
         [ProducesResponseType(typeof(SetCcPaymnetResponse), 200)]

@@ -5,6 +5,7 @@ using AargonTools.Data.ExamplesForDocumentation.Request;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
 using AargonTools.Models;
+using AargonTools.ViewModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,10 +28,11 @@ namespace AargonTools.Controllers.prod_old
         private readonly ISetPostDateChecks _setPostDateChecks;
         private readonly ISetMoveToQueue _setMoveToQueue;
         private readonly ISetInteractResults _setInteractionResults;
+        private readonly IAddNotesV2 _contextAddNotesV2;
 
         public SetAccountsDetailsController(IAddBadNumbers contextBadNumbers, ISetMoveAccount contextSetMoveAccount, IAddNotes contextAddNotes
             , ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute, ISetPostDateChecks setPostDateChecks
-            , ISetMoveToQueue setMoveToQueue, ISetInteractResults setInteractionResults)
+            , ISetMoveToQueue setMoveToQueue, ISetInteractResults setInteractionResults, IAddNotesV2 contextAddNotesV2)
         {
             _contextBadNumbers = contextBadNumbers;
             _contextSetMoveAccount = contextSetMoveAccount;
@@ -42,7 +44,11 @@ namespace AargonTools.Controllers.prod_old
             _setPostDateChecks = setPostDateChecks;
             _setMoveToQueue = setMoveToQueue;
             _setInteractionResults = setInteractionResults;
+            _contextAddNotesV2 = contextAddNotesV2;
         }
+
+
+
         /// <summary>
         ///  This endpoint can set a bad number(prod_old environment).
         /// </summary>
@@ -249,7 +255,7 @@ namespace AargonTools.Controllers.prod_old
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can set move to house and make a movement log for a debtor acccount.
+        /// By using this endpoint you can set move to house and make a movement log for a debtor account.
         /// And please don't forget about a valid token.
         ///You can pass the parameter with API client like https://g14.aargontools.com/api/prod_old/SetAccountsDetails/SetMoveToHouse/0001-000001
         /// </remarks>
@@ -289,7 +295,7 @@ namespace AargonTools.Controllers.prod_old
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can set move to dispute and make a movement log for a debtor acccount.
+        /// By using this endpoint you can set move to dispute and make a movement log for a debtor account.
         /// And please don't forget about a valid token.
         ///You can pass the parameter with API client like https://g14.aargontools.com/api/prod_old/SetAccountsDetails/SetMoveToDispute/0001-000001
         /// </remarks>
@@ -338,17 +344,15 @@ namespace AargonTools.Controllers.prod_old
         /// <response code="401">Invalid Token/Token Not Available</response>
         ///
         [ProducesResponseType(typeof(SetPostDateChecksResponse), 200)]
-        [HttpPost("SetPostDateChecks/{debtorAcct}&{postDate}&{amount}&{accountNumber}&{routingNumber}&{totalPd}&{sif}")]
-        public async Task<IActionResult> SetPostDateChecks(string debtorAcct, DateTime postDate, decimal amount, string accountNumber, string routingNumber,
-            int totalPd, char sif)
+        [HttpPost("SetPostDateChecks")]
+        public async Task<IActionResult> SetPostDateChecks([FromBody] SetPostDateChecksRequestModel requestModel)
         {
             Serilog.Log.Information("prod_old SetPostDateChecks => POST");
             try
             {
                 if (ModelState.IsValid)
                 {
-                    var data = await _setPostDateChecks.SetPostDateChecks(debtorAcct, postDate, amount, accountNumber,
-                        routingNumber, totalPd, sif, "PO");
+                    var data = await _setPostDateChecks.SetPostDateChecks(requestModel, "PO");
 
                     return Ok(data);
 
@@ -371,7 +375,7 @@ namespace AargonTools.Controllers.prod_old
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can set move to house and make a movement log for a debtor acccount.
+        /// By using this endpoint you can set move to house and make a movement log for a debtor account.
         /// And please don't forget about a valid token.
         ///You can pass the parameter with API client like https://g14.aargontools.com/api/prod_old/SetAccountsDetails/SetMoveToQueue/0001-000001&amp;'TYPE'
         /// </remarks>
@@ -443,5 +447,45 @@ namespace AargonTools.Controllers.prod_old
 
             return new JsonResult("Something went wrong") { StatusCode = 500 };
         }
+
+        /// <summary>
+        ///  This endpoint can add a note (JSON body request prod_old).
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can add a note to a specific debtor account.
+        /// And please don't forget about a valid token.
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetNotesV2
+        /// (pass JSON body like the request example)
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [HttpPost("SetNotesV2")]
+        public async Task<IActionResult> SetNotesV2([FromBody] AddNotesRequestModel request)
+        {
+            Serilog.Log.Information("prod_old  SetNotesV2 => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = await _contextAddNotesV2.CreateNotes(request, "PO");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
+
     }
 }

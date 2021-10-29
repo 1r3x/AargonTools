@@ -4,22 +4,32 @@
     {
         public ResponseModel()
         {
-            //Message = "Oops an error has occurred while getting the data!";
+            Data = "Oops something went wrong. Please try again";
         }
         public bool Status { get; set; }
-        //public string Message { get; set; }
+        public bool TransactionStatus { get; set; }
 
         public object Data { get; set; }
 
-        //public ResponseModel Response(bool isSuccess, string msg)
-        //{
-        //    return new ResponseModel { Status = isSuccess, Message = msg, Data = null };
-        //}
+       
 
         public ResponseModel Response(object data)
         {
             return new() { Status = true, Data = data };
         }
+
+
+        public ResponseModel Response(bool status,object data)
+        {
+            return new() { Status = status, Data = data };
+        }
+
+        public ResponseModel Response(bool status,bool transStatus, object data)
+        {
+            return new() { Status = status,TransactionStatus = transStatus, Data = data };
+        }
+
+
     }
 
     public interface IResponseModel

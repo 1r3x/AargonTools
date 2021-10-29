@@ -48,16 +48,16 @@ namespace AargonTools.Manager
                             _context.Update(targetData);
                             await _context.SaveChangesAsync();
                             await _addNotes.CreateNotes(debtorAcct, "PUT ON NOTICE (" + areaCode + "-" + cellNo + ") BY CUSTOMER.", environment);
-                            return _response.Response("Successfully set the number to don't call status.");
+                            return _response.Response(true,true,"Successfully set the number to don't call status.");
                         }
                         else
                         {
-                            return _response.Response("This account is not associate with this cell number");
+                            return _response.Response(true,false,"This account is not associate with this cell number");
                         }
                     }
                     else
                     {
-                        return _response.Response("This is not a valid cell number for US.Just put areaCode+centralOffice+lineNumber. ex. 7025052773");
+                        return _response.Response(true,false,"This is not a valid cell number for US.Just put areaCode+centralOffice+lineNumber. ex. 7025052773");
                     }
 
 
@@ -79,16 +79,16 @@ namespace AargonTools.Manager
                             _contextProdOld.Update(targetData);
                             await _contextProdOld.SaveChangesAsync();
                             await _addNotes.CreateNotes(debtorAcct, "PUT ON NOTICE (" + areaCode + "-" + cellNo + ") BY CUSTOMER.", environment);
-                            return _response.Response("Successfully set the number to don't call status.");
+                            return _response.Response(true,true,"Successfully set the number to don't call status.");
                         }
                         else
                         {
-                            return _response.Response("This account is not associate with this cell number");
+                            return _response.Response(true, false, "This account is not associate with this cell number");
                         }
                     }
                     else
                     {
-                        return _response.Response("This is not a valid cell number for US.Just put areaCode+centralOffice+lineNumber. ex. 7025052773");
+                        return _response.Response(true, false, "This is not a valid cell number for US.Just put areaCode+centralOffice+lineNumber. ex. 7025052773");
                     }
 
 
@@ -112,12 +112,12 @@ namespace AargonTools.Manager
                         }
                         else
                         {
-                            return _response.Response("This account is not associate with this cell number");
+                            return _response.Response(true, false, "This account is not associate with this cell number");
                         }
                     }
                     else
                     {
-                        return _response.Response("This is not a valid cell number for US.Just put areaCode+centralOffice+lineNumber. ex. 7025052773");
+                        return _response.Response(true, false, "This is not a valid cell number for US.Just put areaCode+centralOffice+lineNumber. ex. 7025052773");
                     }
 
                 }
@@ -125,7 +125,7 @@ namespace AargonTools.Manager
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                return _response.Response(true,false,e);
                 throw;
             }
 

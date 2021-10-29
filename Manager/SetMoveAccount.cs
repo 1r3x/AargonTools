@@ -42,17 +42,17 @@ namespace AargonTools.Manager
                 var oldQueue = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
                 if (oldQueue.Employee == null)
                 {
-                    return _response.Response("Invalid Request[This account is inactive].");
+                    return _response.Response(true, false, "Invalid Request[This account is inactive].");
                 }
                 //if it's only transfer into same company then check for it
                 var toQueueResult = await _context.EmployeeInfos.FirstOrDefaultAsync(x => x.Employee == toQueue && x.EmployeeType == "Q" && x.AcctStatus == "A");
                 if (toQueueResult == null)
                 {
-                    return _response.Response("Invalid Request[Request queue not available].");
+                    return _response.Response(true, false, "Invalid Request[Request queue not available].");
                 }
                 var targetQueue = await _companyFlag.GetFlagForQueueMaster(debtorAcct, environment).Result
                     .FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
-                if (targetQueue.Employee == null) return _response.Response("Invalid Request.[By any how data corrupted for" + debtorAcct + " its not in the any queue master tables].");
+                if (targetQueue.Employee == null) return _response.Response(true, false, "Invalid Request.[By any how data corrupted for" + debtorAcct + " its not in the any queue master tables].");
                 var datetimeNow = DateTime.Now;
                 var note = new NoteMaster()
                 {
@@ -88,24 +88,24 @@ namespace AargonTools.Manager
 
                 await _context.SaveChangesAsync();
 
-                return _response.Response("Account moved successfully.");
+                return _response.Response(true, true, "Account moved successfully.");
             }
             else if (environment=="PO")
             {
                  var oldQueue = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
                 if (oldQueue.Employee == null)
                 {
-                    return _response.Response("Invalid Request[This account is inactive].");
+                    return _response.Response(true, false, "Invalid Request[This account is inactive].");
                 }
                 //if it's only transfer into same company then check for it
                 var toQueueResult = await _contextProdOld.EmployeeInfos.FirstOrDefaultAsync(x => x.Employee == toQueue && x.EmployeeType == "Q" && x.AcctStatus == "A");
                 if (toQueueResult == null)
                 {
-                    return _response.Response("Invalid Request[Request queue not available].");
+                    return _response.Response(true, false, "Invalid Request[Request queue not available].");
                 }
                 var targetQueue = await _companyFlag.GetFlagForQueueMaster(debtorAcct, environment).Result
                     .FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
-                if (targetQueue.Employee == null) return _response.Response("Invalid Request.[By any how data corrupted for" + debtorAcct + " its not in the any queue master tables].");
+                if (targetQueue.Employee == null) return _response.Response(true, false, "Invalid Request.[By any how data corrupted for" + debtorAcct + " its not in the any queue master tables].");
                 var datetimeNow = DateTime.Now;
                 var note = new NoteMaster()
                 {
@@ -141,24 +141,24 @@ namespace AargonTools.Manager
 
                 await _contextProdOld.SaveChangesAsync();
 
-                return _response.Response("Account moved successfully.");
+                return _response.Response(true,true,"Account moved successfully.");
             }
             else
             {
                 var oldQueue = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
                 if (oldQueue.Employee == null)
                 {
-                    return _response.Response("Invalid Request[This account is inactive].");
+                    return _response.Response(true, false, "Invalid Request[This account is inactive].");
                 }
                 //if it's only transfer into same company then check for it
                 var toQueueResult = await _contextTest.EmployeeInfos.FirstOrDefaultAsync(x => x.Employee == toQueue && x.EmployeeType == "Q" && x.AcctStatus == "A");
                 if (toQueueResult == null)
                 {
-                    return _response.Response("Invalid Request[Request queue not available].");
+                    return _response.Response(true, false, "Invalid Request[Request queue not available].");
                 }
                 var targetQueue = await _companyFlag.GetFlagForQueueMaster(debtorAcct, environment).Result
                     .FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
-                if (targetQueue.Employee == null) return _response.Response("Invalid Request.[By any how data data corrupted for" + debtorAcct + " its not in the any queue master tables].");
+                if (targetQueue.Employee == null) return _response.Response(true, false, "Invalid Request.[By any how data data corrupted for" + debtorAcct + " its not in the any queue master tables].");
                 var datetimeNow = DateTime.Now;
                 var note = new NoteMaster()
                 {
@@ -194,7 +194,7 @@ namespace AargonTools.Manager
 
                 await _contextTest.SaveChangesAsync();
 
-                return _response.Response("Status.");
+                return _response.Response(true,true,"Account moved successfully.");
             }
 
           

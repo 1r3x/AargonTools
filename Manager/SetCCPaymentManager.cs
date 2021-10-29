@@ -51,23 +51,23 @@ namespace AargonTools.Manager
 
             if (request.paymentDate>DateTime.Now)
             {
-                return _response.Response("Payment date won't be in future.");
+                return _response.Response(true,false,"Payment date won't be in future.");
             }
             else if (!companyContainsLIst.Contains(request.company))
             {
-                return _response.Response("Please correct company name.");
+                return _response.Response(true, false, "Please correct company name.");
             }
             else if (!approvalLIst.Contains(request.approvalStatus))
             {
-                return _response.Response("Please correct approval status.");
+                return _response.Response(true, false, "Please correct approval status.");
             }
             else if (!request.refNo.Contains("USAEPAY2"))
             {
-                return _response.Response("Please correct reference number.");
+                return _response.Response(true, false, "Please correct reference number.");
             }
             else if (!sifStatusLIst.Contains(request.sif))
             {
-                return _response.Response("SIF must be just 'Y' or 'N' ");
+                return _response.Response(true, false, "SIF must be just 'Y' or 'N' ");
             }
             try
             {
@@ -134,12 +134,13 @@ namespace AargonTools.Manager
                     await _contextTest.CcPayments.AddAsync(ccPayment);
                     await _contextTest.SaveChangesAsync();
                 }
-                return _response.Response("Successfully set CC payment.");
+
+                return _response.Response(true,true,"Successfully set CC payment.");
 
             }
             catch (Exception e)
             {
-                return _response.Response(e);
+                return _response.Response(true,false,e);
             }
         }
     }
