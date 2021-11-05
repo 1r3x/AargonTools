@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace AargonTools.Data.ExamplesForDocumentation.Response
@@ -9,6 +6,7 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
     public class SchedulePostDateResponse : IMultipleExamplesProvider<SchedulePostDateResponse>
     {
         public bool Status { get; set; }
+        public bool TransactionStatus { get; set; }
         public string Data { get; set; }
 
         public IEnumerable<SwaggerExample<SchedulePostDateResponse>> GetExamples()
@@ -21,7 +19,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SchedulePostDateResponse()
                     {
                         Data = "Successfully Set Post Date Checks.",
-                        Status = true
+                        Status = true,
+                        TransactionStatus = true
                     },
                     Summary = "When Successfully Set Post Date Checks."
                 },
@@ -31,7 +30,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SchedulePostDateResponse()
                     {
                         Data = "Oops Something went wrong..",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=false
                     },
                     Summary = "When Something went wrong."
                 }

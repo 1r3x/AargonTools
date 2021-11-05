@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using AargonTools.Manager;
+﻿using System.Threading.Tasks;
 using AargonTools.Manager.GenericManager;
 
 namespace AargonTools.Interfaces

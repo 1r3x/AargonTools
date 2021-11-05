@@ -1,27 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Dynamic;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 using AargonTools.Data.ADO;
-using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
 using AargonTools.Manager.GenericManager;
 using AargonTools.Models;
 using AargonTools.ViewModel;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using USAePay;
 
 namespace AargonTools.Manager
 {

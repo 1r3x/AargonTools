@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace AargonTools.Data.ExamplesForDocumentation.Response
@@ -9,6 +6,7 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
     public class SetDoNotCallResponse : IMultipleExamplesProvider<SetDoNotCallResponse>
     {
         public bool Status { get; set; }
+        public bool TransactionStatus { get; set; }
         public string Data { get; set; }
         public IEnumerable<SwaggerExample<SetDoNotCallResponse>> GetExamples()
         {
@@ -20,7 +18,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SetDoNotCallResponse()
                     {
                         Data = "Successfully set the number to don't call status.",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=false
                     },
                     Summary = "Successful Response."
                 },
@@ -30,7 +29,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SetDoNotCallResponse()
                     {
                         Data = "This account is not associate with this cell number",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=false
                     },
                     Summary = "Validation Error"
                 },
@@ -40,7 +40,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SetDoNotCallResponse()
                     {
                         Data = "This is not a valid cell number for US.Just put areaCode+centralOffice+lineNumber. ex. 7025052773",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=false
                     },
                     Summary = "Format Error"
                 }

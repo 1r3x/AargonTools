@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using AargonTools.Data.ExamplesForDocumentation;
-using AargonTools.Data.ExamplesForDocumentation.Request;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
 using AargonTools.Models;

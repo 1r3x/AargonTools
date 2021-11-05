@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace AargonTools.Data.ExamplesForDocumentation.Response
@@ -9,6 +6,7 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
     public class SetNumberResponses : IMultipleExamplesProvider<SetNumberResponses>
     {
         public bool Status { get; set; }
+        public bool TransactionStatus { get; set; }
         public string Data { get; set; }
         public IEnumerable<SwaggerExample<SetNumberResponses>> GetExamples()
         {
@@ -21,7 +19,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     {
                         Data = "Successfully set a new number on new phone number directory " +
                                "for debtor account 0001-000001",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=false
                     },
                     Summary = "Successful Response(debtor cell phone Not available)."
                 },
@@ -31,7 +30,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SetNumberResponses()
                     {
                         Data = "Successfully set the number for debtor account 0001-000001",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=false
                     },
                     Summary = "Successful Response(debtor cell phone available and replaced)."
                 },
@@ -41,7 +41,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SetNumberResponses()
                     {
                         Data = "This is not a valid US cell number.",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=false
                     },
                     Summary = "Validation Error"
                 }

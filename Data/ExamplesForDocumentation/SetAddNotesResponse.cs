@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AargonTools.Data.ExamplesForDocumentation.Response;
+﻿using System.Collections.Generic;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace AargonTools.Data.ExamplesForDocumentation
@@ -10,6 +6,7 @@ namespace AargonTools.Data.ExamplesForDocumentation
     public class SetAddNotesResponse : IMultipleExamplesProvider<SetAddNotesResponse>
     {
         public bool Status { get; set; }
+        public bool TransactionStatus { get; set; }
         public string Data { get; set; }
         public IEnumerable<SwaggerExample<SetAddNotesResponse>> GetExamples()
         {
@@ -21,7 +18,8 @@ namespace AargonTools.Data.ExamplesForDocumentation
                     Value =new SetAddNotesResponse()
                     {
                         Data = "Successfully added a notes.",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=true
                     },
                     Summary = "Successfully added"
                 },
@@ -31,7 +29,8 @@ namespace AargonTools.Data.ExamplesForDocumentation
                     Value =new SetAddNotesResponse()
                     {
                         Data = "If something went wrong then you get a specific message about it.",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=false
                     },
                     Summary = "If something went wrong"
                 },

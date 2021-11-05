@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace AargonTools.Data.ExamplesForDocumentation.Response
@@ -9,6 +6,7 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
     public class SetCcPaymnetResponse : IMultipleExamplesProvider<SetCcPaymnetResponse>
     {
         public bool Status { get; set; }
+        public bool TransactionStatus { get; set; }
         public string Data { get; set; }
         public IEnumerable<SwaggerExample<SetCcPaymnetResponse>> GetExamples()
         {
@@ -20,7 +18,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SetCcPaymnetResponse()
                     {
                         Data = "Successfully set CC payment",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=true
                     },
                     Summary = "Successful Response"
                 },
@@ -31,7 +30,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SetCcPaymnetResponse()
                     {
                         Data = "Payment date won't be in future.",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=false
                     },
                     Summary = "Validation Error 1"
                 },
@@ -41,7 +41,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                 Value =new SetCcPaymnetResponse()
                 {
                     Data = "Please correct company name.",
-                    Status = true
+                    Status = true,
+                    TransactionStatus=false
                 },
                 Summary = "Validation Error 2"
                 },
@@ -51,7 +52,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SetCcPaymnetResponse()
                     {
                         Data = "Please correct approval status.",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=false
                     },
                     Summary = "Validation Error 3"
                 },
@@ -61,7 +63,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SetCcPaymnetResponse()
                     {
                         Data = "Please correct reference number.",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=false
                     },
                     Summary = "Validation Error 4"
                 },
@@ -71,7 +74,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SetCcPaymnetResponse()
                     {
                         Data = "SIF must be just 'Y' or 'N' ",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=false
                     },
                     Summary = "Validation Error 5"
                 }

@@ -12,7 +12,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using AargonTools.Configuration;
 using AargonTools.Data;
-using AargonTools.Data.ExamplesForDocumentation.Request;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Models;
 using AargonTools.Models.DTOs.Requests;

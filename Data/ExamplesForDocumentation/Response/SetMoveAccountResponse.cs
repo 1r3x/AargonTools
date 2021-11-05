@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace AargonTools.Data.ExamplesForDocumentation.Response
@@ -9,6 +6,7 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
     public class SetMoveAccountResponse : IMultipleExamplesProvider<SetMoveAccountResponse>
     {
         public bool Status { get; set; }
+        public bool TransactionStatus { get; set; }
         public string Data { get; set; }
         public IEnumerable<SwaggerExample<SetMoveAccountResponse>> GetExamples()
         {
@@ -20,7 +18,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SetMoveAccountResponse()
                     {
                         Data = "Account moved successfully.",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=true
                     },
                     Summary = "Successful Move."
                 },
@@ -30,7 +29,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SetMoveAccountResponse()
                     {
                         Data = "Invalid Request[This account is inactive].",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=false
                     },
                     Summary = "Inactive Account"
                 },
@@ -40,7 +40,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SetMoveAccountResponse()
                     {
                         Data = "Invalid Request[Request queue not available].",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=false
                     },
                     Summary = "Queue Unavailable"
                 },
@@ -50,7 +51,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                 Value =new SetMoveAccountResponse()
                 {
                     Data = "Invalid Request.[By any how data corrupted for 0001-000001 its not in the any queue master tables].",
-                    Status = true
+                    Status = true,
+                    TransactionStatus=false
                 },
                 Summary = "Data Corrupted"
                 }

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace AargonTools.Data.ExamplesForDocumentation.Response
@@ -9,6 +6,7 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
     public class SetProcessCCResponse : IMultipleExamplesProvider<SetProcessCCResponse>
     {
         public bool Status { get; set; }
+        public bool TransactionStatus { get; set; }
         public TransactionDetails Data { get; set; }
         public IEnumerable<SwaggerExample<SetProcessCCResponse>> GetExamples()
         {
@@ -54,7 +52,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                             auth_amount= "13.00",
                             trantype="Credit Card Sale"
                         },
-                        Status = true
+                        Status = true,
+                        TransactionStatus=true
                     },
                     Summary = "Successful Response"
                 }

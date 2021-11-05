@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace AargonTools.Data.ExamplesForDocumentation.Response
@@ -9,6 +6,7 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
     public class SetEmployeeTimeLogResponse : IMultipleExamplesProvider<SetEmployeeTimeLogResponse>
     {
         public bool Status { get; set; }
+        public bool TransactionStatus { get; set; }
         public string Data { get; set; }
         public IEnumerable<SwaggerExample<SetEmployeeTimeLogResponse>> GetExamples()
         {
@@ -20,7 +18,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value = new SetEmployeeTimeLogResponse()
                     {
                         Data = "Time Log Saved Successfully.",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=true
                     },
                     Summary = "Successful Entry."
                 },

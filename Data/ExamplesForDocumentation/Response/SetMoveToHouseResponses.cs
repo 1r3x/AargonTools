@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace AargonTools.Data.ExamplesForDocumentation.Response
@@ -9,6 +6,7 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
     public class SetMoveToHouseResponses : IMultipleExamplesProvider<SetMoveToHouseResponses>
     {
         public bool Status { get; set; }
+        public bool TransactionStatus { get; set; }
         public string Data { get; set; }
         public IEnumerable<SwaggerExample<SetMoveToHouseResponses>> GetExamples()
         {
@@ -20,7 +18,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SetMoveToHouseResponses()
                     {
                         Data = "Successfully Move 0000-000001 to house.",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=true
                     },
                     Summary = "Successful Response"
                 },
@@ -31,7 +30,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     Value =new SetMoveToHouseResponses()
                     {
                         Data = "Setup employee is out of the range from current move to house setup.",
-                        Status = true
+                        Status = true,
+                        TransactionStatus=false
                     },
                     Summary = "Validation Error"
                 }

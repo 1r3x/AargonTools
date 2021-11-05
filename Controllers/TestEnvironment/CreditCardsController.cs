@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
-using AargonTools.Models;
 using AargonTools.ViewModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;

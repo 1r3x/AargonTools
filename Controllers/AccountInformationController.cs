@@ -1,17 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using AargonTools.Data.ExamplesForDocumentation.Request;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
-using AargonTools.Models;
-using AargonTools.ViewModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Swashbuckle.AspNetCore.Filters;
 
 namespace AargonTools.Controllers
 {

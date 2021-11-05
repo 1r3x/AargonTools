@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using AargonTools.Manager;
 using AargonTools.Manager.GenericManager;
 using AargonTools.ViewModel;
 

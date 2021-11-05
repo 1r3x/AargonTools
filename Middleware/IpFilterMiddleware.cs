@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using AargonTools.Manager.GenericManager;
 using AargonTools.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
