@@ -46,7 +46,21 @@ namespace AargonTools.Models
         public virtual DbSet<ApiMoveLog> ApiMoveLogs { get; set; }
         public virtual DbSet<EmployeeTimeLog> EmployeeTimeLogs { get; set; }
         public virtual DbSet<InteractResult> InteractResults { get; set; }
-
+        public virtual DbSet<ClientAcctInfo> ClientAcctInfos { get; set; }
+        public virtual DbSet<ClientAcctInfoD> ClientAcctInfoDs { get; set; }
+        public virtual DbSet<ClientAcctInfoH> ClientAcctInfoHs { get; set; }
+        public virtual DbSet<ClientAcctInfoL> ClientAcctInfoLs { get; set; }
+        public virtual DbSet<ClientAcctInfoT> ClientAcctInfoTs { get; set; }
+        public virtual DbSet<ClientAcctInfoW> ClientAcctInfoWs { get; set; }
+        public virtual DbSet<DebtorMaster> DebtorMasters { get; set; }
+        public virtual DbSet<DebtorMasterD> DebtorMasterDs { get; set; }
+        public virtual DbSet<DebtorMasterH> DebtorMasterHs { get; set; }
+        public virtual DbSet<DebtorMasterL> DebtorMasterLs { get; set; }
+        public virtual DbSet<DebtorMasterT> DebtorMasterTs { get; set; }
+        public virtual DbSet<DebtorMasterW> DebtorMasterWs { get; set; }
+        public virtual DbSet<CheckDetail> CheckDetails { get; set; }
+        public virtual DbSet<DebtorPpInfo> DebtorPpInfos { get; set; }
+        public virtual DbSet<LarryCcPayment> LarryCcPayments { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)

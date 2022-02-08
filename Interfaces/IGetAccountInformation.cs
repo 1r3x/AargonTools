@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using AargonTools.Manager.GenericManager;
+using AargonTools.ViewModel;
 
 namespace AargonTools.Interfaces
 {
@@ -18,6 +19,11 @@ namespace AargonTools.Interfaces
         //get some account infos with some logic applied 
         Task<ResponseModel> GetAccountInfo(string debtorAcct, string environment);
         Task<ResponseModel> GetSIF(string debtorAcct, string environment);
+        Task<ResponseModel> GetInteractionsAcctData(GetInteractionAcctDateRequestModel request, string environment);//temp using debtor account as a param .
+
+        Task<ResponseModel> GetClientInvoiceHeader(string clientAcct, string company, string environment);
+        Task<ResponseModel> GetClientPrimaryContact(string clientAcct, string company, string environment);
+        Task<ResponseModel> GetClientInvoicePayments(GetClientInvoiceRequestModel request, string environment);
 
     }
 }

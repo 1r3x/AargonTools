@@ -28,10 +28,13 @@ namespace AargonTools.Controllers
         private readonly ISetMoveToQueue _setMoveToQueue;
         private readonly ISetInteractResults _setInteractionResults;
         private readonly IAddNotesV2 _contextAddNotesV2;
+        private readonly ISetDialing _contextSetDialing;
+        private readonly ISetUpdateAddress _contextSetUpdateAddress;
 
         public SetAccountsDetailsController(IAddBadNumbers contextBadNumbers, ISetMoveAccount contextSetMoveAccount, IAddNotes contextAddNotes
-        ,ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute, ISetPostDateChecks setPostDateChecks
-        , ISetMoveToQueue setMoveToQueue, ISetInteractResults setInteractionResults, IAddNotesV2 contextAddNotesV2)
+        , ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute, ISetPostDateChecks setPostDateChecks
+        , ISetMoveToQueue setMoveToQueue, ISetInteractResults setInteractionResults, IAddNotesV2 contextAddNotesV2, ISetDialing contextSetDialing,
+        ISetUpdateAddress contextSetUpdateAddress)
         {
             _contextBadNumbers = contextBadNumbers;
             _contextSetMoveAccount = contextSetMoveAccount;
@@ -44,17 +47,18 @@ namespace AargonTools.Controllers
             _setMoveToQueue = setMoveToQueue;
             _setInteractionResults = setInteractionResults;
             _contextAddNotesV2 = contextAddNotesV2;
+            _contextSetDialing = contextSetDialing;
+            _contextSetUpdateAddress = contextSetUpdateAddress;
         }
 
         /// <summary>
-        ///  This endpoint can set a bad number.
+        ///  Set a bad number.(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can add a bad number , and the bad number will remove from debtor account and add a notes about the action.
-        /// And please don't forget about a valid token.
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetBadNumbers/0001-000001&amp;7025052773
+        /// Can add a bad number , and the bad number will remove from debtor account and add a notes about the action.A valid token is required for setting the data
+        ///Pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetBadNumbers/0001-000001&amp;7025052773
         /// (pass both parameter separated by '&amp;')
         /// </remarks>
         /// <response code="200">Successful Request.</response>
@@ -70,7 +74,7 @@ namespace AargonTools.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    var data = await _contextBadNumbers.AddBadNumbers(debtorAcct, phoneNo,"P");
+                    var data = await _contextBadNumbers.AddBadNumbers(debtorAcct, phoneNo, "P");
 
                     return Ok(data);
 
@@ -89,15 +93,14 @@ namespace AargonTools.Controllers
 
 
         /// <summary>
-        ///  This endpoint can move debtor account to a queue.
+        ///  Can move debtor account to a queue.(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can move debtor account to a queue if the queue is available and the account is active
-        /// then add a notes about the action and make a log to a specific log table.
-        /// And please don't forget about a valid token.
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetMoveAccount/0001-000001&amp;70
+        /// Can move debtor account to a queue if the queue is available and the account is active
+        /// then add a notes about the action and make a log to a specific log table.A valid token is required for setting the data
+        /// You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetMoveAccount/0001-000001&amp;70
         /// (pass both parameter separated by '&amp;')
         /// </remarks>
         /// <response code="200">Successful Request.</response>
@@ -110,7 +113,7 @@ namespace AargonTools.Controllers
             Serilog.Log.Information("  SetMoveAccount => POST");
             try
             {
-                var data = await _contextSetMoveAccount.SetMoveAccount(debtorAcct, toQueue,"P");
+                var data = await _contextSetMoveAccount.SetMoveAccount(debtorAcct, toQueue, "P");
                 return Ok(data);
             }
             catch (Exception e)
@@ -122,14 +125,13 @@ namespace AargonTools.Controllers
         }
 
         /// <summary>
-        ///  This endpoint can add a note.
+        ///  This endpoint can add a note.(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can add a note to a specific debtor account.
-        /// And please don't forget about a valid token.
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetNotes/0001-000001&amp;This is the notes
+        /// an add a note to a specific debtor account.   A valid token is required for getting the data
+        ///  Pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetNotes/0001-000001&amp;This is the notes
         /// (pass both parameter separated by '&amp;')
         /// </remarks>
         /// <response code="200">Successful Request.</response>
@@ -144,7 +146,7 @@ namespace AargonTools.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    var data = await _contextAddNotes.CreateNotes(debtorAcct, notes,"P");
+                    var data = await _contextAddNotes.CreateNotes(debtorAcct, notes, "P");
 
                     return Ok(data);
 
@@ -161,14 +163,13 @@ namespace AargonTools.Controllers
         }
 
         /// <summary>
-        ///  This endpoint can set a phone number's status [don't call].
+        ///  Can set a phone number's status [don't call].(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can can set a phone number's status [don't call].
-        /// And please don't forget about a valid token.
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetDoNotCall/0001-000001&amp;7025052773
+        /// Can set a phone number's status [don't call]. A valid token is required for setting the data
+        /// You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetDoNotCall/0001-000001&amp;7025052773
         /// (pass both parameter separated by '&amp;')
         /// </remarks>
         /// <response code="200">Successful Request.</response>
@@ -201,13 +202,12 @@ namespace AargonTools.Controllers
 
 
         /// <summary>
-        ///  This endpoint can set a phone number for a debtor.
+        ///  Can set a phone number for a debtor.(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can set a phone number for a debtor.
-        /// And please don't forget about a valid token.
+        /// Can set a phone number for a debtor.A valid token is required for setting the data
         ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetNumber/0001-000001&amp;7025052773
         /// (pass both parameter separated by '&amp;')
         /// </remarks>
@@ -241,14 +241,14 @@ namespace AargonTools.Controllers
 
 
         /// <summary>
-        ///  This endpoint can set move to house.
+        ///  Can set move to house.(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can set move to house and make a movement log for a debtor account.
-        /// And please don't forget about a valid token.
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetMoveToHouse/0001-000001
+        /// Can set move to house and make a movement log for a debtor account.
+        /// A valid token is required for setting the data
+        /// You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetMoveToHouse/0001-000001
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -280,13 +280,13 @@ namespace AargonTools.Controllers
 
 
         /// <summary>
-        ///  This endpoint can set move to dispute.
+        ///  This endpoint can set move to dispute.(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
         /// By using this endpoint you can set move to dispute and make a movement log for a debtor account.
-        /// And please don't forget about a valid token.
+        /// A valid token is required for setting the data
         ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetMoveToDispute/0001-000001
         /// </remarks>
         /// <response code="200">Successful Request.</response>
@@ -294,7 +294,7 @@ namespace AargonTools.Controllers
         ///
         [ProducesResponseType(typeof(SetMoveToDisputeResponses), 200)]
         [HttpPost("SetMoveToDispute/{debtorAcct}")]
-        public async Task<IActionResult> SetMoveToDispute(string debtorAcct,decimal amountDisputed)
+        public async Task<IActionResult> SetMoveToDispute(string debtorAcct, decimal amountDisputed)
         {
             Serilog.Log.Information("SetMoveToDispute => POST");
             try
@@ -319,15 +319,17 @@ namespace AargonTools.Controllers
 
 
         /// <summary>
-        ///  This endpoint can set post date checks and take necessary actions.
+        ///  Can set post date checks and take necessary actions.(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can set post date checks and take necessary actions.
-        /// And please don't forget about a valid token.
+        /// Can set post date checks and take necessary actions.
+        /// A valid token is required for setting the data
         ///You can pass parameters with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetPostDateChecks
         /// (pass JSON body like the request example)
+        /// **Notes**
+        /// All the  parameter is required for the endpoint .
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -361,15 +363,15 @@ namespace AargonTools.Controllers
 
 
         /// <summary>
-        ///  This endpoint can set move to queue.
+        ///  This endpoint can set move to queue.(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
         /// By using this endpoint you can set move to house and make a movement log for a debtor account.
-        /// And please don't forget about a valid token.
-        ///You can pass required parameters with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetMoveToQueue/0001-000001&amp;'TYPE'
-        /// (pass all the  parameter separated by '&amp;')
+        /// A valid token is required for setting the data.
+        ///Pass required parameters with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetMoveToQueue/0001-000001&amp;'TYPE'
+        /// (Pass all the  parameter separated by '&amp;')
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -401,13 +403,15 @@ namespace AargonTools.Controllers
 
 
         /// <summary>
-        ///  This endpoint can set Interaction Results.
+        ///  Can set Interaction Results.(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can set set Interaction Results.
-        /// And please don't forget about a valid token.
+        /// Can set Interaction Results.
+        /// You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetInteractionResults
+        /// (pass JSON body like the request example)
+        ///  A valid token is required for setting the data.
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -441,14 +445,14 @@ namespace AargonTools.Controllers
 
 
         /// <summary>
-        ///  This endpoint can add a note (JSON body request).
+        ///  Can add a note (JSON body request).(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can add a note to a specific debtor account.
-        /// And please don't forget about a valid token.
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetNotesV2
+        /// Can add a note to a specific debtor account.
+        /// A valid token is required for setting the data.
+        /// You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetNotesV2
         /// (pass JSON body like the request example)
         /// </remarks>
         /// <response code="200">Successful Request.</response>
@@ -477,5 +481,88 @@ namespace AargonTools.Controllers
 
             return new JsonResult("Something went wrong") { StatusCode = 500 };
         }
+
+        /// <summary>
+        ///  Can set a dialing (JSON body request).(Prod.)
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// Can set dialing.
+        /// A valid token is required for setting the data.
+        /// You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetDialing
+        /// (pass JSON body like the request example)
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [HttpPost("SetDialing")]
+        [ProducesResponseType(typeof(SetDialingResponseModelExample
+        ), 200)]
+        public async Task<IActionResult> SetDialing([FromBody] SetDialingRequestModel request)
+        {
+            Serilog.Log.Information("  SetDialing => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = await _contextSetDialing.SetDialing(request, "P");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
+
+
+        /// <summary>
+        ///  Can Update Address (JSON body request).(Prod.)
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// Can Update Address.
+        /// A valid token is required for setting the data.
+        /// You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetUpdateAddress
+        /// (pass JSON body like the request example)
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [HttpPost("SetUpdateAddress")]
+        [ProducesResponseType(typeof(SetUpdateAddressResponseModel
+        ), 200)]
+        public async Task<IActionResult> SetUpdateAddress([FromBody] SetUpdateAddressRequestModel request)
+        {
+            Serilog.Log.Information("  SetUpdateAddress => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = await _contextSetUpdateAddress.SetUpdateAddress(request, "P");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
     }
 }

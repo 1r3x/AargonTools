@@ -1,16 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using AargonTools.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Threading.Tasks;
 
-#nullable disable
-
-namespace AargonTools.Models
+namespace AargonTools.Interfaces
 {
-    [Keyless]
-    [Table("client_master_h")]
-    public partial class ClientMasterH : IClientMaster
+    public interface IClientMaster
     {
         [Required]
         [Column("client_acct")]

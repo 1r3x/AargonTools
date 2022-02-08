@@ -92,13 +92,15 @@ namespace AargonTools.Controllers
 
 
         /// <summary>
-        ///  This endpoint give you a token and a refresh token.
+        ///  Can generate a token and a refresh token.
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can get token and refresh token.
-        /// So that you can use it for later authentication process or request for a new token using refresh token.
+        /// Can generate token and refresh token.
+        /// It can be used for authentication process or request for a new token using refresh token.
+        /// **Notes**
+        /// Email and password both are required .
         /// </remarks>
         /// <response code="200">Successful request.</response>
         /// <response code="400">Something went wrong</response>
@@ -163,14 +165,16 @@ namespace AargonTools.Controllers
 
 
         /// <summary>
-        /// This endpoint is for refreshing your token 
+        /// Can refreshing a token 
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        ///  This can refresh a expired tokens carry the information necessary to get a new access token.
+        ///  Refresh a expired tokens carry the information necessary to get a new access token.
         /// In other words, whenever an access token is required to access a specific resource,
         /// a client may use a refresh token to get a new access token issued by the authentication server.
+        /// **Notes**
+        /// Previous Token and previous RefreshToken both are required .
         /// </remarks>
         /// <response code="200">Successful request</response>
         /// <response code="400">Something went wrong</response>

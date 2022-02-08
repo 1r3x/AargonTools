@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using AargonTools.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 #nullable disable
@@ -9,7 +10,7 @@ namespace AargonTools.Models
 {
     [Keyless]
     [Table("client_master_t")]
-    public partial class ClientMasterT
+    public partial class ClientMasterT : IClientMaster
     {
         [Required]
         [Column("client_acct")]

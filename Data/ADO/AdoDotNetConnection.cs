@@ -44,9 +44,9 @@ namespace AargonTools.Data.ADO
                     da.Fill(objResult);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                // ignored
+                var errorForDebugging=e;
             }
 
             return objResult;

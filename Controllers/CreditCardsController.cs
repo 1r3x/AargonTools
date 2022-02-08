@@ -25,19 +25,19 @@ namespace AargonTools.Controllers
         }
 
         /// <summary>
-        ///  Can Process a credit card payment.
+        ///  Can Process a credit card payment.(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// You can use this end point to Process a credit card payment of any debtor account by passing the parameters. You need a valid token
+        /// Process a credit card payment of any debtor account by passing the parameters. A valid token is required for sending the data. 
         /// for this endpoint .
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/CreditCards/SetProcessCcPayments 
+        /// You can pass the parameter with API client like https://g14.aargontools.com/api/CreditCards/SetProcessCcPayments 
         /// (pass JSON body like the request example)
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
-       
+
         /// 
         [ProducesResponseType(typeof(SetProcessCCResponse), 200)]
         [HttpPost("SetProcessCcPayments")]
@@ -65,14 +65,14 @@ namespace AargonTools.Controllers
         }
 
         /// <summary>
-        ///  Can Schedule Post Data.
+        ///  Can Schedule Post Data.(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// You can Schedule Post Data of any debtor account by passing the parameters. You need a valid token
-        /// for this endpoint .
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/CreditCards/SchedulePostData
+        /// Schedule Post Data of a debtor account by passing the parameters. A valid token is required for sending the data.
+        /// 
+        /// Pass the parameter with API client like https://g14.aargontools.com/api/CreditCards/SchedulePostData
         /// (pass JSON body like the request example)
         /// </remarks>
         /// <response code="200">Execution Successful</response>
@@ -105,15 +105,16 @@ namespace AargonTools.Controllers
         }
 
         /// <summary>
-        ///  Can set CC Payments.
+        ///  Can set CC Payments.(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// You can set cc payment by passing required parameters. You need a valid token
-        /// for this endpoint .
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/CreditCards/SetCcPayments
+        /// Set cc payment by passing required parameters. A valid token is required for sending the data.
+        ///Pass the parameter with API client like https://g14.aargontools.com/api/CreditCards/SetCcPayments
         /// (pass JSON body like the request example)
+        /// 
+        /// 
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>

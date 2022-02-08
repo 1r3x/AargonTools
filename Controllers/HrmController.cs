@@ -21,14 +21,14 @@ namespace AargonTools.Controllers
         }
 
         /// <summary>
-        ///  Returns time log for an employee on a specific date.
+        ///  Returns time log for an employee on a specific date.(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// You can use this end point to check the time log for an employee on a specific date by passing the parametrize emp id ann date. You need a valid token
-        /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/Hrm/GetEmployeeTimeLog/65&amp;2020-02-22 
-        /// and please don't forget about valid token.
+        /// Get the time log for an employee on a specific date by passing the parametrize emp id ann date. A valid token is required for getting the data
+        /// Pass the param with API client like  https://g14.aargontools.com/api/Hrm/GetEmployeeTimeLog/65&amp;2020-02-22
+
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>

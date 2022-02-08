@@ -20,6 +20,9 @@ namespace AargonTools.Manager.GenericManager
 
         private IQueryable<IDebtorAcctInfo> _debtorTable;
         private IQueryable<IQueueMaster> _queueTable;
+        private IQueryable<IClientAcctInfo> _accountInfoTable;
+        private IQueryable<IDebtorMaster> _debtorMasterTable;
+        private IQueryable<IClientMaster> _clientMasterTable;
 
         public async Task<IQueryable<IDebtorAcctInfo>> GetFlagForDebtorAccount(string debtorAcct,string environment)
         {
@@ -289,6 +292,509 @@ namespace AargonTools.Manager.GenericManager
                 }
             }
         }
+
+        public async Task<string> GetStringFlagForAdoQuery(string debtorAcct, string environment)
+        {
+            var account = debtorAcct.Substring(0, 4);
+            if (environment == "P")
+            {
+                if (await _context.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "";
+                }
+                else if (await _context.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "_d";
+                }
+                else if (await _context.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "_h";
+                }
+                else if (await _context.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "_l";
+                }
+                else if (await _context.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "_t";
+                }
+                else if (await _context.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "_w";
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (environment == "PO")
+            {
+                if (await _contextProdOld.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "";
+                }
+                else if (await _contextProdOld.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "_d";
+                }
+                else if (await _contextProdOld.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "_h";
+                }
+                else if (await _contextProdOld.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "_l";
+                }
+                else if (await _contextProdOld.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "_t";
+                }
+                else if (await _contextProdOld.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "_w";
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                if (await _contextTest.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "";
+                }
+                else if (await _contextTest.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "_d";
+                }
+                else if (await _contextTest.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "_h";
+                }
+                else if (await _contextTest.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "_l";
+                }
+                else if (await _contextTest.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "_t";
+                }
+                else if (await _contextTest.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return "_w";
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+
+        public async Task<IQueryable<IClientAcctInfo>> GetFlagForClientAccountInfo(string debtorAcct, string environment)
+        {
+
+            var account = debtorAcct.Substring(0, 4);
+            if (environment == "P")
+            {
+                if (await _context.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _context.ClientAcctInfos;
+                }
+                else if (await _context.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _context.ClientAcctInfoDs;
+                }
+                else if (await _context.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _context.ClientAcctInfoHs;
+                }
+                else if (await _context.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _context.ClientAcctInfoLs;
+                }
+                else if (await _context.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _context.ClientAcctInfoTs;
+                }
+                else if (await _context.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _context.ClientAcctInfoWs;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (environment == "PO")
+            {
+                if (await _contextProdOld.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _contextProdOld.ClientAcctInfos;
+                }
+                else if (await _contextProdOld.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _contextProdOld.ClientAcctInfoDs;
+                }
+                else if (await _contextProdOld.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _contextProdOld.ClientAcctInfoHs;
+                }
+                else if (await _contextProdOld.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _contextProdOld.ClientAcctInfoLs;
+                }
+                else if (await _contextProdOld.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _contextProdOld.ClientAcctInfoTs;
+                }
+                else if (await _contextProdOld.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _contextProdOld.ClientAcctInfoWs;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                if (await _contextTest.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _contextTest.ClientAcctInfos;
+                }
+                else if (await _contextTest.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _contextTest.ClientAcctInfoDs;
+                }
+                else if (await _contextTest.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _contextTest.ClientAcctInfoHs;
+                }
+                else if (await _contextTest.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _contextTest.ClientAcctInfoLs;
+                }
+                else if (await _contextTest.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _contextTest.ClientAcctInfoTs;
+                }
+                else if (await _contextTest.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _accountInfoTable = _contextTest.ClientAcctInfoWs;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+
+        }
+
+        public async Task<IQueryable<IDebtorMaster>> GetFlagForDebtorMasterBySsn(string ssn, string environment)
+        {
+
+            if (environment == "P")
+            {
+                if (await _context.DebtorMasters.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _context.DebtorMasters;
+                }
+                else if (await _context.DebtorMasterDs.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _context.DebtorMasterDs;
+                }
+                else if (await _context.DebtorMasterHs.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _context.DebtorMasterHs;
+                }
+                else if (await _context.DebtorMasterLs.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _context.DebtorMasterLs;
+                }
+                else if (await _context.DebtorMasterTs.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _context.DebtorMasterTs;
+                }
+                else if (await _context.DebtorMasterWs.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _context.DebtorMasterWs;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (environment == "PO")
+            {
+                if (await _contextProdOld.DebtorMasters.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextProdOld.DebtorMasters;
+                }
+                else if (await _contextProdOld.DebtorMasterDs.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextProdOld.DebtorMasterDs;
+                }
+                else if (await _contextProdOld.DebtorMasterHs.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextProdOld.DebtorMasterHs;
+                }
+                else if (await _contextProdOld.DebtorMasterLs.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextProdOld.DebtorMasterLs;
+                }
+                else if (await _contextProdOld.DebtorMasterTs.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextProdOld.DebtorMasterTs;
+                }
+                else if (await _contextProdOld.DebtorMasterWs.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextProdOld.DebtorMasterWs;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                if (await _contextTest.DebtorMasters.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextTest.DebtorMasters;
+                }
+                else if (await _contextTest.DebtorMasterDs.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextTest.DebtorMasterDs;
+                }
+                else if (await _contextTest.DebtorMasterHs.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextTest.DebtorMasterHs;
+                }
+                else if (await _contextTest.DebtorMasterLs.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextTest.DebtorMasterLs;
+                }
+                else if (await _contextTest.DebtorMasterTs.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextTest.DebtorMasterTs;
+                }
+                else if (await _contextTest.DebtorMasterWs.Where(x => x.Ssn == ssn).Select(x => x.DebtorAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextTest.DebtorMasterWs;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+
+        }
+
+
+        public async Task<IQueryable<IDebtorMaster>> GetFlagForDebtorMaster(string debtorAcct, string environment)
+        {
+            var account = debtorAcct.Substring(0, 4);
+            if (environment == "P")
+            {
+                if (await _context.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _context.DebtorMasters;
+                }
+                else if (await _context.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _context.DebtorMasterDs;
+                }
+                else if (await _context.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _context.DebtorMasterHs;
+                }
+                else if (await _context.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _context.DebtorMasterLs;
+                }
+                else if (await _context.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _context.DebtorMasterTs;
+                }
+                else if (await _context.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _context.DebtorMasterWs;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (environment == "PO")
+            {
+                if (await _contextProdOld.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextProdOld.DebtorMasters;
+                }
+                else if (await _contextProdOld.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextProdOld.DebtorMasterDs;
+                }
+                else if (await _contextProdOld.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextProdOld.DebtorMasterHs;
+                }
+                else if (await _contextProdOld.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextProdOld.DebtorMasterLs;
+                }
+                else if (await _contextProdOld.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextProdOld.DebtorMasterTs;
+                }
+                else if (await _contextProdOld.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextProdOld.DebtorMasterWs;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                if (await _contextTest.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextTest.DebtorMasters;
+                }
+                else if (await _contextProdOld.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextTest.DebtorMasterDs;
+                }
+                else if (await _contextTest.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextTest.DebtorMasterHs;
+                }
+                else if (await _contextTest.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextTest.DebtorMasterLs;
+                }
+                else if (await _contextTest.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextTest.DebtorMasterTs;
+                }
+                else if (await _contextTest.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).ToListAsync() != null)
+                {
+                    return _debtorMasterTable = _contextTest.DebtorMasterWs;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+
+        }
+
+        public async Task<IQueryable<IClientMaster>> GetFlagForClientMaster(string debtorAcct, string environment)
+        {
+
+            var account = debtorAcct.Substring(0, 4);
+            if (environment == "P")
+            {
+                if (await _context.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _context.ClientMasters;
+                }
+                else if (await _context.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _context.ClientMasterDs;
+                }
+                else if (await _context.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _context.ClientMasterHs;
+                }
+                else if (await _context.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _context.ClientMasterLs;
+                }
+                else if (await _context.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _context.ClientMasterTs;
+                }
+                else if (await _context.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _context.ClientMasterWs;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (environment == "PO")
+            {
+                if (await _contextProdOld.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _contextProdOld.ClientMasters;
+                }
+                else if (await _contextProdOld.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _contextProdOld.ClientMasterDs;
+                }
+                else if (await _contextProdOld.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _contextProdOld.ClientMasterHs;
+                }
+                else if (await _contextProdOld.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _contextProdOld.ClientMasterLs;
+                }
+                else if (await _contextProdOld.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _contextProdOld.ClientMasterTs;
+                }
+                else if (await _contextProdOld.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _contextProdOld.ClientMasterWs;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                if (await _contextTest.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _contextTest.ClientMasters;
+                }
+                else if (await _contextTest.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _contextTest.ClientMasterDs;
+                }
+                else if (await _contextTest.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _contextTest.ClientMasterHs;
+                }
+                else if (await _contextTest.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _contextTest.ClientMasterLs;
+                }
+                else if (await _contextTest.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _contextTest.ClientMasterTs;
+                }
+                else if (await _contextTest.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).SingleOrDefaultAsync() != null)
+                {
+                    return _clientMasterTable = _contextTest.ClientMasterWs;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+
+        }
+        
 
 
     }

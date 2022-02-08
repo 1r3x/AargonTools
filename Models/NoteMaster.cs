@@ -10,12 +10,13 @@ namespace AargonTools.Models
     [Table("note_master")]
     public partial class NoteMaster
     {
-        [Key]//experimrnt
+        
         [Required]
         [Column("debtor_acct")]
         [StringLength(15)]
         public string DebtorAcct { get; set; }
         [Column("note_date", TypeName = "datetime")]
+        [Key]//experimrnt
         public DateTime NoteDate { get; set; }
         [Column("employee")]
         public int Employee { get; set; }
