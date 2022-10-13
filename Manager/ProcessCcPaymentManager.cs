@@ -6,7 +6,9 @@ using AargonTools.Data.ADO;
 using AargonTools.Interfaces;
 using AargonTools.Manager.GenericManager;
 using AargonTools.Models;
+using AargonTools.Models.Helper;
 using AargonTools.ViewModel;
+using Microsoft.Extensions.Options;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 
@@ -22,10 +24,11 @@ namespace AargonTools.Manager
         private readonly IUserService _userService;
         private readonly ISetCCPayment _setCcPayment;//fro ccPayment Insert
         private readonly IAddNotes _addNotes;//fro notes Insert
+        private  readonly IOptions<CentralizeVariablesModel> _centralizeVariablesModel;
 
         public ProcessCcPaymentManager(ExistingDataDbContext context, ResponseModel response,
             TestEnvironmentDbContext contextTest, IAddNotes addNotes, AdoDotNetConnection adoConnection, IUserService userService,
-            ISetCCPayment setCcPayment)
+            ISetCCPayment setCcPayment, IOptions<CentralizeVariablesModel> centralizeVariablesModel)
         {
             _context = context;
             _response = response;
@@ -34,6 +37,7 @@ namespace AargonTools.Manager
             _userService = userService;
             _setCcPayment = setCcPayment;
             _addNotes = addNotes;
+            _centralizeVariablesModel = centralizeVariablesModel;
         }
         //models
         private class SaveCard
@@ -44,12 +48,12 @@ namespace AargonTools.Manager
         }
 
         //for tokenize the cc
-        private static async Task<ResponseModel> TokenizeCc(string cardNo, string expireDate, string environment)
+        private  async Task<ResponseModel> TokenizeCc(string cardNo, string expireDate, string environment)
         {
             if (environment == "P")
             {
-                USAePay.API.SetURL("https://sandbox.usaepay.com", "v2");
-                USAePay.API.SetAuthentication("_OF5UaX8RaAZ4h8XG4ppDP1VjnvH294Y", "1122333");
+                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.Url, "v2");
+                USAePay.API.SetAuthentication(_centralizeVariablesModel.Value.USAePayDefault.Key, _centralizeVariablesModel.Value.USAePayDefault.Pin);
 
                 var creditCardObj = new Dictionary<string, object>();
                 creditCardObj["number"] = cardNo;
@@ -62,15 +66,15 @@ namespace AargonTools.Manager
 
 
                 var tokenizeObjects = await USAePay.API.Transactions.PostAsync(request);
-
+               
                 string json = JsonConvert.SerializeObject(tokenizeObjects.ElementAt(8).Value, Formatting.Indented);
 
                 return _response.Response(json);
             }
             else
             {
-                USAePay.API.SetURL("https://sandbox.usaepay.com", "v2");
-                USAePay.API.SetAuthentication("_OF5UaX8RaAZ4h8XG4ppDP1VjnvH294Y", "1122333");
+                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.Url, "v2");
+                USAePay.API.SetAuthentication(_centralizeVariablesModel.Value.USAePayDefault.Key, _centralizeVariablesModel.Value.USAePayDefault.Pin);
 
                 var creditCardObj = new Dictionary<string, object>();
                 creditCardObj["number"] = cardNo;
@@ -81,22 +85,32 @@ namespace AargonTools.Manager
 
                 var request = new Dictionary<string, object> { ["command"] = "cc:save", ["creditcard"] = creditCardObj };
 
-
                 var tokenizeObjects = await USAePay.API.Transactions.PostAsync(request);
-
                 string json = JsonConvert.SerializeObject(tokenizeObjects.ElementAt(8).Value, Formatting.Indented);
-
                 return _response.Response(json);
             }
 
         }
 
-        private static async Task<ResponseModel> ProcessingTransaction(string tokenizeCc, decimal amount, string environment)
+        private async Task<ResponseModel> ProcessingTransaction(string tokenizeCc, decimal amount, bool hsa, string key, string pin, string environment)
         {
             if (environment == "P")
             {
-                USAePay.API.SetURL("https://sandbox.usaepay.com", "v2");
-                USAePay.API.SetAuthentication("_OF5UaX8RaAZ4h8XG4ppDP1VjnvH294Y", "1122333");
+                string tempkey;
+                string tempPin;
+                if (hsa == false)
+                {
+                    tempkey = _centralizeVariablesModel.Value.USAePayDefault.Key;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.Pin;
+                }
+                else
+                {
+                    tempkey = key;
+                    tempPin = pin;
+
+                }
+                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.Url, "v2");
+                USAePay.API.SetAuthentication(tempkey, tempPin);
 
                 var creditCardObj = new Dictionary<string, object> { ["number"] = tokenizeCc };
 
@@ -120,8 +134,21 @@ namespace AargonTools.Manager
             }
             else
             {
-                USAePay.API.SetURL("https://sandbox.usaepay.com", "v2");
-                USAePay.API.SetAuthentication("_OF5UaX8RaAZ4h8XG4ppDP1VjnvH294Y", "1122333");
+                string tempKey;
+                string tempPin;
+                if (hsa == false)
+                {
+                    tempKey = _centralizeVariablesModel.Value.USAePayDefault.Key;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.Pin;
+                }
+                else
+                {
+                    tempKey = key;
+                    tempPin = pin;
+
+                }
+                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.Url, "v2");
+                USAePay.API.SetAuthentication(tempKey, tempPin);
 
                 var creditCardObj = new Dictionary<string, object> { ["number"] = tokenizeCc };
 
@@ -148,10 +175,11 @@ namespace AargonTools.Manager
         }
 
         //no implementation for now....
-        private static async Task<ResponseModel> VoidTransaction(string transactionKey)
+        private  async Task<ResponseModel> VoidTransaction(string transactionKey)
         {
-            USAePay.API.SetURL("https://sandbox.usaepay.com", "v2");
-            USAePay.API.SetAuthentication("_OF5UaX8RaAZ4h8XG4ppDP1VjnvH294Y", "1122333");
+            USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.Url, "v2");
+            USAePay.API.SetAuthentication(_centralizeVariablesModel.Value.USAePayDefault.Key, _centralizeVariablesModel.Value.USAePayDefault.Pin);
+
 
             var request = new Dictionary<string, object>
             {
@@ -212,11 +240,11 @@ namespace AargonTools.Manager
 
             if (Convert.ToDecimal(rawAdo.Rows[0]["Return Value"]) == 0)
             {
-                return _response.Response(true,true,"Successfully Set Post Date Checks");
+                return _response.Response(true, true, "Successfully Set Post Date Checks");
             }
             else
             {
-                return _response.Response(true,false,"Oops Something went wrong.");
+                return _response.Response(true, false, "Oops Something went wrong.");
             }
 
 
@@ -317,7 +345,7 @@ namespace AargonTools.Manager
 
                                                                   "1," +//_userService.GetLoginUserName() + "," +//user name from api but no implementation default 1 
 
-                                                                 "'"+debtorData.Rows[0]["employee"] + "'," +//the queue set from the debtor account's employee 
+                                                                 "'" + debtorData.Rows[0]["employee"] + "'," +//the queue set from the debtor account's employee 
                                                                   statusCode +
                                                                   "'Y'," +
                                                                   "NULL," +
@@ -360,7 +388,7 @@ namespace AargonTools.Manager
                     "WHERE client_acct = '" + debtorAccount.Substring(0, 4) + "'"
                     , environment);
 
-               
+
 
 
                 var insertNotes = _adoConnection.GetData(
@@ -407,65 +435,73 @@ namespace AargonTools.Manager
             {
                 var tokenizeDataJsonResult = TokenizeCc(request.ccNumber, request.expiredDate, environment).Result;
                 var tokenizeCObj = JsonConvert.DeserializeObject<SaveCard>(tokenizeDataJsonResult.Data.ToString() ?? string.Empty);
-                var processTransactionJsonResult = ProcessingTransaction(tokenizeCObj.Key, request.amount, environment).Result.Data;
-
-
-                //var responseResults = JsonConvert.DeserializeObject<SetProcessCCResponse>(processTransactionJsonResult.ToString() ?? string.Empty);
-
-
-                //cc paymnet insert 
-                await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
+                if (request.amount != null)
                 {
-                    debtorAcc = request.debtorAcc,
-                    approvalCode = "",
-                    approvalStatus = "APPROVED",
-                    chargeTotal = request.amount,
-                    company = "AARGON AGENCY",
-                    sif = "Y",
-                    paymentDate = DateTime.Now,
-                    refNo = "USAEPAY2",
-                    orderNumber = "",
-                    userId = "WEB",
-                }, environment);
 
-                if (request.numberOfPayments > 1)
-                {
-                    var spResult = await SchedulePostData(request.debtorAcc, DateTime.Now, request.amount, request.ccNumber, request.numberOfPayments, request.expiredDate.Substring(0, 2),
-                        request.expiredDate.Substring(2, 2), environment);
-                }
+                    var processTransactionJsonResult = ProcessingTransaction(tokenizeCObj.Key, (decimal)request.amount, request.hsa != null && (bool)request.hsa, request.key, request.pin, environment).Result.Data;
 
-                if (processTransactionJsonResult.ToString() != "Oops something went wrong")
-                {
-                    try
+
+                    //var responseResults = JsonConvert.DeserializeObject<SetProcessCCResponse>(processTransactionJsonResult.ToString() ?? string.Empty);
+
+
+                    //cc payment insert 
+                    await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
                     {
-                        await PostPayment(request.debtorAcc, request.amount, DateAndTime.Now, "", Convert.ToDecimal(0), environment);
-                        var debtorData = _adoConnection.GetData(
-                            "INSERT INTO note_master " +
-                            "( debtor_acct," +
-                            " note_date," +
-                            "employee," +
-                            "note_text," +
-                            "activity_code)" +
-                            //values
-                            "VALUES('" + request.debtorAcc + "'," +
-                            "GETDATE()," +
-                            "0," +
-                            "'API PAYMENT " + "Successful" + ": $" + request.amount + " - " + "auth" + "; CC - ' + UPPER('" + tokenizeCObj.Type + "') + ' - XXXX-" + request.ccNumber.Substring(request.ccNumber.Length - 4) + "'," +
-                            "'PM')"
-                            , environment);
-                    }
-                    catch (Exception e)
+                        debtorAcc = request.debtorAcc,
+                        approvalCode = "",
+                        approvalStatus = "APPROVED",
+                        chargeTotal = (decimal)request.amount,
+                        company = "AARGON AGENCY",
+                        sif = "Y",
+                        paymentDate = DateTime.Now,
+                        refNo = "USAEPAY2",
+                        orderNumber = "",
+                        userId = "WEB",
+                    }, environment);
+
+                    if (request.numberOfPayments > 1)
                     {
-                        return _response.Response(true, false, e);
+                        if (request.expiredDate != null)
+                        {
+                            var spResult = await SchedulePostData(request.debtorAcc, DateTime.Now,
+                                (decimal)request.amount, request.ccNumber, (int)request.numberOfPayments,
+                                request.expiredDate.Substring(0, 2),
+                                request.expiredDate.Substring(2, 2), environment);
+                        }
                     }
-                    return _response.Response(true, true, processTransactionJsonResult);
 
+                    if (processTransactionJsonResult.ToString() != "Oops something went wrong")
+                    {
+                        try
+                        {
+                            await PostPayment(request.debtorAcc, (decimal)request.amount, DateAndTime.Now, "", Convert.ToDecimal(0), environment);
+                            var debtorData = _adoConnection.GetData(
+                                "INSERT INTO note_master " +
+                                "( debtor_acct," +
+                                " note_date," +
+                                "employee," +
+                                "note_text," +
+                                "activity_code)" +
+                                //values
+                                "VALUES('" + request.debtorAcc + "'," +
+                                "GETDATE()," +
+                                "0," +
+                                "'API PAYMENT " + "Successful" + ": $" + request.amount + " - " + "auth" + "; CC - ' + UPPER('" + tokenizeCObj.Type + "') + ' - XXXX-" + request.ccNumber.Substring(request.ccNumber.Length - 4) + "'," +
+                                "'PM')"
+                                , environment);
+                        }
+                        catch (Exception e)
+                        {
+                            return _response.Response(true, false, e);
+                        }
+                        return _response.Response(true, true, processTransactionJsonResult);
+
+                    }
                 }
-
             }
             catch (Exception e)
             {
-                return _response.Response(true,false,e);
+                return _response.Response(true, false, e);
                 throw;
             }
 

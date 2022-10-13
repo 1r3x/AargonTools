@@ -226,7 +226,7 @@ namespace AargonTools.Controllers
                     new Claim(JwtRegisteredClaimNames.Sub, user.Email),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 }),
-                Expires = DateTime.UtcNow.AddSeconds(3000), // we should change it in production (5-10) min. 
+                Expires = DateTime.UtcNow.AddMinutes(50), //50 min now we should change it in production (5-10) min. 
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 

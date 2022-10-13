@@ -20,6 +20,7 @@ using AargonTools.Manager;
 using AargonTools.Manager.GenericManager;
 using AargonTools.Middleware;
 using AargonTools.Models;
+using AargonTools.Models.Helper;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Identity;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -46,6 +47,8 @@ namespace AargonTools
             services.Configure<ApplicationsOptions>(Configuration.GetSection("ApplicationOptions"));
 
             services.Configure<JwtConfig>(Configuration.GetSection("JwtConfig"));
+            //for centralize data 
+            services.Configure<CentralizeVariablesModel>(Configuration.GetSection("CentralizeVariables"));
 
             services.AddDbContext<ApiDbContext>(options =>
                 options.UseSqlServer(

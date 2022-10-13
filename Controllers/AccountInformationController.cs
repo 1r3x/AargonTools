@@ -433,5 +433,45 @@ namespace AargonTools.Controllers
             }
 
         }
+
+
+        /// <summary>
+        ///  Returns Next Payment Info.(prod)
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// Gets the client's new payment info by passing parameterized clientAcct like the request example. All parameters are required
+        /// for this endpoint . You can call with an API client like  https://g14.aargontools.com/api/AccountInformation/GetNextPaymentInfo/0001-000001
+        /// and it's a GET request for getting the data.
+        /// 
+        /// Regular expression for debtorAcct [@"\d{4}-\d{6}"] ex. 0001-000001, for company ex. A,
+        /// Required a valid token.
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        /// 
+        [ProducesResponseType(typeof(GetNextPaymentInfoExample), 200)]
+        [HttpGet("GetNextPaymentInfo/{clientAcct}")]
+        public async Task<IActionResult> GetNextPaymentInfo(string clientAcct)
+        {
+            Serilog.Log.Information("GetNextPaymentInfo => GET");
+            try
+            {
+                //P for prod.
+                var item = await _context.GetNextPaymentInfo(clientAcct, "P");
+
+                return Ok(item);
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Error(e.InnerException, e.Message);
+                throw;
+            }
+
+        }
+
+
+
     }
 }

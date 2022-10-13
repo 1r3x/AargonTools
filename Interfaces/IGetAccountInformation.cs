@@ -25,5 +25,8 @@ namespace AargonTools.Interfaces
         Task<ResponseModel> GetClientPrimaryContact(string clientAcct, string company, string environment);
         Task<ResponseModel> GetClientInvoicePayments(GetClientInvoiceRequestModel request, string environment);
 
+        //get the next payment info for a specific debtor account
+        Task<ResponseModel> GetNextPaymentInfo(string debtorAcct, string environment);
+
     }
 }

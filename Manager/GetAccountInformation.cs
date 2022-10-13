@@ -1445,5 +1445,98 @@ namespace AargonTools.Manager
             return listOfItems;
         }
 
+        public async Task<ResponseModel> GetNextPaymentInfo(string debtorAcct, string environment)
+        {
+            //this function automatically works for all environments cause every things is submitted  from API controller  
+            var flag = await _companyFlag.GetStringFlagForAdoQuery(debtorAcct, environment);
+
+            var rowAdo = _adoConnection.GetData("SELECT DM.first_name+' '+DM.last_name as name_first_last," +
+                                                "DAI.balance as balance," +
+                                                "DAI.payment_amt_life as amount_paid_life," +
+                                                "DAI.date_of_service as date_of_service," +
+                                                "DM.ssn as ssn9," +
+                                                "substring(DM.address1,1,patindex('% %',DM.address1)-1) as street_number," +
+                                                "substring(DM.address1,patindex('% %',DM.address1)+1,99)+' '+DM.address2 as street_name," +
+                                                "DM.city as city," +
+                                                "DM.state_code as state," +
+                                                "DM.zip as zip_code," +
+                                                "CM.client_name as client_name," +
+                                                "CM.client_desc as client_description," +
+                                                "CAI.charge_interest as client_interst_bearingB," +
+                                                "CAI.report_to_bureau as client_credit_reportableB," +
+                                                "DPI.home_area_code+DPI.home_phone as home_phone_number," +
+                                                "DPI.home_phone_ver as home_phone_verifiedB," +
+                                                "DPI.home_phone_dont_call as home_phone_ponB," +
+                                                "DPI.cell_area_code+DPI.cell_phone as cell_phone_number," +
+                                                "DPI.cell_phone_ver as cell_phone_verifiedB," +
+                                                "DPI.cell_phone_dont_call as cell_phone_ponB," +
+                                                "DAI.last_payment_amt as last_payment_amount," +
+                                                "DAI.begin_age_date as last_payment_date," +
+                                                "DM.birth_date as birth_date ," +
+                                                "isnull(DPPI.pp_amount1,0) as promise_amount," +
+                                                "isnull(DPPI.pp_date1,'2000-01-01') as promise_date," +
+                                                "isnull((select check_amt from check_detail where debtor_acct='" + debtorAcct + "'),0) as check_amt," +
+                                                "isnull((select check_date from check_detail where debtor_acct='" + debtorAcct + "'),'2000-01-01') as check_date," +
+                                                "isnull((select top 1 total from larry_cc_payments where debtor_acct='" + debtorAcct + "' and processed='N' order by date_process asc),0) as cc_amt," +
+                                                "isnull((select top 1 date_process from larry_cc_payments where debtor_acct='" + debtorAcct + "' and processed='N' order by date_process asc),'2000-01-01') as cc_date " +
+                                                "FROM debtor_master" + flag + " DM," +
+                                                "debtor_acct_info" + flag + " DAI," +
+                                                "client_master" + flag + " CM," +
+                                                "client_acct_info" + flag + " CAI," +
+                                                "debtor_phone_info DPI," +
+                                                "debtor_pp_info DPPI" +
+                                                " WHERE " +
+                                                "DM.debtor_acct=DAI.debtor_acct " +
+                                                "AND LEFT(DAI.debtor_acct,4)=CM.client_acct " +
+                                                "AND CM.client_acct =CAI.client_acct " +
+                                                "AND DAI.debtor_acct=DPI.debtor_acct " +
+                                                "AND DAI.debtor_acct=DPPI.debtor_acct " +
+                                                "AND DAI.debtor_acct='" + debtorAcct + "'", environment);
+
+
+
+
+
+            var listOfItems = new List<GetNextPaymentInfoViewModel>();
+            for (var i = 0; i < rowAdo.Rows.Count; i++)
+            {
+                var itemData = new GetNextPaymentInfoViewModel
+                {
+                    name_first_last = Convert.ToString(rowAdo.Rows[i]["name_first_last"]),
+                    balance = rowAdo.Rows[i]["balance"] is DBNull ? 0 : Convert.ToDecimal(rowAdo.Rows[i]["balance"]),
+                    amount_paid_life = rowAdo.Rows[i]["amount_paid_life"] is DBNull ? 0 : Convert.ToDecimal(rowAdo.Rows[i]["amount_paid_life"]),
+                    date_of_service= Convert.ToDateTime(rowAdo.Rows[i]["date_of_service"]),
+                    ssn9 = rowAdo.Rows[i]["ssn9"] is DBNull ? 0 : Convert.ToDecimal(rowAdo.Rows[i]["ssn9"]),
+                    street_number = Convert.ToString(rowAdo.Rows[i]["street_number"]),
+                    street_name = Convert.ToString(rowAdo.Rows[i]["street_name"]),
+                    city = Convert.ToString(rowAdo.Rows[i]["city"]),
+                    state = Convert.ToString(rowAdo.Rows[i]["state"]),
+                    zip_code = Convert.ToString(rowAdo.Rows[i]["zip_code"]),
+                    client_name = Convert.ToString(rowAdo.Rows[i]["client_name"]),
+                    client_description = Convert.ToString(rowAdo.Rows[i]["client_description"]),
+                    client_interst_bearingB = Convert.ToString(rowAdo.Rows[i]["client_interst_bearingB"]),
+                    client_credit_reportableB = Convert.ToString(rowAdo.Rows[i]["client_credit_reportableB"]),
+                    home_phone_number = Convert.ToString(rowAdo.Rows[i]["home_phone_number"]),
+                    home_phone_verifiedB = Convert.ToString(rowAdo.Rows[i]["home_phone_verifiedB"]),
+                    home_phone_ponB = Convert.ToString(rowAdo.Rows[i]["home_phone_ponB"]),
+                    cell_phone_number = Convert.ToString(rowAdo.Rows[i]["cell_phone_number"]),
+                    cell_phone_verifiedB = Convert.ToString(rowAdo.Rows[i]["cell_phone_verifiedB"]),
+                    cell_phone_ponB = Convert.ToString(rowAdo.Rows[i]["cell_phone_ponB"]),
+                    last_payment_amount = rowAdo.Rows[i]["last_payment_amount"] is DBNull ? 0 : Convert.ToDecimal(rowAdo.Rows[i]["last_payment_amount"]),
+                    last_payment_date = Convert.ToDateTime(rowAdo.Rows[i]["last_payment_date"]),
+                    birth_date = Convert.ToDateTime(rowAdo.Rows[i]["birth_date"]),
+                    promise_amount = rowAdo.Rows[i]["promise_amount"] is DBNull ? 0 : Convert.ToDecimal(rowAdo.Rows[i]["promise_amount"]),
+                    promise_date = Convert.ToDateTime(rowAdo.Rows[i]["promise_date"]),
+                    check_amt = rowAdo.Rows[i]["check_amt"] is DBNull ? 0 : Convert.ToDecimal(rowAdo.Rows[i]["check_amt"]),
+                    check_date = Convert.ToDateTime(rowAdo.Rows[i]["check_date"]),
+                    cc_amt = rowAdo.Rows[i]["cc_amt"] is DBNull ? 0 : Convert.ToDecimal(rowAdo.Rows[i]["cc_amt"]),
+                    cc_date = Convert.ToDateTime(rowAdo.Rows[i]["cc_date"])
+                };
+                listOfItems.Add(itemData);
+            }
+
+            return _response.Response(listOfItems);
+
+        }
     }
 }
