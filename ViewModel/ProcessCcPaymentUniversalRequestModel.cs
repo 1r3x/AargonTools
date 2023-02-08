@@ -1,9 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
 using FoolProof.Core;
 
 namespace AargonTools.ViewModel
 {
-    public class ProcessCcPaymentRequestModel
+    public class ProcessCcPaymentUniversalRequestModel
     {
         [Required]
         public string? debtorAcc { get; set; }
@@ -17,11 +21,5 @@ namespace AargonTools.ViewModel
         public int? numberOfPayments { get; set; }
         [Required]
         public decimal amount { get; set; }
-        [Required]
-        public bool? hsa { get; set; }
-        [RequiredIf("hsa",true)]
-        public string? key { get; set; }
-        [RequiredIf("hsa", true)]
-        public string? pin { get; set; }
     }
 }

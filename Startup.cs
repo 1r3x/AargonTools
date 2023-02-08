@@ -64,6 +64,9 @@ namespace AargonTools
             services.AddDbContext<ProdOldDbContext>(
                 options => options.UseSqlServer("name=ConnectionStrings:ProdOldConnection"));
 
+            services.AddDbContext<CurrentBackupTestEnvironmentDbContext>(
+                options => options.UseSqlServer("name=ConnectionStrings:CurrentBackupTestConnection"));
+
             var key = Encoding.ASCII.GetBytes(Configuration["JwtConfig:Secret"]);
 
             var tokenValidationParams = new TokenValidationParameters
@@ -136,12 +139,14 @@ namespace AargonTools
             services.AddScoped<ResponseModel>();
             services.AddScoped<AdoDotNetConnection>();
             services.AddScoped<GetTheCompanyFlag>();
+            services.AddScoped<GatewaySelectionHelper>();
 
             //injected getAccountInformation v1.0
             services.AddScoped<IGetAccountInformation, GetAccountInformation>();
             //injected setAccountInformation v1.0
             services.AddScoped<ISetMoveAccount, SetMoveAccount>();
             services.AddScoped<IAddNotes, AddNotes>();
+            services.AddScoped<IAddNotesV3, AddNotesV3>();
             services.AddScoped<IAddBadNumbers, AddBadNumbers>();
             services.AddScoped<ISetDoNotCall, SetDoNotCall>();
             services.AddScoped<ISetNumber, SetNumberManager>();
@@ -157,11 +162,25 @@ namespace AargonTools
             services.AddScoped<IAddNotesV2, AddNotesV2Manager>();
             services.AddScoped<ISetDialing, SetDialingManager>();
             services.AddScoped<ISetUpdateAddress, SetUpdateAddressManager>();
+            services.AddScoped<IAddCcPaymentV2, AddCcPaymentV2>();
+            services.AddScoped<ICardTokenizationDataHelper, CardTokenizationDataHelper>();
+            services.AddScoped<ICryptoGraphy, CryptoGraphy>();
+            //
+
+            //services.AddScoped<IUniversalCcProcessHelper, UniversalCcProcessHelper>();
+            services.AddHttpClient<IUniversalCcProcessApiService, UniversalCcProcessApiService>();
+            //services.AddScoped<IUniversalCcProcessManager, UniversalCcProcessManager>();
+
 
             //
             services.AddHttpContextAccessor();
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<ISetInteractResults, InteractResultsManager>();
+
+
+            
+            
+            
 
         }
 

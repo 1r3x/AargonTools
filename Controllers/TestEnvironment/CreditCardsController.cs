@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
+using AargonTools.Manager.GenericManager;
 using AargonTools.ViewModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -17,11 +18,15 @@ namespace AargonTools.Controllers.TestEnvironment
     {
         private readonly IProcessCcPayment _processCcPayment;
         private readonly ISetCCPayment _setCcPayment;
+        private readonly IUniversalCcProcessApiService _processCcUniversal;
+        private static GatewaySelectionHelper _gatewaySelectionHelper;
 
-        public CreditCardsController(IProcessCcPayment processCcPayment, ISetCCPayment setCcPayment)
+        public CreditCardsController(IProcessCcPayment processCcPayment, ISetCCPayment setCcPayment, IUniversalCcProcessApiService processCcUniversal, GatewaySelectionHelper gatewaySelectionHelper)
         {
             _processCcPayment = processCcPayment;
             _setCcPayment = setCcPayment;
+            _processCcUniversal = processCcUniversal;
+            _gatewaySelectionHelper = gatewaySelectionHelper;
         }
 
         /// <summary>
@@ -143,6 +148,125 @@ namespace AargonTools.Controllers.TestEnvironment
 
             return new JsonResult("Something went wrong") { StatusCode = 500 };
         }
+
+
+
+
+        /// <summary>
+        ///  Can process CC Payments.(New Test Environment [C-SQLTEST1])
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// You can process CC payments by passing required parameters.
+        /// This endpoint can process through multiple gateways.It will automatically choose the desire gateways by debtor acct number.
+        /// You need a valid token for this endpoint .
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/Test/CreditCards/ProcessCc
+        /// (pass JSON body like the request example)
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+
+        ///
+
+        [ProducesResponseType(typeof(ProcessCCResponse), 200)]
+        [HttpPost("ProcessCc")]
+        public async Task<IActionResult> ProcessCc([FromBody] ProcessCcPaymentUniversalRequestModel requestCcPayment)
+        {
+            Serilog.Log.Information("ProcessCc => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+
+
+                    if (requestCcPayment.debtorAcc != null)
+                    {
+                        DateTime scheduleDateTime = DateTime.Now;//todo 
+                        var acctLimitTemp = requestCcPayment.debtorAcc.Split('-');
+                        var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
+                        if (acctLimitCheck >= 4950000001 && acctLimitCheck < 4950999999)
+                        {
+
+                            ResponseModel response;
+
+                            if (scheduleDateTime.Date == DateTime.Now.Date)
+                            {
+                                response = await _processCcUniversal.ProcessSaleTransForInstaMed(requestCcPayment, "CBT");
+                            }
+                            else
+                            {
+                                response = await _processCcUniversal.ProcessCardAuthorizationForInstaMed(requestCcPayment, "CBT");
+                            }
+
+                            return Ok(response);
+                        }
+                        if (acctLimitCheck >= 4953000001 && acctLimitCheck < 4953999999)
+                        {
+                            ResponseModel response;
+                            if (scheduleDateTime.Date == DateTime.Now.Date)
+                            {
+                                response = await _processCcUniversal.ProcessSaleTransForInstaMed(requestCcPayment, "CBT");
+                            }
+                            else
+                            {
+                                response = await _processCcUniversal.ProcessCardAuthorizationForInstaMed(requestCcPayment, "CBT");
+                            }
+
+                            return Ok(response);
+                        }
+                        if (acctLimitCheck >= 4514000001 && acctLimitCheck < 4950999999)
+                        {
+                            ResponseModel response;
+                            if (scheduleDateTime.Date == DateTime.Now.Date)
+                            {
+                                response = await _processCcUniversal.ProcessSaleTransForIProGateway(requestCcPayment, "CBT");
+                            }
+                            else
+                            {
+                                response = await _processCcUniversal.ProcessCardAuthorizationForIProGateway(requestCcPayment, "CBT");
+                            }
+
+                            return Ok(response);
+                        }
+                        else
+                        {
+                            var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(requestCcPayment.debtorAcc, "CBT");
+                            if (gatewaySelect.Result == "ELAVON")
+                            {
+                                ResponseModel response;
+                                if (scheduleDateTime.Date == DateTime.Now.Date)
+                                {
+                                    response = await _processCcUniversal.ProcessSaleTransForElavon(requestCcPayment, "CBT");
+                                }
+                                else
+                                {
+                                    response = await _processCcUniversal.ProcessCardAuthorizationForIProGateway(requestCcPayment, "CBT");
+                                }
+
+                                return Ok(response);
+                            }
+
+                            //if (gatewaySelct=="")
+                            //{
+
+                            //}
+
+                            return Ok();
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
 
 
     }
