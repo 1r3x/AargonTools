@@ -215,7 +215,7 @@ namespace AargonTools.Controllers.TestEnvironment
 
                             return Ok(response);
                         }
-                        if (acctLimitCheck >= 4514000001 && acctLimitCheck < 4950999999)
+                        if (acctLimitCheck >= 4514000001 && acctLimitCheck < 4514999999)
                         {
                             ResponseModel response;
                             if (scheduleDateTime.Date == DateTime.Now.Date)
