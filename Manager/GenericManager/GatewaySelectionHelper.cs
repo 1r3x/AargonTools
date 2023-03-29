@@ -28,7 +28,7 @@ namespace AargonTools.Manager.GenericManager
             if (environment == "P")
             {
                 var indexCount =
-                    _context.LarryCcIndices.Count(x => x.ClientAcct == debtorAcct.Substring(0, 5) && x.AcctStatus == "A");
+                    _context.LarryCcIndices.Count(x => x.ClientAcct == debtorAcct.Substring(0, 4) && x.AcctStatus == "A");//bug length 0-4
                 var gatewayName = "";
                 if (indexCount == 0)
                 {
@@ -55,7 +55,7 @@ namespace AargonTools.Manager.GenericManager
             else if (environment == "PO")
             {
                 var indexCount =
-                    _contextProdOld.LarryCcIndices.Count(x => x.ClientAcct == debtorAcct.Substring(0, 5) && x.AcctStatus == "A");
+                    _contextProdOld.LarryCcIndices.Count(x => x.ClientAcct == debtorAcct.Substring(0, 4) && x.AcctStatus == "A");
                 var gatewayName = "";
                 if (indexCount == 0)
                 {

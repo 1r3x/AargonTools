@@ -148,25 +148,5 @@ namespace AargonTools.Controllers
 
 
 
-
-        /// <summary>
-        ///  Can Process CC Payments.(Prod.)
-        /// </summary>
-        /// 
-        /// <remarks>
-        /// **Details**:
-        /// Set cc payment by passing required parameters. A valid token is required for sending the data.
-        ///Pass the parameter with API client like https://g14.aargontools.com/api/CreditCards/ProcessCc
-        /// (pass JSON body like the request example)
-        /// 
-        /// 
-        /// </remarks>
-        /// <response code="200">Execution Successful</response>
-        /// <response code="401">Unauthorized , please login or refresh your token.</response>
-        ///
-
-      
-
-
     }
 }

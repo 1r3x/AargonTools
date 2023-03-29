@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AargonTools.Data.ADO;
@@ -401,6 +402,7 @@ namespace AargonTools.Manager
                             {
                                 string phoneAreaCode;
                                 string phoneNo;
+                                string debtorAccountCheckFromPhone = "";
                                 if (request.phone == "")
                                 {
                                     phoneAreaCode = "";
@@ -414,31 +416,85 @@ namespace AargonTools.Manager
 
                                 if (request.debtorAcct == "" && request.ssn == "")
                                 {
-                                    var phoneInfoData = from phn in _contextProdOld.DebtorPhoneInfos
-                                                        where phn.HomePhone == phoneNo && phn.HomeAreaCode == phoneAreaCode
-                                                        select new
-                                                        {
-                                                            phn.HomePhone,
-                                                            phn.HomeAreaCode,
-                                                            phn.CellPhone,
-                                                            phn.CellAreaCode,
-                                                            phn.RelativeAreaCode,
-                                                            phn.RelativePhone,
-                                                            phn.OtherAreaCode,
-                                                            phn.OtherPhone,
-                                                            phn.DebtorAcct,
-                                                            phn.WorkAreaCode,
-                                                            phn.WorkPhone
-                                                        };
-                                    var debtorAccountCheckFromPhone = await (phoneInfoData.Select(a => a.DebtorAcct)).SingleOrDefaultAsync();
-                                    if (debtorAccountCheckFromPhone.Any())
+                                    var phoneInfoDataFromHome = _contextProdOld.DebtorPhoneInfos
+                                       .Where(phn => phn.HomePhone == phoneNo && phn.HomeAreaCode == phoneAreaCode)
+                                       .Select(phn => new
+                                       {
+                                           phn.HomePhone,
+                                           phn.HomeAreaCode,
+                                           phn.CellPhone,
+                                           phn.CellAreaCode,
+                                           phn.RelativeAreaCode,
+                                           phn.RelativePhone,
+                                           phn.OtherAreaCode,
+                                           phn.OtherPhone,
+                                           phn.DebtorAcct,
+                                           phn.WorkAreaCode,
+                                           phn.WorkPhone
+                                       }).ToList();
+
+
+
+
+                                    var phoneInfoDataFromCell = _contextProdOld.DebtorPhoneInfos
+                                        .Where(phn => phn.CellPhone == phoneNo && phn.CellAreaCode == phoneAreaCode)
+                                        .Select(phn => new
+                                        {
+                                            phn.HomePhone,
+                                            phn.HomeAreaCode,
+                                            phn.CellPhone,
+                                            phn.CellAreaCode,
+                                            phn.RelativeAreaCode,
+                                            phn.RelativePhone,
+                                            phn.OtherAreaCode,
+                                            phn.OtherPhone,
+                                            phn.DebtorAcct,
+                                            phn.WorkAreaCode,
+                                            phn.WorkPhone
+                                        }).ToList();
+
+                                    var phoneInfoDataFromOther = _contextProdOld.DebtorPhoneInfos
+                                        .Where(phn => phn.OtherPhone == phoneNo && phn.OtherAreaCode == phoneAreaCode)
+                                        .Select(phn => new
+                                        {
+                                            phn.HomePhone,
+                                            phn.HomeAreaCode,
+                                            phn.CellPhone,
+                                            phn.CellAreaCode,
+                                            phn.RelativeAreaCode,
+                                            phn.RelativePhone,
+                                            phn.OtherAreaCode,
+                                            phn.OtherPhone,
+                                            phn.DebtorAcct,
+                                            phn.WorkAreaCode,
+                                            phn.WorkPhone
+                                        }).ToList();
+
+
+                                    if (phoneInfoDataFromHome.Any())
+                                    {
+                                        debtorAccountCheckFromPhone = phoneInfoDataFromHome.Select(a => a.DebtorAcct)
+                                            .FirstOrDefault();
+                                    }
+                                    else if (phoneInfoDataFromCell.Any())
+                                    {
+                                        debtorAccountCheckFromPhone = phoneInfoDataFromCell.Select(a => a.DebtorAcct)
+                                            .FirstOrDefault();
+                                    }
+                                    else if (phoneInfoDataFromOther.Any())
+                                    {
+                                        debtorAccountCheckFromPhone = phoneInfoDataFromOther.Select(a => a.DebtorAcct).FirstOrDefault();
+                                    }
+
+
+                                    if (debtorAccountCheckFromPhone != null && debtorAccountCheckFromPhone.Any())
                                     {
                                         return _response.Response(await GetInteractionsAcctDataHelper(debtorAccountCheckFromPhone, request.ssn, phoneNo, phoneAreaCode, environment));
                                     }
                                     else
                                     {
                                         var listOfItems = new List<GetInteractionAcctDataViewModel>();
-                                        for (var i = 0; i < phoneInfoData.Count(); i++)
+                                        for (var i = 0; i < phoneInfoDataFromHome.Count(); i++)
                                         {
                                             var itemData = new GetInteractionAcctDataViewModel
                                             {
@@ -449,18 +505,18 @@ namespace AargonTools.Manager
                                                 address1 = null,
                                                 address2 = null,
                                                 birthDate = null,
-                                                cellPhoneNumber = (phoneInfoData.Select(a => a.CellAreaCode)) + "-" + (phoneInfoData.Select(a => a.CellPhone)),
+                                                cellPhoneNumber = (phoneInfoDataFromHome.Select(a => a.CellAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.CellPhone)),
                                                 city = null,
                                                 clientName = null,
                                                 debtType = null,
                                                 emailAddress = null,
                                                 firstName = null,
-                                                homePhoneNumber = (phoneInfoData.Select(a => a.HomeAreaCode)) + "-" + (phoneInfoData.Select(a => a.HomePhone)),
+                                                homePhoneNumber = (phoneInfoDataFromHome.Select(a => a.HomeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.HomePhone)),
                                                 lastName = null,
-                                                otherPhoneNumer = (phoneInfoData.Select(a => a.OtherAreaCode)) + "-" + (phoneInfoData.Select(a => a.OtherPhone)),
-                                                relatiovePhoneNumber = (phoneInfoData.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoData.Select(a => a.RelativePhone)),
+                                                otherPhoneNumer = (phoneInfoDataFromHome.Select(a => a.OtherAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.OtherPhone)),
+                                                relatiovePhoneNumber = (phoneInfoDataFromHome.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.RelativePhone)),
                                                 stateCode = null,
-                                                workPhoneNumber = (phoneInfoData.Select(a => a.WorkAreaCode)) + "-" + (phoneInfoData.Select(a => a.WorkPhone)),
+                                                workPhoneNumber = (phoneInfoDataFromHome.Select(a => a.WorkAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.WorkPhone)),
                                                 zip = null
                                             };
                                             listOfItems.Add(itemData);
@@ -510,6 +566,7 @@ namespace AargonTools.Manager
                             {
                                 string phoneAreaCode;
                                 string phoneNo;
+                                string debtorAccountCheckFromPhone = "";
                                 if (request.phone == "")
                                 {
                                     phoneAreaCode = "";
@@ -523,31 +580,85 @@ namespace AargonTools.Manager
 
                                 if (request.debtorAcct == "" && request.ssn == "")
                                 {
-                                    var phoneInfoData = from phn in _context.DebtorPhoneInfos
-                                                        where phn.HomePhone == phoneNo && phn.HomeAreaCode == phoneAreaCode
-                                                        select new
-                                                        {
-                                                            phn.HomePhone,
-                                                            phn.HomeAreaCode,
-                                                            phn.CellPhone,
-                                                            phn.CellAreaCode,
-                                                            phn.RelativeAreaCode,
-                                                            phn.RelativePhone,
-                                                            phn.OtherAreaCode,
-                                                            phn.OtherPhone,
-                                                            phn.DebtorAcct,
-                                                            phn.WorkAreaCode,
-                                                            phn.WorkPhone
-                                                        };
-                                    var debtorAccountCheckFromPhone = await (phoneInfoData.Select(a => a.DebtorAcct)).SingleOrDefaultAsync();
-                                    if (debtorAccountCheckFromPhone.Any())
+                                    var phoneInfoDataFromHome = _context.DebtorPhoneInfos
+                                        .Where(phn => phn.HomePhone == phoneNo && phn.HomeAreaCode == phoneAreaCode)
+                                        .Select(phn => new
+                                        {
+                                            phn.HomePhone,
+                                            phn.HomeAreaCode,
+                                            phn.CellPhone,
+                                            phn.CellAreaCode,
+                                            phn.RelativeAreaCode,
+                                            phn.RelativePhone,
+                                            phn.OtherAreaCode,
+                                            phn.OtherPhone,
+                                            phn.DebtorAcct,
+                                            phn.WorkAreaCode,
+                                            phn.WorkPhone
+                                        }).ToList();
+
+
+
+
+                                    var phoneInfoDataFromCell = _context.DebtorPhoneInfos
+                                        .Where(phn => phn.CellPhone == phoneNo && phn.CellAreaCode == phoneAreaCode)
+                                        .Select(phn => new
+                                        {
+                                            phn.HomePhone,
+                                            phn.HomeAreaCode,
+                                            phn.CellPhone,
+                                            phn.CellAreaCode,
+                                            phn.RelativeAreaCode,
+                                            phn.RelativePhone,
+                                            phn.OtherAreaCode,
+                                            phn.OtherPhone,
+                                            phn.DebtorAcct,
+                                            phn.WorkAreaCode,
+                                            phn.WorkPhone
+                                        }).ToList();
+
+                                    var phoneInfoDataFromOther = _context.DebtorPhoneInfos
+                                        .Where(phn => phn.OtherPhone == phoneNo && phn.OtherAreaCode == phoneAreaCode)
+                                        .Select(phn => new
+                                        {
+                                            phn.HomePhone,
+                                            phn.HomeAreaCode,
+                                            phn.CellPhone,
+                                            phn.CellAreaCode,
+                                            phn.RelativeAreaCode,
+                                            phn.RelativePhone,
+                                            phn.OtherAreaCode,
+                                            phn.OtherPhone,
+                                            phn.DebtorAcct,
+                                            phn.WorkAreaCode,
+                                            phn.WorkPhone
+                                        }).ToList();
+
+
+                                    if (phoneInfoDataFromHome.Any())
+                                    {
+                                        debtorAccountCheckFromPhone = phoneInfoDataFromHome.Select(a => a.DebtorAcct)
+                                            .FirstOrDefault();
+                                    }
+                                    else if (phoneInfoDataFromCell.Any())
+                                    {
+                                        debtorAccountCheckFromPhone = phoneInfoDataFromCell.Select(a => a.DebtorAcct)
+                                            .FirstOrDefault();
+                                    }
+                                    else if (phoneInfoDataFromOther.Any())
+                                    {
+                                        debtorAccountCheckFromPhone = phoneInfoDataFromOther.Select(a => a.DebtorAcct).FirstOrDefault();
+                                    }
+
+
+                                    if (debtorAccountCheckFromPhone != null && debtorAccountCheckFromPhone.Any())
                                     {
                                         return _response.Response(await GetInteractionsAcctDataHelper(debtorAccountCheckFromPhone, request.ssn, phoneNo, phoneAreaCode, environment));
                                     }
                                     else
                                     {
                                         var listOfItems = new List<GetInteractionAcctDataViewModel>();
-                                        for (var i = 0; i < phoneInfoData.Count(); i++)
+                                        for (var i = 0; i < phoneInfoDataFromHome.Count(); i++)
                                         {
                                             var itemData = new GetInteractionAcctDataViewModel
                                             {
@@ -558,18 +669,18 @@ namespace AargonTools.Manager
                                                 address1 = null,
                                                 address2 = null,
                                                 birthDate = null,
-                                                cellPhoneNumber = (phoneInfoData.Select(a => a.CellAreaCode)) + "-" + (phoneInfoData.Select(a => a.CellPhone)),
+                                                cellPhoneNumber = (phoneInfoDataFromHome.Select(a => a.CellAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.CellPhone)),
                                                 city = null,
                                                 clientName = null,
                                                 debtType = null,
                                                 emailAddress = null,
                                                 firstName = null,
-                                                homePhoneNumber = (phoneInfoData.Select(a => a.HomeAreaCode)) + "-" + (phoneInfoData.Select(a => a.HomePhone)),
+                                                homePhoneNumber = (phoneInfoDataFromHome.Select(a => a.HomeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.HomePhone)),
                                                 lastName = null,
-                                                otherPhoneNumer = (phoneInfoData.Select(a => a.OtherAreaCode)) + "-" + (phoneInfoData.Select(a => a.OtherPhone)),
-                                                relatiovePhoneNumber = (phoneInfoData.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoData.Select(a => a.RelativePhone)),
+                                                otherPhoneNumer = (phoneInfoDataFromHome.Select(a => a.OtherAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.OtherPhone)),
+                                                relatiovePhoneNumber = (phoneInfoDataFromHome.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.RelativePhone)),
                                                 stateCode = null,
-                                                workPhoneNumber = (phoneInfoData.Select(a => a.WorkAreaCode)) + "-" + (phoneInfoData.Select(a => a.WorkPhone)),
+                                                workPhoneNumber = (phoneInfoDataFromHome.Select(a => a.WorkAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.WorkPhone)),
                                                 zip = null
                                             };
                                             listOfItems.Add(itemData);
@@ -619,6 +730,7 @@ namespace AargonTools.Manager
                             {
                                 string phoneAreaCode;
                                 string phoneNo;
+                                string debtorAccountCheckFromPhone="";
                                 if (request.phone == "")
                                 {
                                     phoneAreaCode = "";
@@ -632,31 +744,85 @@ namespace AargonTools.Manager
 
                                 if (request.debtorAcct == "" && request.ssn == "")
                                 {
-                                    var phoneInfoData = from phn in _contextTest.DebtorPhoneInfos
-                                                        where phn.HomePhone == phoneNo && phn.HomeAreaCode == phoneAreaCode
-                                                        select new
-                                                        {
-                                                            phn.HomePhone,
-                                                            phn.HomeAreaCode,
-                                                            phn.CellPhone,
-                                                            phn.CellAreaCode,
-                                                            phn.RelativeAreaCode,
-                                                            phn.RelativePhone,
-                                                            phn.OtherAreaCode,
-                                                            phn.OtherPhone,
-                                                            phn.DebtorAcct,
-                                                            phn.WorkAreaCode,
-                                                            phn.WorkPhone
-                                                        };
-                                    var debtorAccountCheckFromPhone = await (phoneInfoData.Select(a => a.DebtorAcct)).SingleOrDefaultAsync();
-                                    if (debtorAccountCheckFromPhone.Any())
+                                    var phoneInfoDataFromHome = _contextTest.DebtorPhoneInfos
+                                       .Where(phn => phn.HomePhone == phoneNo && phn.HomeAreaCode == phoneAreaCode)
+                                       .Select(phn => new
+                                       {
+                                           phn.HomePhone,
+                                           phn.HomeAreaCode,
+                                           phn.CellPhone,
+                                           phn.CellAreaCode,
+                                           phn.RelativeAreaCode,
+                                           phn.RelativePhone,
+                                           phn.OtherAreaCode,
+                                           phn.OtherPhone,
+                                           phn.DebtorAcct,
+                                           phn.WorkAreaCode,
+                                           phn.WorkPhone
+                                       }).ToList();
+
+
+
+
+                                    var phoneInfoDataFromCell = _contextTest.DebtorPhoneInfos
+                                        .Where(phn => phn.CellPhone == phoneNo && phn.CellAreaCode == phoneAreaCode)
+                                        .Select(phn => new
+                                        {
+                                            phn.HomePhone,
+                                            phn.HomeAreaCode,
+                                            phn.CellPhone,
+                                            phn.CellAreaCode,
+                                            phn.RelativeAreaCode,
+                                            phn.RelativePhone,
+                                            phn.OtherAreaCode,
+                                            phn.OtherPhone,
+                                            phn.DebtorAcct,
+                                            phn.WorkAreaCode,
+                                            phn.WorkPhone
+                                        }).ToList();
+
+                                    var phoneInfoDataFromOther = _contextTest.DebtorPhoneInfos
+                                        .Where(phn => phn.OtherPhone == phoneNo && phn.OtherAreaCode == phoneAreaCode)
+                                        .Select(phn => new
+                                        {
+                                            phn.HomePhone,
+                                            phn.HomeAreaCode,
+                                            phn.CellPhone,
+                                            phn.CellAreaCode,
+                                            phn.RelativeAreaCode,
+                                            phn.RelativePhone,
+                                            phn.OtherAreaCode,
+                                            phn.OtherPhone,
+                                            phn.DebtorAcct,
+                                            phn.WorkAreaCode,
+                                            phn.WorkPhone
+                                        }).ToList();
+
+
+                                    if (phoneInfoDataFromHome.Any())
+                                    {
+                                        debtorAccountCheckFromPhone = phoneInfoDataFromHome.Select(a => a.DebtorAcct)
+                                            .FirstOrDefault();
+                                    }
+                                    else if (phoneInfoDataFromCell.Any())
+                                    {
+                                        debtorAccountCheckFromPhone = phoneInfoDataFromCell.Select(a => a.DebtorAcct)
+                                            .FirstOrDefault();
+                                    }
+                                    else if (phoneInfoDataFromOther.Any())
+                                    {
+                                        debtorAccountCheckFromPhone = phoneInfoDataFromOther.Select(a => a.DebtorAcct).FirstOrDefault();
+                                    }
+
+
+                                    if (debtorAccountCheckFromPhone != null && debtorAccountCheckFromPhone.Any())
                                     {
                                         return _response.Response(await GetInteractionsAcctDataHelper(debtorAccountCheckFromPhone, request.ssn, phoneNo, phoneAreaCode, environment));
                                     }
                                     else
                                     {
                                         var listOfItems = new List<GetInteractionAcctDataViewModel>();
-                                        for (var i = 0; i < phoneInfoData.Count(); i++)
+                                        for (var i = 0; i < phoneInfoDataFromHome.Count(); i++)
                                         {
                                             var itemData = new GetInteractionAcctDataViewModel
                                             {
@@ -667,18 +833,18 @@ namespace AargonTools.Manager
                                                 address1 = null,
                                                 address2 = null,
                                                 birthDate = null,
-                                                cellPhoneNumber = (phoneInfoData.Select(a => a.CellAreaCode)) + "-" + (phoneInfoData.Select(a => a.CellPhone)),
+                                                cellPhoneNumber = (phoneInfoDataFromHome.Select(a => a.CellAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.CellPhone)),
                                                 city = null,
                                                 clientName = null,
                                                 debtType = null,
                                                 emailAddress = null,
                                                 firstName = null,
-                                                homePhoneNumber = (phoneInfoData.Select(a => a.HomeAreaCode)) + "-" + (phoneInfoData.Select(a => a.HomePhone)),
+                                                homePhoneNumber = (phoneInfoDataFromHome.Select(a => a.HomeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.HomePhone)),
                                                 lastName = null,
-                                                otherPhoneNumer = (phoneInfoData.Select(a => a.OtherAreaCode)) + "-" + (phoneInfoData.Select(a => a.OtherPhone)),
-                                                relatiovePhoneNumber = (phoneInfoData.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoData.Select(a => a.RelativePhone)),
+                                                otherPhoneNumer = (phoneInfoDataFromHome.Select(a => a.OtherAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.OtherPhone)),
+                                                relatiovePhoneNumber = (phoneInfoDataFromHome.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.RelativePhone)),
                                                 stateCode = null,
-                                                workPhoneNumber = (phoneInfoData.Select(a => a.WorkAreaCode)) + "-" + (phoneInfoData.Select(a => a.WorkPhone)),
+                                                workPhoneNumber = (phoneInfoDataFromHome.Select(a => a.WorkAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.WorkPhone)),
                                                 zip = null
                                             };
                                             listOfItems.Add(itemData);
@@ -1199,7 +1365,7 @@ namespace AargonTools.Manager
             DateTime? latestDate;
             switch (environment)
             {
-                case "p":
+                case "P":
                     {
                         var dateTimeList = new List<DateTime>();
                         var dateFromCheckDetails = await (from checkDate in _context.CheckDetails
@@ -1285,6 +1451,7 @@ namespace AargonTools.Manager
                                                 " SELECT distinct dai.debtor_acct," +
                                                 "dai.balance," +
                                                 "dai.email_address," +
+                                                "dai.acct_status," +
                                                 "dm.ssn," +
                                                 "dm.address1," +
                                                 "dm.address2," +
@@ -1343,7 +1510,8 @@ namespace AargonTools.Manager
                     relatiovePhoneNumber = Convert.ToString(rowAdo.Rows[i]["relative_area_code"]) + "-" + Convert.ToString(rowAdo.Rows[i]["relative_phone"]),
                     stateCode = Convert.ToString(rowAdo.Rows[i]["state_code"]),
                     workPhoneNumber = Convert.ToString(rowAdo.Rows[i]["work_area_code"]) + "-" + Convert.ToString(rowAdo.Rows[i]["work_phone"]),
-                    zip = Convert.ToString(rowAdo.Rows[i]["zip"])
+                    zip = Convert.ToString(rowAdo.Rows[i]["zip"]),
+                    accountStatus = Convert.ToString(rowAdo.Rows[i]["acct_status"])
                 };
                 listOfItems.Add(itemData);
             }
@@ -1379,6 +1547,7 @@ namespace AargonTools.Manager
                                                 " SELECT distinct dai.debtor_acct," +
                                                 "dai.balance," +
                                                 "dai.email_address," +
+                                                "dai.acct_status," +
                                                 "dm.ssn," +
                                                 "dm.address1," +
                                                 "dm.address2," +
@@ -1437,7 +1606,8 @@ namespace AargonTools.Manager
                     relatiovePhoneNumber = Convert.ToString(rowAdo.Rows[i]["relative_area_code"]) + "-" + Convert.ToString(rowAdo.Rows[i]["relative_phone"]),
                     stateCode = Convert.ToString(rowAdo.Rows[i]["state_code"]),
                     workPhoneNumber = Convert.ToString(rowAdo.Rows[i]["work_area_code"]) + "-" + Convert.ToString(rowAdo.Rows[i]["work_phone"]),
-                    zip = Convert.ToString(rowAdo.Rows[i]["zip"])
+                    zip = Convert.ToString(rowAdo.Rows[i]["zip"]),
+                    accountStatus = Convert.ToString(rowAdo.Rows[i]["acct_status"])
                 };
                 listOfItems.Add(itemData);
             }
@@ -1505,7 +1675,7 @@ namespace AargonTools.Manager
                     name_first_last = Convert.ToString(rowAdo.Rows[i]["name_first_last"]),
                     balance = rowAdo.Rows[i]["balance"] is DBNull ? 0 : Convert.ToDecimal(rowAdo.Rows[i]["balance"]),
                     amount_paid_life = rowAdo.Rows[i]["amount_paid_life"] is DBNull ? 0 : Convert.ToDecimal(rowAdo.Rows[i]["amount_paid_life"]),
-                    date_of_service= Convert.ToDateTime(rowAdo.Rows[i]["date_of_service"]),
+                    date_of_service = Convert.ToDateTime(rowAdo.Rows[i]["date_of_service"]),
                     ssn9 = rowAdo.Rows[i]["ssn9"] is DBNull ? 0 : Convert.ToDecimal(rowAdo.Rows[i]["ssn9"]),
                     street_number = Convert.ToString(rowAdo.Rows[i]["street_number"]),
                     street_name = Convert.ToString(rowAdo.Rows[i]["street_name"]),

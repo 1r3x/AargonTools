@@ -26,6 +26,7 @@ namespace AargonTools.ViewModel
         public string workPhoneNumber { get; set; }
         public string relatiovePhoneNumber { get; set; }
         public string otherPhoneNumer { get; set; }
+        public string accountStatus { get; set; }
         public DateTime? date { get; set; }
     }
 }

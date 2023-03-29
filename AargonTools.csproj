@@ -11,6 +11,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\prod_old\AccountInformationController.cs" />
+    <Compile Remove="Controllers\prod_old\CreditCardsController.cs" />
+    <Compile Remove="Controllers\prod_old\HrmController.cs" />
+    <Compile Remove="Controllers\prod_old\SetAccountsDetailsController.cs" />
+    <Compile Remove="Controllers\prod_old\SetHrmController.cs" />
     <Compile Remove="Manager\UniversalCcProcessHelper.cs" />
   </ItemGroup>
 
@@ -31,6 +36,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="7.0.2" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
     <PackageReference Include="USAePAY.SDK" Version="2.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Controllers\prod_old\" />
   </ItemGroup>
 
 </Project>

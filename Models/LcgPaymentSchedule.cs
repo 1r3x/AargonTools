@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AargonTools.Models
 {
-    [Table("LCG_PaymentSchedule")]
+    [Table("UCG_PaymentSchedule")]
     public partial class LcgPaymentSchedule
     {
         [Key]
