@@ -10,6 +10,18 @@ namespace AargonTools.Interfaces
 {
     public interface IUniversalCcProcessApiService
     {
+
+
+
+        
+        //postPayment Later introduced 
+        Task PostPaymentA(string debtorAccount, decimal paymentAmount, float balance,
+                decimal interestAmount, decimal feePct, string sif, int qFrom, int qTo,
+                string remit, string paymentType, string company, float adminAmount, string MainDA, string environment);
+        //
+
+
+
         Task<string> InstaMedSale(SaleRequestModelForInstamed request);
         Task<string> InstaMedAuth(SaleRequestModelForInstamed request);
         Task<string> InstaMedTokenization(SaleRequestModelForInstamed request);

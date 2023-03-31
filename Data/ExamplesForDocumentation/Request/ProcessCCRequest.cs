@@ -16,9 +16,10 @@ namespace AargonTools.Data.ExamplesForDocumentation.Request
                 debtorAcc = "4950-000001",
                 ccNumber = "378282246310005",
                 expiredDate = "12/24",
-                cvv = "123",
+                cvv = "1234",
                 numberOfPayments = 1,
-                amount = 9
+                amount = 9,
+                sif = "Y"
             };
         }
     }

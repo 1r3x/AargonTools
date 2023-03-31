@@ -21,5 +21,7 @@ namespace AargonTools.ViewModel
         public int? numberOfPayments { get; set; }
         [Required]
         public decimal amount { get; set; }
+        [Required]
+        public string? sif { get; set; }
     }
 }
