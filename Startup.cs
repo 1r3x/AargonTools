@@ -17,6 +17,7 @@ using AargonTools.Data;
 using AargonTools.Data.ADO;
 using AargonTools.Interfaces;
 using AargonTools.Manager;
+using AargonTools.Manager.BackgroundJobs;
 using AargonTools.Manager.GenericManager;
 using AargonTools.Middleware;
 using AargonTools.Models;
@@ -127,6 +128,11 @@ namespace AargonTools
             services.AddSwaggerExamplesFromAssemblyOf<Startup>();
 
 
+            //service for background job
+
+            services.AddHostedService<TestJob>();
+
+
 
             services.AddCors(options =>
             {
@@ -170,6 +176,7 @@ namespace AargonTools
             //services.AddScoped<IUniversalCcProcessHelper, UniversalCcProcessHelper>();
             services.AddHttpClient<IUniversalCcProcessApiService, UniversalCcProcessApiService>();
             //services.AddScoped<IUniversalCcProcessManager, UniversalCcProcessManager>();
+            services.AddScoped<IPreSchedulePaymentProcessing, PreSchedulePaymentProcessingManager>();
 
 
             //

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AargonTools.Manager;
 using AargonTools.Manager.GenericManager;
 using AargonTools.Models.Helper;
 using AargonTools.ViewModel;
@@ -34,9 +35,15 @@ namespace AargonTools.Interfaces
 
 
         Task<String> ReadHtmlPageAsync(string url, string post);
+
         Task SaveCardInfoAndScheduleData(ProcessCcPaymentUniversalRequestModel request, string environment);
 
         Task<ResponseModel> ProcessSaleTransForInstaMed(ProcessCcPaymentUniversalRequestModel request,
+            string environment);
+        Task<ResponseModel> ProcessSaleTransForInstaMedQA(ProcessCcPaymentUniversalRequestModel request,
+            string environment);
+
+        Task<ResponseModel> ProcessOnFileSaleTransForInstaMed(AutoProcessCcUniversalViewModel request,
             string environment);
 
         Task<ResponseModel> ProcessCardAuthorizationForInstaMed(ProcessCcPaymentUniversalRequestModel request,
@@ -48,10 +55,21 @@ namespace AargonTools.Interfaces
         Task<ResponseModel> ProcessSaleTransForIProGateway(ProcessCcPaymentUniversalRequestModel request,
             string environment);
 
+        Task<ResponseModel> ProcessSaleTransForIProGatewayQA(ProcessCcPaymentUniversalRequestModel request,
+            string environment);
+
+        Task<ResponseModel> ProcessOnfileSaleTransForIProGateway(AutoProcessCcUniversalViewModel request,
+            string environment);
+
         Task<ResponseModel> ProcessCardAuthorizationForIProGateway(ProcessCcPaymentUniversalRequestModel request,
             string environment);
 
         Task<ResponseModel> ProcessSaleTransForElavon(ProcessCcPaymentUniversalRequestModel request,
+            string environment);
+        Task<ResponseModel> ProcessSaleTransForElavonQA(ProcessCcPaymentUniversalRequestModel request,
+            string environment);
+
+        Task<ResponseModel> ProcessOnfileSaleTransForElavon(AutoProcessCcUniversalViewModel request,
             string environment);
 
         Task<ResponseModel> ProcessCardAuthorizationForElavon(ProcessCcPaymentUniversalRequestModel request,

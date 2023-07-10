@@ -13,6 +13,10 @@
         {
             return new ResponseWithTransaction() { Status = status, TransactionStatus = transStatus, Data = data };
         }
+        public ResponseModel Response(bool status, bool transStatus, object data,object dbData)
+        {
+            return new ResponseForDbInsertQa() { Status = status, TransactionStatus = transStatus, Data = data, DbQaTransaction = dbData };
+        }
 
         public ResponseModel Response(object data)
         {
@@ -35,6 +39,12 @@
         public bool TransactionStatus { get; set; }
 
        
+    }
+    public class ResponseForDbInsertQa : ResponseWithTransaction
+    {
+        public object DbQaTransaction { get; set; }
+
+
     }
 
     public interface IResponseModel

@@ -24,7 +24,7 @@ namespace AargonTools.Manager
         private readonly IUserService _userService;
         private readonly ISetCCPayment _setCcPayment;//fro ccPayment Insert
         private readonly IAddNotes _addNotes;//fro notes Insert
-        private  readonly IOptions<CentralizeVariablesModel> _centralizeVariablesModel;
+        private readonly IOptions<CentralizeVariablesModel> _centralizeVariablesModel;
 
         public ProcessCcPaymentManager(ExistingDataDbContext context, ResponseModel response,
             TestEnvironmentDbContext contextTest, IAddNotes addNotes, AdoDotNetConnection adoConnection, IUserService userService,
@@ -48,7 +48,7 @@ namespace AargonTools.Manager
         }
 
         //for tokenize the cc
-        private  async Task<ResponseModel> TokenizeCc(string cardNo, string expireDate, string environment)
+        private async Task<ResponseModel> TokenizeCc(string cardNo, string expireDate, string environment)
         {
             if (environment == "P")
             {
@@ -66,7 +66,7 @@ namespace AargonTools.Manager
 
 
                 var tokenizeObjects = await USAePay.API.Transactions.PostAsync(request);
-               
+
                 string json = JsonConvert.SerializeObject(tokenizeObjects.ElementAt(8).Value, Formatting.Indented);
 
                 return _response.Response(json);
@@ -86,7 +86,9 @@ namespace AargonTools.Manager
                 var request = new Dictionary<string, object> { ["command"] = "cc:save", ["creditcard"] = creditCardObj };
 
                 var tokenizeObjects = await USAePay.API.Transactions.PostAsync(request);
-                string json = JsonConvert.SerializeObject(tokenizeObjects.ElementAt(8).Value, Formatting.Indented);
+                string success = JsonConvert.SerializeObject(tokenizeObjects.ElementAt(5).Value, Formatting.Indented);
+                if (success != "\"Approved\"") return _response.Response(null);
+                var json = JsonConvert.SerializeObject(tokenizeObjects.ElementAt(8).Value, Formatting.Indented);
                 return _response.Response(json);
             }
 
@@ -168,14 +170,14 @@ namespace AargonTools.Manager
                     return _response.Response(processSaleObjects);
                 }
 
-                return _response.Response(false);
+                return _response.Response("Error 404");
 
             }
 
         }
 
         //no implementation for now....
-        private  async Task<ResponseModel> VoidTransaction(string transactionKey)
+        private async Task<ResponseModel> VoidTransaction(string transactionKey)
         {
             USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.Url, "v2");
             USAePay.API.SetAuthentication(_centralizeVariablesModel.Value.USAePayDefault.Key, _centralizeVariablesModel.Value.USAePayDefault.Pin);
@@ -362,7 +364,8 @@ namespace AargonTools.Manager
                 {
                     updateDebtorLogic = "status_code = 'PIF'," +
                                         "acct_status = 'I'," +
-                                        "date_inactivated = CONVERT(VARCHAR,GETDATE(),101)," +
+                                        //commented out duo to debugger reports 
+                                        //"date_inactivated = CONVERT(VARCHAR,GETDATE(),101)," +
                                         "date_inactivated = CONVERT(VARCHAR, GETDATE(), 101),";
                     removeMults = true;
                 }
@@ -434,8 +437,20 @@ namespace AargonTools.Manager
             try
             {
                 var tokenizeDataJsonResult = TokenizeCc(request.ccNumber, request.expiredDate, environment).Result;
-                var tokenizeCObj = JsonConvert.DeserializeObject<SaveCard>(tokenizeDataJsonResult.Data.ToString() ?? string.Empty);
-                if (request.amount != null)
+                SaveCard tokenizeCObj=new SaveCard()
+                {
+                    CardNumber = "",
+                    Key = "",
+                    Type = ""
+                };
+                if (tokenizeDataJsonResult.Data != null)
+                {
+                    tokenizeCObj = JsonConvert.DeserializeObject<SaveCard>(tokenizeDataJsonResult.Data.ToString() ?? string.Empty);
+                }
+
+
+
+                if (request.amount != null && tokenizeCObj.CardNumber != "" && tokenizeCObj.Key != "")
                 {
 
                     var processTransactionJsonResult = ProcessingTransaction(tokenizeCObj.Key, (decimal)request.amount, request.hsa != null && (bool)request.hsa, request.key, request.pin, environment).Result.Data;
@@ -470,11 +485,12 @@ namespace AargonTools.Manager
                         }
                     }
 
-                    if (processTransactionJsonResult.ToString() != "Oops something went wrong")
+                    if (processTransactionJsonResult.ToString() != "Error 404")
                     {
                         try
                         {
                             await PostPayment(request.debtorAcc, (decimal)request.amount, DateAndTime.Now, "", Convert.ToDecimal(0), environment);
+
                             var debtorData = _adoConnection.GetData(
                                 "INSERT INTO note_master " +
                                 "( debtor_acct," +
@@ -489,6 +505,7 @@ namespace AargonTools.Manager
                                 "'API PAYMENT " + "Successful" + ": $" + request.amount + " - " + "auth" + "; CC - ' + UPPER('" + tokenizeCObj.Type + "') + ' - XXXX-" + request.ccNumber.Substring(request.ccNumber.Length - 4) + "'," +
                                 "'PM')"
                                 , environment);
+
                         }
                         catch (Exception e)
                         {

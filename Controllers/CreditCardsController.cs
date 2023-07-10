@@ -38,8 +38,9 @@ namespace AargonTools.Controllers
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        ///
 
-        /// 
+
         [ProducesResponseType(typeof(SetProcessCCResponse), 200)]
         [HttpPost("SetProcessCcPayments")]
         public async Task<IActionResult> SetProcessCcPayments([FromBody] ProcessCcPaymentRequestModel requestCcPayment)
@@ -79,6 +80,7 @@ namespace AargonTools.Controllers
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
         ///
+        
         [ProducesResponseType(typeof(SchedulePostDateResponse), 200)]
 
         [HttpPost("SchedulePostData")]
@@ -105,6 +107,7 @@ namespace AargonTools.Controllers
             return new JsonResult("Something went wrong") { StatusCode = 500 };
         }
 
+
         /// <summary>
         ///  Can set CC Payments.(Prod.)
         /// </summary>
@@ -122,7 +125,9 @@ namespace AargonTools.Controllers
         ///
 
         [ProducesResponseType(typeof(SetCcPaymnetResponse), 200)]
+
         [HttpPost("SetCcPayments")]
+
         public async Task<IActionResult> SetCcPayments([FromBody]CcPaymnetRequestModel requestCcPayment)
         {
             Serilog.Log.Information("SetProcessCcPayments => POST");
