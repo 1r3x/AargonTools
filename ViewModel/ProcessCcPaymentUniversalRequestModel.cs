@@ -23,5 +23,11 @@ namespace AargonTools.ViewModel
         public decimal amount { get; set; }
         [Required]
         public string? sif { get; set; }
+        [Required]
+        public bool? hsa { get; set; }
+        [RequiredIf("hsa", true)]
+        public string? key { get; set; }
+        [RequiredIf("hsa", true)]
+        public string? pin { get; set; }
     }
 }

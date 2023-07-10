@@ -327,8 +327,15 @@ namespace AargonTools.Manager
                     }
                     else
                     {
-                        strQuery += "    " + (Convert.ToDecimal(acct["balance"]) - paymentAmount - interestAmount) +
+                        //old 
+                        //strQuery += "    " + (Convert.ToDecimal(acct["balance"]) - paymentAmount - interestAmount) +
+                        //            "," + Constants.vbCrLf;
+
+
+                        //new 
+                        strQuery += "    " + (Convert.ToDecimal(acct["amount_placed"])+ (Convert.ToDecimal(acct["adjustments_life"])) - paymentAmount - (Convert.ToDecimal(acct["payment_amt_life"]))) +
                                     "," + Constants.vbCrLf;
+
                     } // Balance
 
                     strQuery += "    " + feePct.ToString() + "," + Constants.vbCrLf; // Fee Pct
@@ -454,7 +461,7 @@ namespace AargonTools.Manager
                     strQuery +=
                         "    CONVERT(DATETIME,CONVERT(VARCHAR,GETDATE(),101) + ' ' + SUBSTRING(CONVERT(VARCHAR,GETDATE(),108),1,5))," +
                         Constants.vbCrLf;
-                    strQuery += "    " + "userNameNotValidFOrNOwInAPI" + ",";
+                    strQuery += "    " + "0" + ",";//not valid for api
                     strQuery += "    'PM',";
                     intDescription = "";
                     if (interestAmount > 0m)

@@ -19,7 +19,10 @@ namespace AargonTools.Data.ExamplesForDocumentation.Request
                 cvv = "1234",
                 numberOfPayments = 1,
                 amount = 9,
-                sif = "Y"
+                sif = "Y",
+                hsa = false,
+                key = null,
+                pin = null
             };
         }
     }

@@ -36,6 +36,7 @@ namespace AargonTools.Manager
             _contextProdOld = contextProdOld;
 
         }
+
         async Task<ResponseModel> IGetAccountInformation.GetAccountBalanceByDebtorAccount(string debtorAcct, string environment)
         {
 
@@ -730,7 +731,7 @@ namespace AargonTools.Manager
                             {
                                 string phoneAreaCode;
                                 string phoneNo;
-                                string debtorAccountCheckFromPhone="";
+                                string debtorAccountCheckFromPhone = "";
                                 if (request.phone == "")
                                 {
                                     phoneAreaCode = "";
