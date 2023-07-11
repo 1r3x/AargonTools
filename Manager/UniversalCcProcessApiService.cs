@@ -1616,12 +1616,12 @@ namespace AargonTools.Manager
 
                 var paymentScheduleHistoryObj = new LcgPaymentScheduleHistory()
                 {
-                    ResponseCode = _responseModelForInstamed.ResponseCode,
-                    AuthorizationNumber = _responseModelForInstamed.AuthorizationNumber,
+                    ResponseCode = _responseModelForIProGateway.response_code,
+                    AuthorizationNumber = _responseModelForIProGateway.authcode,
                     AuthorizationText = "_username", //todo user name 
-                    ResponseMessage = _responseModelForInstamed.ResponseMessage,
+                    ResponseMessage = _responseModelForIProGateway.cvvresponse,
                     PaymentScheduleId = _lcgPaymentScheduleId,
-                    TransactionId = _responseModelForInstamed.TransactionId
+                    TransactionId = _responseModelForIProGateway.transactionid
                 };
 
                 await _cardTokenizationHelper.CreatePaymentScheduleHistory(paymentScheduleHistoryObj, environment);
@@ -1640,8 +1640,8 @@ namespace AargonTools.Manager
                         PaymentDate = _scheduleDateTime,
                         ApprovalStatus = "APPROVED",
                         BillingName = "", //todo billing person name 
-                        ApprovalCode = _responseModelForInstamed.ResponseCode,
-                        OrderNumber = _responseModelForInstamed.TransactionId,
+                        ApprovalCode = _responseModelForIProGateway.response_code,
+                        OrderNumber = _responseModelForIProGateway.transactionid,
                         RefNumber = "INSTAMEDLH",
                         Sif = "N"
                     };
@@ -1734,10 +1734,10 @@ namespace AargonTools.Manager
 
 
             }
-            catch (Exception)
+            catch (Exception e)
             {
 
-                throw;
+                throw e;
             }
 
 
@@ -1778,7 +1778,7 @@ namespace AargonTools.Manager
             }
 
             string noteText = null;
-            if (_responseModelForIProGateway != null && _responseModelForIProGateway.response_code == "000")
+            if (_responseModelForIProGateway != null && _responseModelForIProGateway.response_code == "100")
             {
                 noteText = "INSTAMED CC APPROVED FOR $" + request.amount + " " +
                            _responseModelForIProGateway.responsetext.ToUpper() +
@@ -1908,7 +1908,7 @@ namespace AargonTools.Manager
             }
 
             string noteText = null;
-            if (_responseModelForIProGateway != null && _responseModelForIProGateway.response_code == "000")
+            if (_responseModelForIProGateway != null && _responseModelForIProGateway.response_code == "100")
             {
                 noteText = "INSTAMED CC APPROVED FOR $" + request.amount + " " +
                            _responseModelForIProGateway.responsetext.ToUpper() +
@@ -2017,7 +2017,7 @@ namespace AargonTools.Manager
 
 
 
-                var qaCC = _adoConnection.GetData("select * from cc_payment cc where cc.order_number='" + _responseModelForInstamed.TransactionId + "'", environment);
+                var qaCC = _adoConnection.GetData("select * from cc_payment cc where cc.order_number='" + _responseModelForIProGateway.transactionid + "'", environment);
                 if (qaCC.Rows.Count > 0)
                 {
                     idCc = Convert.ToString(qaCC.Rows[0]["id"]); // 4
@@ -2054,7 +2054,7 @@ namespace AargonTools.Manager
                 string TimeLoghs = "";
 
 
-                var qaHistory = _adoConnection.GetData("select * from UCG_PaymentScheduleHistory hs where hs.TransactionId='" + _responseModelForInstamed.TransactionId + "'", environment);
+                var qaHistory = _adoConnection.GetData("select * from UCG_PaymentScheduleHistory hs where hs.TransactionId='" + _responseModelForIProGateway.transactionid + "'", environment);
 
                 if (qaHistory.Rows.Count > 0)
                 {
@@ -2158,10 +2158,10 @@ namespace AargonTools.Manager
                 dbQA.Add(PaymentScheduleHistoryTable);
                 dbQA.AddRange(qaPaymentScheduleStringList);
 
-
+             
                 //
 
-                return _response.Response(true, true, _responseModelForInstamed, dbQA);
+                return _response.Response(true, true, response, dbQA);
             }
             else
             {
@@ -2827,9 +2827,9 @@ namespace AargonTools.Manager
 
 
 
+                //todo
 
-
-                var qaCC = _adoConnection.GetData("select * from cc_payment cc where cc.order_number='" + _responseModelForInstamed.TransactionId + "'", environment);
+                var qaCC = _adoConnection.GetData("select * from cc_payment cc where cc.order_number='" + _deserializeObjForElavon.ssl_txn_id + "'", environment);
                 if (qaCC.Rows.Count > 0)
                 {
                     idCc = Convert.ToString(qaCC.Rows[0]["id"]); // 4
@@ -2866,7 +2866,7 @@ namespace AargonTools.Manager
                 string TimeLoghs = "";
 
 
-                var qaHistory = _adoConnection.GetData("select * from UCG_PaymentScheduleHistory hs where hs.TransactionId='" + _responseModelForInstamed.TransactionId + "'", environment);
+                var qaHistory = _adoConnection.GetData("select * from UCG_PaymentScheduleHistory hs where hs.TransactionId='" + _deserializeObjForElavon.ssl_txn_id + "'", environment);
 
                 if (qaHistory.Rows.Count > 0)
                 {
@@ -2973,7 +2973,7 @@ namespace AargonTools.Manager
 
                 //
 
-                return _response.Response(true, true, _responseModelForInstamed, dbQA);
+                return _response.Response(true, true, response, dbQA);
             }
             else
             {
