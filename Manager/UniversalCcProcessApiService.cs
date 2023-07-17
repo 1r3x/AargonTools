@@ -636,7 +636,7 @@ namespace AargonTools.Manager
                        "<ssl_exp_date>" + request.Card.Expiration + "</ssl_exp_date>" +
                        "<ssl_amount>" + request.Amount + "</ssl_amount>" +
                        "<ssl_cvv2cvc2>" + request.Card.CVN + "</ssl_cvv2cvc2>" +
-                       "<ssl_cardholder_ip>103.112.55.88</ssl_cardholder_ip>" +
+                       "<ssl_cardholder_ip>72.206.60.98</ssl_cardholder_ip>" +
                        "</txn>";
 
 
@@ -2749,12 +2749,12 @@ namespace AargonTools.Manager
             }
             else
             {
-                if (_responseModelForInstamed != null)
+                if (_deserializeObjForElavon != null)
                     noteText = "INSTAMED CC DECLINED FOR $" + request.amount + " " +
                                _deserializeObjForElavon.ssl_result_message.ToUpper() +
                                " AUTH #:" + _deserializeObjForElavon.ssl_oar_data;
                 // for DECLINED
-                if (_responseModelForInstamed != null)
+                if (_deserializeObjForElavon != null)
                 {
                     var ccPaymentObj = new CcPayment()
                     {
@@ -2894,7 +2894,14 @@ namespace AargonTools.Manager
 
 
                 var qaPaymentScheduleTEmp = _adoConnection.GetData("select * from UCG_PaymentSchedule hs where hs.Id='" + PaymentScheduleIdhs + "'", environment);
-                var CardInfoIdTemp = Convert.ToString(qaPaymentScheduleTEmp.Rows[0]["CardInfoId"]); // 5
+
+                //check if null
+                string CardInfoIdTemp="";
+                if (qaPaymentScheduleTEmp.Rows.Count>0)
+                {
+                    CardInfoIdTemp = Convert.ToString(qaPaymentScheduleTEmp.Rows[0]["CardInfoId"]); // 5
+                }
+                
 
                 var qaPaymentSchedule = _adoConnection.GetData("select * from UCG_PaymentSchedule hs where hs.CardInfoId='" + CardInfoIdTemp + "'", environment);
                 var qaPaymentScheduleStringList = new List<string>

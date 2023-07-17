@@ -35,7 +35,7 @@ namespace AargonTools.Manager
                         NoteDate = datetimeNow.AddSeconds(-datetimeNow.Second).AddMilliseconds(-datetimeNow.Millisecond),
                         Employee = request.Employee,
                         ActivityCode = request.ActivityCode,
-                        NoteText = request.NoteText
+                        NoteText = request.NoteText.ToUpper()
                     };
                     await _context.NoteMasters.AddAsync(note);
                     await _context.SaveChangesAsync();
@@ -49,7 +49,7 @@ namespace AargonTools.Manager
                         NoteDate = datetimeNow.AddSeconds(-datetimeNow.Second).AddMilliseconds(-datetimeNow.Millisecond),
                         Employee = request.Employee,
                         ActivityCode = request.ActivityCode,
-                        NoteText = request.NoteText
+                        NoteText = request.NoteText.ToUpper()
                     };
                     await _contextProdOld.NoteMasters.AddAsync(note);
                     await _contextProdOld.SaveChangesAsync();
@@ -63,7 +63,7 @@ namespace AargonTools.Manager
                         NoteDate = datetimeNow.AddSeconds(-datetimeNow.Second).AddMilliseconds(-datetimeNow.Millisecond),
                         Employee = request.Employee,
                         ActivityCode = request.ActivityCode,
-                        NoteText = request.NoteText
+                        NoteText = request.NoteText.ToUpper()
                     };
                     await _contextTest.NoteMasters.AddAsync(note);
                     await _contextTest.SaveChangesAsync();

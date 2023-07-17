@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Globalization;
 using System.Threading.Tasks;
+using AargonTools.Data.ADO;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
 using AargonTools.Manager.GenericManager;
@@ -28,10 +29,11 @@ namespace AargonTools.Controllers.TestEnvironment
         private readonly IPreSchedulePaymentProcessing _preSchedulePaymentProcessing;
         private static GatewaySelectionHelper _gatewaySelectionHelper;
         private static ResponseModel _response;
+        private readonly AdoDotNetConnection _adoConnection;
 
         public CreditCardsController(IProcessCcPayment processCcPayment, ISetCCPayment setCcPayment,
             IUniversalCcProcessApiService processCcUniversal, GatewaySelectionHelper gatewaySelectionHelper, IPreSchedulePaymentProcessing preSchedulePaymentProcessing,
-            ResponseModel response)
+            ResponseModel response, AdoDotNetConnection adoConnection)
         {
             _processCcPayment = processCcPayment;
             _setCcPayment = setCcPayment;
@@ -39,6 +41,7 @@ namespace AargonTools.Controllers.TestEnvironment
             _gatewaySelectionHelper = gatewaySelectionHelper;
             _preSchedulePaymentProcessing = preSchedulePaymentProcessing;
             _response = response;
+            _adoConnection = adoConnection;
         }
 
         /// <summary>
@@ -345,7 +348,7 @@ namespace AargonTools.Controllers.TestEnvironment
         [HttpPost("ProcessCcQA")]
         public async Task<IActionResult> ProcessCcQA([FromBody] ProcessCcPaymentUniversalRequestModel requestCcPayment)
         {
-            Serilog.Log.Information("ProcessCc => POST");
+            Serilog.Log.Information("ProcessCcQA => POST");
             try
             {
                 if (ModelState.IsValid)
@@ -459,10 +462,205 @@ namespace AargonTools.Controllers.TestEnvironment
                                         ResponseMessage = obj.result,
                                         TransactionId = obj.key
                                     };
-                                    var response = _response.Response(true, true, res);
+
+
+                                    //cc payment insert 
+                                    await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
+                                    {
+                                        debtorAcc = requestCcPayment.debtorAcc,
+                                        approvalCode = "",
+                                        approvalStatus = "APPROVED",
+                                        chargeTotal = (decimal)requestCcPayment.amount,
+                                        company = "AARGON AGENCY",
+                                        sif = "Y",
+                                        paymentDate = DateTime.Now,
+                                        refNo = "USAEPAY2",
+                                        orderNumber = res.TransactionId,
+                                        userId = "WEB",
+                                    }, "T");
+
+
+
+                                    //this segment is for QA
+                                    //cc_payment variables
+                                    string idCc = "";
+                                    string debtor_acctCc = "";
+                                    string companyCc = "";
+                                    string user_idCc = "";
+                                    string user_nameCc = "";
+                                    string subtotalCc = "";
+                                    string charge_totalCc = "";
+                                    string payment_dateCc = "";
+                                    string approval_statusCc = "";
+                                    string approval_codeCc = "";
+                                    string error_codeCc = "";
+                                    string order_numberCc = "";
+                                    string ref_numberCc = "";
+                                    string sifCc = "";
+
+
+
+
+
+
+
+                                    var qaCC = _adoConnection.GetData("select * from cc_payment cc where cc.order_number='" + res.TransactionId + "'", "T");
+                                    if (qaCC.Rows.Count > 0)
+                                    {
+                                        idCc = Convert.ToString(qaCC.Rows[0]["id"]); // 4
+                                        debtor_acctCc = Convert.ToString(qaCC.Rows[0]["debtor_acct"]); // 3
+                                        companyCc = Convert.ToString(qaCC.Rows[0]["company"]); // 2
+                                        user_idCc = Convert.ToString(qaCC.Rows[0]["user_id"]); // 5
+                                        user_nameCc = Convert.ToString(qaCC.Rows[0]["user_name"]); // 6
+                                        subtotalCc = Convert.ToString(qaCC.Rows[0]["subtotal"]); // 1
+                                        charge_totalCc = Convert.ToString(qaCC.Rows[0]["charge_total"]); // 1
+                                        payment_dateCc = Convert.ToString(qaCC.Rows[0]["payment_date"]); // 1
+                                        approval_statusCc = Convert.ToString(qaCC.Rows[0]["approval_status"]); // 1
+                                        approval_codeCc = Convert.ToString(qaCC.Rows[0]["approval_code"]); // 1
+                                        error_codeCc = Convert.ToString(qaCC.Rows[0]["error_code"]); // 1
+                                        order_numberCc = Convert.ToString(qaCC.Rows[0]["order_number"]); // 1
+                                        ref_numberCc = Convert.ToString(qaCC.Rows[0]["ref_number"]); // 1
+                                        sifCc = Convert.ToString(qaCC.Rows[0]["sif"]); // 1
+                                    }
+
+                                    var ccPaymnetTable = "cc_payment >>>>" + "--id-->" + idCc + "-- debtor_acct-->" + debtor_acctCc + "-- company -->" + companyCc + "-- user_id -->" +
+                                                         user_idCc + "-- user_name -->" + user_nameCc + "-- subtotal -->" + subtotalCc + "-- charge_total -->" + charge_totalCc
+                                                         + "-- payment_date -->" +
+                                                         payment_dateCc + "-- approval_status -->" + approval_statusCc + "-- approval_code -->" +
+                                                         approval_codeCc + "-- error_code -->" + error_codeCc + "-- order_number -->" + order_numberCc + "-- ref_number -->"
+                                                         + ref_numberCc + "--sif  -->" + sifCc;
+
+                                    //[UCG_PaymentScheduleHistory] variables
+                                    string Idhs = "";
+                                    string PaymentScheduleIdhs = "";
+                                    string TransactionIdhs = "";
+                                    string ResponseCodehs = "";
+                                    string ResponseMessagehs = "";
+                                    string AuthorizationNumberhs = "";
+                                    string AuthorizationTexths = "";
+                                    string TimeLoghs = "";
+
+
+                                    var qaHistory = _adoConnection.GetData("select * from UCG_PaymentScheduleHistory hs where hs.TransactionId='" + res.TransactionId + "'", "T");
+
+                                    if (qaHistory.Rows.Count > 0)
+                                    {
+                                        Idhs = Convert.ToString(qaHistory.Rows[0]["Id"]); // 4
+                                        PaymentScheduleIdhs = Convert.ToString(qaHistory.Rows[0]["PaymentScheduleId"]); // 3
+                                        TransactionIdhs = Convert.ToString(qaHistory.Rows[0]["TransactionId"]); // 2
+                                        ResponseCodehs = Convert.ToString(qaHistory.Rows[0]["ResponseCode"]); // 5
+                                        ResponseMessagehs = Convert.ToString(qaHistory.Rows[0]["ResponseMessage"]); // 6
+                                        AuthorizationNumberhs = Convert.ToString(qaHistory.Rows[0]["AuthorizationNumber"]); // 1
+                                        AuthorizationTexths = Convert.ToString(qaHistory.Rows[0]["AuthorizationText"]); // 1
+                                        TimeLoghs = Convert.ToString(qaHistory.Rows[0]["TimeLog"]); // 1
+                                    }
+                                    var PaymentScheduleHistoryTable = "UCG_PaymentScheduleHistory >>>>" + "--id-->" + Idhs + "--id-->" + PaymentScheduleIdhs + "--TransactionIdhs-->" + TransactionIdhs
+                                                                      + "--ResponseCode-->" + ResponseCodehs + "--ResponseMessage-->" + ResponseMessagehs + "--AuthorizationNumber-->" + AuthorizationNumberhs
+                                                                      + "--AuthorizationText-->" + AuthorizationTexths + "--TimeLog-->" + TimeLoghs;
+
+                                    //[UCG_PaymentSchedule] variables
+                                    string IdPs = "";
+                                    string PatientAccountPs = "";
+                                    string EffectiveDatePs = "";
+                                    string CardInfoIdPs = "";
+                                    string NumberOfPaymentsPs = "";
+                                    string AmountPs = "";
+                                    string IsActivePs = "";
+
+
+                                    var qaPaymentScheduleTEmp = _adoConnection.GetData("select * from UCG_PaymentSchedule hs where hs.Id='" + PaymentScheduleIdhs + "'", "T");
+
+                                    string CardInfoIdTemp = "";
+                                    if (qaPaymentScheduleTEmp.Rows.Count>0)
+                                    {
+                                        CardInfoIdTemp = Convert.ToString(qaPaymentScheduleTEmp.Rows[0]["CardInfoId"]); // 5
+                                    }
+
+                                    var qaPaymentSchedule = _adoConnection.GetData("select * from UCG_PaymentSchedule hs where hs.CardInfoId='" + CardInfoIdTemp + "'", "T");
+                                    var qaPaymentScheduleStringList = new List<string>
+                                    {
+                                        Capacity = 10
+                                    };
+                                    if (qaPaymentSchedule.Rows.Count > 0)
+                                    {
+                                        for (int i = 0; i < qaPaymentSchedule.Rows.Count; i++)
+                                        {
+                                            IdPs = Convert.ToString(qaPaymentSchedule.Rows[i]["Id"]); // 4
+                                            PatientAccountPs = Convert.ToString(qaPaymentSchedule.Rows[i]["PatientAccount"]); // 3
+                                            EffectiveDatePs = Convert.ToString(qaPaymentSchedule.Rows[i]["EffectiveDate"]); // 2
+                                            CardInfoIdPs = Convert.ToString(qaPaymentSchedule.Rows[i]["CardInfoId"]); // 5
+                                            NumberOfPaymentsPs = Convert.ToString(qaPaymentSchedule.Rows[i]["NumberOfPayments"]); // 6
+                                            AmountPs = Convert.ToString(qaPaymentSchedule.Rows[i]["Amount"]); // 1
+                                            IsActivePs = Convert.ToString(qaPaymentSchedule.Rows[i]["IsActive"]); // 1
+
+
+                                            qaPaymentScheduleStringList.Add("UCG_PaymentSchedule >>>>" + "--id-->" + IdPs + "--PatientAccount-->" + PatientAccountPs +
+                                                                            "--EffectiveDate-->" + EffectiveDatePs + "--CardInfoId-->" + CardInfoIdPs
+                                                                            + "--NumberOfPayments-->" + NumberOfPaymentsPs + "--Amount-->" + AmountPs + "--IsActive-->" + IsActivePs);
+                                        }
+                                    }
+
+
+
+                                    //[UCG_CardInfo] variables
+                                    string Idci = "";
+                                    string PaymentMethodID = "";
+                                    string EntryMode = "";
+                                    string Type = "";
+                                    string BinNumber = "";
+                                    string LastFour = "";
+                                    string ExpirationMonth = "";
+                                    string ExpirationYear = "";
+                                    string CardHolderName = "";
+                                    string AssociateDebtorAcct = "";
+                                    string IsActiveci = "";
+
+
+                                    var qaUCG_CardInfo = _adoConnection.GetData("select * from UCG_CardInfo hs where hs.Id='" + CardInfoIdPs + "'", "T");
+
+                                    if (qaUCG_CardInfo.Rows.Count > 0)
+                                    {
+                                        Idci = Convert.ToString(qaUCG_CardInfo.Rows[0]["Id"]); // 4
+                                        PaymentMethodID = Convert.ToString(qaUCG_CardInfo.Rows[0]["PaymentMethodID"]); // 3
+                                        EntryMode = Convert.ToString(qaUCG_CardInfo.Rows[0]["EntryMode"]); // 2
+                                        Type = Convert.ToString(qaUCG_CardInfo.Rows[0]["Type"]); // 5
+                                        BinNumber = Convert.ToString(qaUCG_CardInfo.Rows[0]["BinNumber"]); // 6
+                                        LastFour = Convert.ToString(qaUCG_CardInfo.Rows[0]["LastFour"]); // 1
+                                        ExpirationMonth = Convert.ToString(qaUCG_CardInfo.Rows[0]["ExpirationMonth"]); // 1
+                                        ExpirationYear = Convert.ToString(qaUCG_CardInfo.Rows[0]["ExpirationYear"]); // 1
+                                        CardHolderName = Convert.ToString(qaUCG_CardInfo.Rows[0]["CardHolderName"]); // 1
+                                        AssociateDebtorAcct = Convert.ToString(qaUCG_CardInfo.Rows[0]["AssociateDebtorAcct"]); // 1
+                                        IsActiveci = Convert.ToString(qaUCG_CardInfo.Rows[0]["IsActive"]); // 1
+                                    }
+
+                                    var qaUCG_CardInfoString = "UCG_CardInfo >>>>" + "--Idci-->" + Idci + "--PaymentMethodID-->" + PaymentMethodID + "--EntryMode-->" + EntryMode
+                                                               + "--Type-->" + Type + "--BinNumber-->" + BinNumber + "--LastFour-->" + LastFour
+                                                               + "--ExpirationMonth-->" + ExpirationMonth + "--ExpirationYear-->" + ExpirationYear + "--CardHolderName-->" + CardHolderName
+                                                               + "--AssociateDebtorAcct-->" + AssociateDebtorAcct + "--CardHolderName-->" + CardHolderName + "--AssociateDebtorAcct-->" + AssociateDebtorAcct
+                                                               + "--IsActive-->" + IsActiveci;
+
+
+                                    var dbQA = new List<string>
+                                    {
+                                        Capacity = 5
+                                    };
+
+                                    dbQA.Add(ccPaymnetTable);
+                                    dbQA.Add(qaUCG_CardInfoString);
+                                    dbQA.Add(PaymentScheduleHistoryTable);
+                                    dbQA.AddRange(qaPaymentScheduleStringList);
+
+
+                                    //
+
+                                    //return (IActionResult)_response.Response(true, true, res, dbQA);
+
+
+
+
+                                    var response = _response.Response(true, true, res,dbQA);
                                     return Ok(response);
                                 }
-                                
 
                             }
 
