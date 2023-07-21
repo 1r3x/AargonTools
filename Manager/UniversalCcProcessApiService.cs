@@ -1129,26 +1129,26 @@ namespace AargonTools.Manager
                 //magic 
                 await SaveCardInfoAndScheduleData(request, environment);
                 // for success
-                var ccPaymentObj = new CcPayment()
-                {
-                    DebtorAcct = request.debtorAcc,
-                    Company = "TOTAL CREDIT RECOVERY",
-                    //UserId = username,
-                    UserId = "_username", //todo   
-                    //UserName = username + " -LCG",
-                    UserName = "_username", //todo 
-                    ChargeTotal = request.amount,
-                    Subtotal = request.amount,
-                    PaymentDate = DateTime.Now,
-                    ApprovalStatus = "APPROVED",
-                    BillingName = "", // todo is it valid  for api transaction ? 
-                    ApprovalCode = _responseModelForInstamed.ResponseCode,
-                    OrderNumber = _responseModelForInstamed.TransactionId,
-                    RefNumber = "INSTAMEDLH",
-                    Sif = "N",
-                    VoidSale = "N"
-                };
-                await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
+                //var ccPaymentObj = new CcPayment()
+                //{
+                //    DebtorAcct = request.debtorAcc,
+                //    Company = "TOTAL CREDIT RECOVERY",
+                //    //UserId = username,
+                //    UserId = "_username", //todo   
+                //    //UserName = username + " -LCG",
+                //    UserName = "_username", //todo 
+                //    ChargeTotal = request.amount,
+                //    Subtotal = request.amount,
+                //    PaymentDate = DateTime.Now,
+                //    ApprovalStatus = "APPROVED",
+                //    BillingName = "", // todo is it valid  for api transaction ? 
+                //    ApprovalCode = _responseModelForInstamed.ResponseCode,
+                //    OrderNumber = _responseModelForInstamed.TransactionId,
+                //    RefNumber = "INSTAMEDLH",
+                //    Sif = "N",
+                //    VoidSale = "N"
+                //};
+                //await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
             }
             else
             {
@@ -2430,7 +2430,7 @@ namespace AargonTools.Manager
                 var paymentScheduleHistoryObj = new LcgPaymentScheduleHistory()
                 {
                     ResponseCode = _deserializeObjForElavon.ssl_approval_code,
-                    AuthorizationNumber = _deserializeObjForElavon.ssl_oar_data,
+                    //AuthorizationNumber = _deserializeObjForElavon.,
                     AuthorizationText = "_username", //todo user name 
                     ResponseMessage = _deserializeObjForElavon.ssl_result_message,
                     PaymentScheduleId = _lcgPaymentScheduleId,
@@ -2439,33 +2439,50 @@ namespace AargonTools.Manager
 
                 await _cardTokenizationHelper.CreatePaymentScheduleHistory(paymentScheduleHistoryObj, environment);
 
+                //_adoConnection.GetData("INSERT INTO UCG_PaymentScheduleHistory(PaymentScheduleId, TransactionId, ResponseCode, ResponseMessage," +
+                //    " AuthorizationNumber, AuthorizationText) " +
+                //    "VALUES("+ _lcgPaymentScheduleId + ", '"+ _deserializeObjForElavon.ssl_txn_id + "'," +
+                //    " '"+ _deserializeObjForElavon.ssl_approval_code + "', '"+ _deserializeObjForElavon.ssl_result_message + "'," +
+                //    " '"+ _deserializeObjForElavon.ssl_oar_data + "','_username'); ", environment);
+
+                
+
+
                 if (_scheduleDateTime.Date == DateTime.Now.Date)
                 {
                     //await _cardTokenizationHelper.InactivePaymentSchedule(_lcgPaymentScheduleId, environment);
-                    var ccPaymentObj = new CcPayment()
-                    {
-                        DebtorAcct = request.debtorAcc,
-                        Company = "TOTAL CREDIT RECOVERY",
-                        UserId = "_username", //todo user name
-                        UserName = "_username" + " -LCG", //todo user name
-                        ChargeTotal = request.amount,
-                        Subtotal = request.amount,
-                        PaymentDate = _scheduleDateTime,
-                        ApprovalStatus = "APPROVED",
-                        BillingName = "", //todo billing person name 
-                        ApprovalCode = _deserializeObjForElavon.ssl_approval_code,
-                        OrderNumber = _deserializeObjForElavon.ssl_txn_id,
-                        RefNumber = "INSTAMEDLH",
-                        Sif = "N"
-                    };
-                    await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
+
+
+                    //var ccPaymentObj = new CcPayment()
+                    //{
+                    //    DebtorAcct = request.debtorAcc,
+                    //    Company = "TOTAL CREDIT RECOVERY",
+                    //    UserId = "_username", //todo user name
+                    //    UserName = "_username" + " -LCG", //todo user name
+                    //    ChargeTotal = request.amount,
+                    //    Subtotal = request.amount,
+                    //    PaymentDate = _scheduleDateTime,
+                    //    ApprovalStatus = "APPROVED",
+                    //    BillingName = "", //todo billing person name 
+                    //    ApprovalCode = _deserializeObjForElavon.ssl_approval_code,
+                    //    OrderNumber = _deserializeObjForElavon.ssl_txn_id,
+                    //    RefNumber = "INSTAMEDLH",
+                    //    Sif = "N"
+                    //};
+                    //await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
+                    _adoConnection.GetData("INSERT INTO cc_payment " +
+                        "(debtor_acct,company, user_id,user_name,charge_total,subtotal,payment_date," +
+                        "approval_status,approval_code, order_number,billing_name, ref_number, sif)" +
+                        "VALUES('"+ request.debtorAcc + "', 'TOTAL CREDIT RECOVERY', '_username', '_username elavon -API'," +
+                        " "+ request.amount + "," + request.amount + ", '"+ _scheduleDateTime + "', 'APPROVED', '"+ _deserializeObjForElavon.ssl_approval_code + "'," +
+                        " '"+ _deserializeObjForElavon.ssl_txn_id + "', '', 'INSTAMEDLH', 'N'); ", environment);
                 }
                 //new implementation 
                 var companyFlag = await _getTheCompanyFlag.GetStringFlagForAdoQuery(request.debtorAcc, environment);
 
-                var balance = _adoConnection.GetData("SELECT CAST(balance as float) as balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment); ;
+                var balance = _adoConnection.GetData("SELECT CAST(balance as float) as balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment); 
 
-                var interestAmount = _adoConnection.GetData("SELECT interest_amt_life FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment); ;
+                var interestAmount = _adoConnection.GetData("SELECT interest_amt_life FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment); 
 
                 var placements = _adoConnection.GetData("SELECT ISNULL(placement,0) as placement FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
                 DataTable feePct = null;
@@ -2725,27 +2742,27 @@ namespace AargonTools.Manager
 
                 //magic
                 await SaveCardInfoAndScheduleDataForElavon(request, environment);
-                // for success
-                var ccPaymentObj = new CcPayment()
-                {
-                    DebtorAcct = request.debtorAcc,
-                    Company = "TOTAL CREDIT RECOVERY",
-                    //UserId = username,
-                    UserId = "_username", //todo   
-                    //UserName = username + " -LCG",
-                    UserName = "_username", //todo 
-                    ChargeTotal = request.amount,
-                    Subtotal = request.amount,
-                    PaymentDate = DateTime.Now,
-                    ApprovalStatus = "APPROVED",
-                    BillingName = "", // todo is it valid  for api transaction ? 
-                    ApprovalCode = _deserializeObjForElavon.ssl_approval_code,
-                    OrderNumber = _deserializeObjForElavon.ssl_txn_id,
-                    RefNumber = "INSTAMEDLH",
-                    Sif = "N",
-                    VoidSale = "N"
-                };
-                await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
+                //// for success
+                //var ccPaymentObj = new CcPayment()
+                //{
+                //    DebtorAcct = request.debtorAcc,
+                //    Company = "TOTAL CREDIT RECOVERY",
+                //    //UserId = username,
+                //    UserId = "_username", //todo   
+                //    //UserName = username + " -LCG",
+                //    UserName = "_username", //todo 
+                //    ChargeTotal = request.amount,
+                //    Subtotal = request.amount,
+                //    PaymentDate = DateTime.Now,
+                //    ApprovalStatus = "APPROVED",
+                //    BillingName = "", // todo is it valid  for api transaction ? 
+                //    ApprovalCode = _deserializeObjForElavon.ssl_approval_code,
+                //    OrderNumber = _deserializeObjForElavon.ssl_txn_id,
+                //    RefNumber = "INSTAMEDLH",
+                //    Sif = "N",
+                //    VoidSale = "N"
+                //};
+                //await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
             }
             else
             {
@@ -2770,7 +2787,7 @@ namespace AargonTools.Manager
                         ApprovalStatus = "DECLINED",
                         BillingName = "", // todo is it valid  for api transaction ? 
                         ApprovalCode = _deserializeObjForElavon.ssl_approval_code,
-                        OrderNumber = _deserializeObjForElavon.ssl_txn_id,
+                        OrderNumber = _deserializeObjForElavon.ssl_approval_code,
                         RefNumber = "INSTAMEDLH",
                         Sif = "N",
                         VoidSale = "N"
