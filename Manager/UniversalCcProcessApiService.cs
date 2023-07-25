@@ -1077,7 +1077,7 @@ namespace AargonTools.Manager
 
             await _addNotes.CreateNotes(noteObj, environment); //PO for prod_old & T is for test_db
 
-           
+
 
             return _response.Response(true, true, _responseModelForInstamed);
         }
@@ -1743,6 +1743,8 @@ namespace AargonTools.Manager
 
         }
 
+     
+
         public async Task<ResponseModel> ProcessSaleTransForIProGateway(ProcessCcPaymentUniversalRequestModel request, string environment)
         {
             var saleRequestModel = new SaleRequestModelForInstamed()
@@ -2158,7 +2160,7 @@ namespace AargonTools.Manager
                 dbQA.Add(PaymentScheduleHistoryTable);
                 dbQA.AddRange(qaPaymentScheduleStringList);
 
-             
+
                 //
 
                 return _response.Response(true, true, response, dbQA);
@@ -2445,7 +2447,7 @@ namespace AargonTools.Manager
                 //    " '"+ _deserializeObjForElavon.ssl_approval_code + "', '"+ _deserializeObjForElavon.ssl_result_message + "'," +
                 //    " '"+ _deserializeObjForElavon.ssl_oar_data + "','_username'); ", environment);
 
-                
+
 
 
                 if (_scheduleDateTime.Date == DateTime.Now.Date)
@@ -2473,16 +2475,16 @@ namespace AargonTools.Manager
                     _adoConnection.GetData("INSERT INTO cc_payment " +
                         "(debtor_acct,company, user_id,user_name,charge_total,subtotal,payment_date," +
                         "approval_status,approval_code, order_number,billing_name, ref_number, sif)" +
-                        "VALUES('"+ request.debtorAcc + "', 'TOTAL CREDIT RECOVERY', '_username', '_username elavon -API'," +
-                        " "+ request.amount + "," + request.amount + ", '"+ _scheduleDateTime + "', 'APPROVED', '"+ _deserializeObjForElavon.ssl_approval_code + "'," +
-                        " '"+ _deserializeObjForElavon.ssl_txn_id + "', '', 'INSTAMEDLH', 'N'); ", environment);
+                        "VALUES('" + request.debtorAcc + "', 'TOTAL CREDIT RECOVERY', '_username', '_username elavon -API'," +
+                        " " + request.amount + "," + request.amount + ", '" + _scheduleDateTime + "', 'APPROVED', '" + _deserializeObjForElavon.ssl_approval_code + "'," +
+                        " '" + _deserializeObjForElavon.ssl_txn_id + "', '', 'INSTAMEDLH', 'N'); ", environment);
                 }
                 //new implementation 
                 var companyFlag = await _getTheCompanyFlag.GetStringFlagForAdoQuery(request.debtorAcc, environment);
 
-                var balance = _adoConnection.GetData("SELECT CAST(balance as float) as balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment); 
+                var balance = _adoConnection.GetData("SELECT CAST(balance as float) as balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
 
-                var interestAmount = _adoConnection.GetData("SELECT interest_amt_life FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment); 
+                var interestAmount = _adoConnection.GetData("SELECT interest_amt_life FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
 
                 var placements = _adoConnection.GetData("SELECT ISNULL(placement,0) as placement FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
                 DataTable feePct = null;
@@ -2913,12 +2915,12 @@ namespace AargonTools.Manager
                 var qaPaymentScheduleTEmp = _adoConnection.GetData("select * from UCG_PaymentSchedule hs where hs.Id='" + PaymentScheduleIdhs + "'", environment);
 
                 //check if null
-                string CardInfoIdTemp="";
-                if (qaPaymentScheduleTEmp.Rows.Count>0)
+                string CardInfoIdTemp = "";
+                if (qaPaymentScheduleTEmp.Rows.Count > 0)
                 {
                     CardInfoIdTemp = Convert.ToString(qaPaymentScheduleTEmp.Rows[0]["CardInfoId"]); // 5
                 }
-                
+
 
                 var qaPaymentSchedule = _adoConnection.GetData("select * from UCG_PaymentSchedule hs where hs.CardInfoId='" + CardInfoIdTemp + "'", environment);
                 var qaPaymentScheduleStringList = new List<string>

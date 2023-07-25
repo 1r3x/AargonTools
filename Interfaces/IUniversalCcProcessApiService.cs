@@ -14,7 +14,7 @@ namespace AargonTools.Interfaces
 
 
 
-        
+
         //postPayment Later introduced 
         Task PostPaymentA(string debtorAccount, decimal paymentAmount, float balance,
                 decimal interestAmount, decimal feePct, string sif, int qFrom, int qTo,
@@ -51,6 +51,7 @@ namespace AargonTools.Interfaces
 
         Task SaveCardInfoAndScheduleDataForIProGateway(ProcessCcPaymentUniversalRequestModel request,
             string environment);
+
 
         Task<ResponseModel> ProcessSaleTransForIProGateway(ProcessCcPaymentUniversalRequestModel request,
             string environment);
