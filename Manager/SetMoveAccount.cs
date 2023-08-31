@@ -36,6 +36,7 @@ namespace AargonTools.Manager
                 {
                     return _response.Response(true, false, "Invalid Request[This account is inactive].");
                 }
+
                 //if it's only transfer into same company then check for it
                 var toQueueResult = await _context.EmployeeInfos.FirstOrDefaultAsync(x => x.Employee == toQueue && x.EmployeeType == "Q" && x.AcctStatus == "A");
                 if (toQueueResult == null)

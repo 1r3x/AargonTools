@@ -17,16 +17,14 @@ namespace AargonTools.Models
         {
         }
 
-        public virtual DbSet<LcgCardInfo> LcgCardInfos { get; set; }
-        public virtual DbSet<LcgPaymentSchedule> LcgPaymentSchedules { get; set; }
-        public virtual DbSet<LcgPaymentScheduleHistory> LcgPaymentScheduleHistories { get; set; }
+        public virtual DbSet<LarryCcIndex2> LarryCcIndex2s { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-                optionsBuilder.UseSqlServer("Server=c-sql1.aai.local;Database=collect;User Id=stephen;Password=Arizona2020!;");
+                optionsBuilder.UseSqlServer("Server=10.56.71.2;Database=collect;User Id=stephen;Password=Arizona2020!;");
             }
         }
 
@@ -34,39 +32,27 @@ namespace AargonTools.Models
         {
             modelBuilder.HasAnnotation("Relational:Collation", "SQL_Latin1_General_CP1_CI_AS");
 
-            modelBuilder.Entity<LcgCardInfo>(entity =>
+            modelBuilder.Entity<LarryCcIndex2>(entity =>
             {
-                entity.Property(e => e.AssociateDebtorAcct).IsUnicode(false);
+                entity.Property(e => e.AcctStatus)
+                    .IsUnicode(false)
+                    .IsFixedLength(true);
 
-                entity.Property(e => e.BinNumber).IsUnicode(false);
+                entity.Property(e => e.ClientAcct).IsUnicode(false);
 
-                entity.Property(e => e.CardHolderName).IsUnicode(false);
+                entity.Property(e => e.ClientId).IsUnicode(false);
 
-                entity.Property(e => e.EntryMode).IsUnicode(false);
+                entity.Property(e => e.ClientKey).IsUnicode(false);
 
-                entity.Property(e => e.LastFour).IsUnicode(false);
+                entity.Property(e => e.ClientPass).IsUnicode(false);
 
-                entity.Property(e => e.PaymentMethodId).IsUnicode(false);
+                entity.Property(e => e.ClientUser).IsUnicode(false);
 
-                entity.Property(e => e.Type).IsUnicode(false);
-            });
+                entity.Property(e => e.Company)
+                    .IsUnicode(false)
+                    .IsFixedLength(true);
 
-            modelBuilder.Entity<LcgPaymentSchedule>(entity =>
-            {
-                entity.Property(e => e.PatientAccount).IsUnicode(false);
-            });
-
-            modelBuilder.Entity<LcgPaymentScheduleHistory>(entity =>
-            {
-                entity.Property(e => e.AuthorizationNumber).IsUnicode(false);
-
-                entity.Property(e => e.AuthorizationText).IsUnicode(false);
-
-                entity.Property(e => e.ResponseCode).IsUnicode(false);
-
-                entity.Property(e => e.ResponseMessage).IsUnicode(false);
-
-                entity.Property(e => e.TransactionId).IsUnicode(false);
+                entity.Property(e => e.Gateway).IsUnicode(false);
             });
 
             OnModelCreatingPartial(modelBuilder);

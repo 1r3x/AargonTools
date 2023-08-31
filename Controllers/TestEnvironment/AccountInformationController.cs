@@ -33,6 +33,24 @@ namespace AargonTools.Controllers.TestEnvironment
         ///
         /// **Notes**
         /// The debtor account as a parameter is required and the format is [RegularExpression(@"\d{4}-\d{6}")]  ex. 0001-000001.
+        /// 
+        /// **GET Table/Fields Details**
+        /// 
+        /// [According to flag]
+        /// 
+        /// client_master ,
+        /// 
+        /// client_master_d,
+        /// 
+        /// client_master_h,
+        /// 
+        /// client_master_l,
+        /// 
+        /// client_master_t,
+        /// 
+        /// client_master_w
+        /// 
+        /// Pull--> balance 
         /// </remarks>
         /// 
         /// <response code="200">Execution Successful</response>
@@ -108,6 +126,24 @@ namespace AargonTools.Controllers.TestEnvironment
         ///
         /// **Notes**
         /// The debtor account as a parameter is required and the format is [RegularExpression(@"\d{4}-\d{6}")]  ex. 0001-000001.
+        /// 
+        /// **GET Table/Fields Details**
+        /// 
+        /// [According to flag]
+        /// 
+        /// client_master ,
+        /// 
+        /// client_master_d,
+        /// 
+        /// client_master_h,
+        /// 
+        /// client_master_l,
+        /// 
+        /// client_master_t,
+        /// 
+        /// client_master_w
+        /// 
+        /// Pull--> If exist then return company flag  
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
@@ -145,6 +181,12 @@ namespace AargonTools.Controllers.TestEnvironment
         /// 
         /// **Notes**
         /// The debtor account as a parameter is required and the format is [RegularExpression(@"\d{4}-\d{6}")]  ex. 0001-000001.
+        /// 
+        ///  **GET Table/Fields Details**
+        /// 
+        /// cc_payment
+        /// 
+        /// Pull--> if have any payment within 5 min then return true by checking db fieled  payment_date and approval_status
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
@@ -170,6 +212,8 @@ namespace AargonTools.Controllers.TestEnvironment
             }
 
         }
+
+
         /// <summary>
         ///  Returns  Multiples account and it's balance from a debtor account.(Test.)
         /// </summary>
@@ -181,6 +225,13 @@ namespace AargonTools.Controllers.TestEnvironment
         ///
         /// **Notes**
         /// The debtor account as a parameter is required and the format is [RegularExpression(@"\d{4}-\d{6}")]  ex. 0001-000001.
+        /// 
+        ///  **GET Table/Fields Details**
+        /// 
+        /// debtor_multiples
+        /// 
+        /// Pull--> debtor_acct,debtor_acct2
+        /// 
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
@@ -216,6 +267,23 @@ namespace AargonTools.Controllers.TestEnvironment
         ///
         /// **Notes**
         /// The debtor account as a parameter is required and the format is [RegularExpression(@"\d{4}-\d{6}")]  ex. 0001-000001.
+        /// 
+        ///  **GET Table/Fields Details**
+        /// 
+        /// According to flag  :
+        /// 
+        /// debtor_acct_info,
+        /// 
+        /// debtor_acct_info_d,
+        /// 
+        /// debtor_acct_info_h,
+        /// 
+        /// debtor_acct_info_l,
+        /// 
+        /// debtor_acct_info_t,
+        /// 
+        /// debtor_acct_info_w 
+        /// 
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
@@ -252,6 +320,12 @@ namespace AargonTools.Controllers.TestEnvironment
         ///
         /// **Notes**
         /// The debtor account as a parameter is required and the format is [RegularExpression(@"\d{4}-\d{6}")]  ex. 0001-000001.
+        /// 
+        ///  **GET Table/Fields Details**
+        /// 
+        /// debtor_multiples
+        /// 
+        /// Pull--> debtor_acct,debtor_acct2
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
@@ -291,10 +365,49 @@ namespace AargonTools.Controllers.TestEnvironment
         /// **Details**:
         /// Regular expression for debtorAcct [@"\d{4}-\d{6}"] ex. 0001-000001, for phone [@"\d{10}"] ex. 2123037334,
         /// please don't forget about valid token.
+        /// 
+        ///  **GET Table/Fields Details**
+        ///  
+        ///  debtor_phone_info,
+        ///  
+        /// check_detail,
+        /// 
+        /// larry_cc_payments,
+        /// 
+        /// debtor_pp_info,
+        /// 
+        /// debtor_acct_info(flag),
+        /// 
+        /// debtor_master(flag),
+        /// 
+        /// client_master(flag),
+        /// 
+        /// client_acct_info(flag)
+        /// 
+        /// Pull--> 
+        /// debtor_phone_info->home_area_code,home_phone,work_area_code,work_phone,cell_area_code,cell_phone,other_area_code,other_phone,
+        /// relative_area_code,relative_phone,debtor_acct
+        /// 
+        /// check_detail->check_date
+        /// 
+        /// larry_cc_payments->date_process
+        /// 
+        /// debtor_pp_info->pp_date1
+        /// 
+        /// debtor_acct_info(flag)->debtor_acct,balance,email_address,acct_status
+        /// 
+        /// 
+        /// debtor_master(flag)->ssn,address1,address2,city,state_code,zip,birth_date,first_name,last_name,
+        /// 
+        /// client_master(flag)->client_name
+        /// 
+        /// client_acct_info(flag)->acct_type
+        /// 
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
         /// 
+
         [ProducesResponseType(typeof(GetInteractionAcctDataExample), 200)]
         [HttpPost("GetInteractionsAcctData")]
         public async Task<IActionResult> GetInteractionsAcctData([FromBody] GetInteractionAcctDateRequestModel request)
@@ -327,6 +440,18 @@ namespace AargonTools.Controllers.TestEnvironment
         /// 
         /// Regular expression for debtorAcct [@"\d{4}"] ex. 0001, for company ex. A,
         /// Required a valid token.
+        /// 
+        ///  **GET Table/Fields Details**
+        ///  
+        /// client_acct_info(flag),
+        /// client_master(flag)
+        /// 
+        /// Pull--> 
+        /// 
+        /// client_acct(flag)->client_acct
+        /// 
+        /// client_master(flag)->orig_creditor,remit_full_pmt,address12,address22,city2,state_code2,zip2
+        /// 
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
@@ -363,6 +488,14 @@ namespace AargonTools.Controllers.TestEnvironment
         /// 
         /// Regular expression for debtorAcct [@"\d{4}"] ex. 0001, for company ex. A,
         /// Required a valid token.
+        /// 
+        /// 
+        ///  **GET Table/Fields Details**
+        ///  
+        /// contact_master(flag)
+        /// 
+        /// Pull--> first_name,last_name
+        /// 
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
@@ -397,6 +530,22 @@ namespace AargonTools.Controllers.TestEnvironment
         /// You can pass the parameter with API client like https://g14.aargontools.com/api/Test/AccountInformation/GetClientInvoicePayments
         /// (pass JSON body like the request example)
         ///  A valid token is required for setting the data.
+        ///  
+        /// 
+        ///  **GET Table/Fields Details**
+        /// 
+        /// debtor_acct_info(flag),
+        /// 
+        /// debtor_master(flag),
+        /// 
+        /// debtor_payment_master
+        /// 
+        /// Pull--> 
+        /// debtor_acct_info(flag)->debtor_acct,supplied_acct,date_of_service,date_placed,first_name,last_name,client_amt,agency_amt_decl,fee_pct,tran_date,cosigner_last_name
+        /// 
+        /// debtor_master(flag)->
+        /// debtor_payment_master->balance,status_code,payment_type,agency_amt_decl,client_amt,remit_full_pmt,payment_type
+        /// 
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -436,6 +585,48 @@ namespace AargonTools.Controllers.TestEnvironment
         /// 
         /// Regular expression for debtorAcct [@"\d{4}-\d{6}"] ex. 0001-000001, for company ex. A,
         /// Required a valid token.
+        /// 
+        /// 
+        /// 
+        ///  **GET Table/Fields Details**
+        /// 
+        /// debtor_master_(flag),
+        /// 
+        /// debtor_acct_info_(flag),
+        /// 
+        /// client_master_(flag),
+        /// 
+        /// client_acct_info_(flag),
+        /// 
+        /// debtor_phone_info,
+        /// 
+        /// debtor_pp_info,
+        /// 
+        /// check_detail,
+        /// 
+        /// larry_cc_payments
+        /// 
+        /// 
+        /// Pull--> 
+        /// 
+        /// debtor_master_(flag) ->first_name,last_name,ssn,address1,city,state_code,zip,birth_date,
+        /// 
+        /// debtor_acct_info_(flag)->balance,payment_amt_life,date_of_service,last_payment_amt,begin_age_date
+        /// 
+        /// client_master_(flag)->client_name,client_desc,
+        /// 
+        /// client_acct_info_(flag)->charge_interest,report_to_bureau,
+        /// 
+        /// debtor_phone_info->home_area_code,home_phone,home_phone_ver,home_phone_dont_call,cell_area_code,cell_phone,cell_phone_ver,cell_phone_dont_call
+        /// 
+        /// debtor_pp_info->pp_amount1,pp_date1,
+        /// 
+        /// check_detail->check_amt,check_date
+        /// 
+        /// larry_cc_payments->total,date_process
+        /// 
+        /// 
+        /// 
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>

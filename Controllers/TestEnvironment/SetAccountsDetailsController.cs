@@ -60,6 +60,21 @@ namespace AargonTools.Controllers.TestEnvironment
         /// Can add a bad number , and the bad number will remove from debtor account and add a notes about the action.A valid token is required for setting the data
         ///Pass the parameter with API client like https://g14.aargontools.com/api/test/SetAccountsDetails/SetBadNumbers/0001-000001&amp;7025052773
         /// (pass both parameter separated by '&amp;')
+        /// 
+        /// 
+        ///**GET Table/Fields Details**
+        ///
+        /// debtor_bad_numbers,
+        /// 
+        /// debtor_phone_info
+        /// 
+        /// Insert:
+        /// debtor_bad_numbers-->debtor_acct,home_area_code,home_phone,time_attempted,reason
+        /// 
+        /// Update:
+        /// 
+        /// debtor_phone_info-->home_phone,work_phone,cell_phone,other_phone
+        /// 
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -103,6 +118,25 @@ namespace AargonTools.Controllers.TestEnvironment
         /// then add a notes about the action and make a log to a specific log table.A valid token is required for setting the data
         /// You can pass the parameter with API client like https://g14.aargontools.com/api/test/SetAccountsDetails/SetMoveAccount/0001-000001&amp;70
         /// (pass both parameter separated by '&amp;')
+        /// 
+        ///**GET Table/Fields Details**
+        ///
+        /// debtor_acct_info(flag),
+        /// 
+        /// note_master,
+        /// 
+        /// MoveAccountApiLogs
+        /// 
+        /// Input:
+        /// 
+        /// note_master-->note_date ,debtor_acct,employee,activity_code,note_text
+        /// 
+        /// MoveAccountApiLogs->DebtorAcct,FromQueue,ToQueue,MoveDate,Requestor
+        /// 
+        /// Update:
+        /// 
+        /// debtor_acct_info(flag)->employee
+        /// 
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -133,6 +167,22 @@ namespace AargonTools.Controllers.TestEnvironment
         /// an add a note to a specific debtor account.   A valid token is required for getting the data
         ///  Pass the parameter with API client like https://g14.aargontools.com/api/test/SetAccountsDetails/SetNotes/0001-000001&amp;This is the notes
         /// (pass both parameter separated by '&amp;')
+        /// 
+        ///**GET Table/Fields Details**
+        ///
+        /// note_master
+        /// 
+        /// Input--> 
+        /// 
+        /// debtor_acct,
+        /// 
+        /// note_date,
+        /// 
+        /// activity_code,
+        /// 
+        /// employee,
+        /// 
+        /// note_text 
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -172,6 +222,20 @@ namespace AargonTools.Controllers.TestEnvironment
         /// Can set a phone number's status [don't call]. A valid token is required for setting the data
         /// You can pass the parameter with API client like https://g14.aargontools.com/api/test/SetAccountsDetails/SetDoNotCall/0001-000001&amp;7025052773
         /// (pass both parameter separated by '&amp;')
+        /// 
+        ///**GET Table/Fields Details**
+        ///
+        /// debtor_phone_info,
+        /// 
+        /// note_master
+        /// 
+        /// Input:
+        /// 
+        /// note_master--> debtor_acct,note_date,activity_code,employee,note_text 
+        /// 
+        /// Update:
+        /// 
+        /// debtor_phone_info-->cell_phone_dont_call
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -211,6 +275,24 @@ namespace AargonTools.Controllers.TestEnvironment
         /// Can set a phone number for a debtor.A valid token is required for setting the data
         ///You can pass the parameter with API client like https://g14.aargontools.com/api/test/SetAccountsDetails/SetNumber/0001-000001&amp;7025052773
         /// (pass both parameter separated by '&amp;')
+        /// 
+        ///**GET Table/Fields Details**
+        ///
+        /// debtor_phone_info(flag),
+        /// 
+        /// new_phone_numbers,
+        /// 
+        /// note_master
+        /// 
+        /// Pull--> 
+        /// *  debtor_phone_info(flag)
+        /// 
+        /// Input: 
+        /// 
+        /// new_phone_numbers->debtor_acct,area_code,phone_num,entered_by,date_acquired,date_used
+        /// 
+        /// note_master--> debtor_acct,note_date,activity_code,employee,note_text 
+        /// 
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -250,6 +332,28 @@ namespace AargonTools.Controllers.TestEnvironment
         /// Can set move to house and make a movement log for a debtor account.
         /// A valid token is required for setting the data
         /// You can pass the parameter with API client like https://g14.aargontools.com/api/test/SetAccountsDetails/SetMoveToHouse/0001-000001
+        ///
+        /// **GET Table/Fields Details**
+        /// 
+        /// api_move_logs,
+        /// 
+        /// debtor_phone_info(flag),
+        /// 
+        /// detor_master(flag),
+        /// 
+        /// api_move_settings
+        /// 
+        /// Pull: 
+        /// 
+        /// api_move_settings-->target_employee 
+        /// 
+        /// Input: 
+        /// 
+        /// api_move_logs-->debtor_acc,move_setup_id,previous_employee,new_employee,move_date
+        /// 
+        /// Update:
+        /// 
+        /// debtor_phone_info(flag) --> employee
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -288,6 +392,22 @@ namespace AargonTools.Controllers.TestEnvironment
         /// By using this endpoint you can set move to dispute and make a movement log for a debtor account.
         /// A valid token is required for setting the data
         ///You can pass the parameter with API client like https://g14.aargontools.com/api/test/SetAccountsDetails/SetMoveToDispute/0001-000001
+        ///**GET Table/Fields Details**
+        ///
+        /// debtor_phone_info(flag),
+        /// new_phone_numbers,
+        /// note_master
+        /// 
+        /// Pull--> 
+        /// 
+        /// *  debtor_phone_info(flag)
+        /// 
+        /// Input: 
+        /// 
+        /// new_phone_numbers->debtor_acct,area_code,phone_num,entered_by,date_acquired,date_used
+        /// 
+        /// note_master--> debtor_acct,note_date,activity_code,employee,note_text 
+        /// 
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -331,6 +451,24 @@ namespace AargonTools.Controllers.TestEnvironment
         /// (pass JSON body like the request example)
         /// **Notes**
         /// All the  parameter is required for the endpoint .
+        /// 
+        ///**GET Table/Fields Details**
+        ///
+        /// routing_numbers,
+        /// 
+        /// larry_automated_payments,
+        /// 
+        /// debtor_acct_info(flag),
+        /// 
+        /// check_detail,
+        /// 
+        /// debtor_phone_info,
+        /// 
+        /// debtor_master(flag),
+        /// 
+        /// batch_checks
+        /// 
+        /// Pull and Push --> sp_larry_check_postdate 
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -372,6 +510,24 @@ namespace AargonTools.Controllers.TestEnvironment
         /// A valid token is required for setting the data.
         ///Pass required parameters with API client like https://g14.aargontools.com/api/test/SetAccountsDetails/SetMoveToQueue/0001-000001&amp;'TYPE'
         /// (Pass all the  parameter separated by '&amp;')
+        /// 
+        ///**GET Table/Fields Details**
+        ///
+        /// debtor_phone_info(flag),
+        /// 
+        /// new_phone_numbers,
+        /// 
+        /// 
+        /// note_master
+        /// 
+        /// Pull--> *  debtor_phone_info(flag)
+        /// 
+        /// 
+        /// Input: 
+        /// 
+        /// new_phone_numbers->debtor_acct,area_code,phone_num,entered_by,date_acquired,date_used
+        /// 
+        /// note_master--> debtor_acct,note_date,activity_code,employee,note_text 
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -414,6 +570,13 @@ namespace AargonTools.Controllers.TestEnvironment
         /// You can pass the parameter with API client like https://g14.aargontools.com/api/Test/SetAccountsDetails/SetInteractionResults
         /// (pass JSON body like the request example)
         ///  A valid token is required for setting the data.
+        ///  
+        ///**GET Table/Fields Details**
+        ///
+        /// interact_results
+        /// 
+        /// Insert--> ANI,call_result,debtor_acct,end_time,last_dialogue,opening_intent,payment_amt,start_time,term_reason,transfer_reason
+        /// 
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -456,6 +619,12 @@ namespace AargonTools.Controllers.TestEnvironment
         /// And please don't forget about a valid token.
         ///You can pass the parameter with API client like https://g14.aargontools.com/api/Test/SetAccountsDetails/SetNotesV2
         /// (pass JSON body like the request example)
+        /// 
+        ///**GET Table/Fields Details**
+        ///
+        /// note_master
+        /// 
+        /// Input--> debtor_acct,note_date,activity_code,employee,note_text 
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -497,6 +666,17 @@ namespace AargonTools.Controllers.TestEnvironment
         /// And please don't forget about a valid token.
         ///You can pass the parameter with API client like https://g14.aargontools.com/api/Test/SetAccountsDetails/SetDialing
         /// (pass JSON body like the request example)
+        /// 
+        ///**GET Table/Fields Details**
+        ///
+        /// ivr_recall_table,
+        /// 
+        /// apex_list_master
+        /// 
+        /// insert: ivr_recall_table,
+        /// 
+        /// update: apex_list_master
+        /// 
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
@@ -539,6 +719,25 @@ namespace AargonTools.Controllers.TestEnvironment
         /// And please don't forget about a valid token.
         ///You can pass the parameter with API client like https://g14.aargontools.com/api/Test/SetAccountsDetails/SetUpdateAddress
         /// (pass JSON body like the request example)
+        /// 
+        ///**GET Table/Fields Details**
+        ///
+        /// debtor_master(flag),
+        /// 
+        /// debtor_acct_info(flag),
+        /// 
+        /// note_master
+        /// 
+        /// Update: 
+        /// 
+        /// debtor_acct_info(flag)->mail_return 
+        /// 
+        /// debtor_master(flag)->address1,address2,city,state_code,zip,residence_status,address_change_date
+        /// 
+        /// Insert:
+        /// 
+        /// note_master->debtor_acct,note_date,activity_code,employee,note_text 
+        /// 
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>

@@ -211,7 +211,7 @@ namespace AargonTools.Controllers.TestEnvironment
                         var scheduleDateTime = DateTime.Now;//todo 
                         var acctLimitTemp = requestCcPayment.debtorAcc.Split('-');
                         var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
-                        if (acctLimitCheck >= 4950000001 && acctLimitCheck < 4950999999)
+                        if (acctLimitCheck >= 4950000001 && acctLimitCheck < 4950999999 || acctLimitCheck >= 4984000001 && acctLimitCheck < 4984999999)
                         {
 
                             ResponseModel response;
@@ -229,8 +229,9 @@ namespace AargonTools.Controllers.TestEnvironment
 
                         }
 
-                        if (acctLimitCheck >= 4953000001 && acctLimitCheck < 4953999999)
+                        if (acctLimitCheck >= 4953000001 && acctLimitCheck < 4953999999 || acctLimitCheck >= 4985000001 && acctLimitCheck < 4985999999)
                         {
+
                             ResponseModel response;
                             if (scheduleDateTime.Date == DateTime.Now.Date)
                             {
@@ -247,6 +248,7 @@ namespace AargonTools.Controllers.TestEnvironment
 
                         if (acctLimitCheck >= 4514000001 && acctLimitCheck < 4514999999)
                         {
+
                             ResponseModel response;
                             if (scheduleDateTime.Date == DateTime.Now.Date)
                             {
@@ -264,7 +266,7 @@ namespace AargonTools.Controllers.TestEnvironment
                         {
                             var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(requestCcPayment.debtorAcc, "CBT");
 
-                            if (gatewaySelect.Result == "ELAVON")
+                            if (gatewaySelect.Result == "ELAVON" || acctLimitCheck >= 1902000001 && acctLimitCheck < 1902999999)//|| acctLimitCheck >= 1902000001 && acctLimitCheck < 1902999999 for staging 
                             {
                                 ResponseModel response;
                                 if (scheduleDateTime.Date == DateTime.Now.Date)
@@ -308,6 +310,100 @@ namespace AargonTools.Controllers.TestEnvironment
                                     ResponseMessage = obj.result,
                                     TransactionId = obj.key
                                 };
+
+                                //updated 
+
+                                var ccNUmber = requestForUsaEPay.ccNumber;
+
+                                var (Key, IVBase64) = _crypto.InitSymmetricEncryptionKeyIv();
+
+                                var encryptedCC = _crypto.Encrypt(ccNUmber, IVBase64, Key);
+
+                                var cardInfoObj = new LcgCardInfo()
+                                {
+                                    IsActive = true,
+                                    EntryMode = "key",
+                                    BinNumber = requestForUsaEPay.cvv,
+                                    ExpirationMonth = 1,//todo 
+                                    ExpirationYear = 2,//todo
+                                    LastFour = ccNUmber.Substring(ccNUmber.Length - 4),
+                                    PaymentMethodId = encryptedCC,
+                                    Type = "VISA",
+                                    AssociateDebtorAcct = requestForUsaEPay.debtorAcc,
+                                    CardHolderName = ""
+                                };
+
+
+                                await _cardTokenizationHelper.CreateCardInfo(cardInfoObj, "CBT");
+
+
+                                var paymentScheduleObj = new LcgPaymentSchedule()
+                                {
+                                    CardInfoId = cardInfoObj.Id,
+                                    IsActive = true,
+                                    EffectiveDate = DateTime.Now,
+                                    NumberOfPayments = (int)requestForUsaEPay.numberOfPayments,
+                                    PatientAccount = "", //todo patient account
+                                    Amount = requestForUsaEPay.amount
+                                };
+
+                                int _USAePayPaymentScheduleId = 0;
+
+                                var paymentDate = paymentScheduleObj.EffectiveDate;
+                                for (var i = 1; i <= requestForUsaEPay.numberOfPayments; i++)
+                                {
+                                    var lcgPaymentScheduleObj = new LcgPaymentSchedule()
+                                    {
+                                        CardInfoId = paymentScheduleObj.CardInfoId,
+                                        EffectiveDate = paymentDate,
+                                        IsActive = true,
+                                        NumberOfPayments = i,
+                                        PatientAccount = paymentScheduleObj.PatientAccount,
+                                        Amount = paymentScheduleObj.Amount
+                                    };
+                                    await _cardTokenizationHelper.CreatePaymentSchedule(lcgPaymentScheduleObj, "CBT");
+
+                                    if (i == 1)
+                                    {
+                                        _USAePayPaymentScheduleId = lcgPaymentScheduleObj.Id;
+                                    }
+
+                                    paymentDate = paymentDate.AddMonths(1);
+
+                                }
+
+
+                                var paymentScheduleHistoryObj = new LcgPaymentScheduleHistory()
+                                {
+                                    ResponseCode = res.ResponseCode,
+                                    AuthorizationNumber = res.AuthorizationNumber,
+                                    AuthorizationText = "_username", //todo user name 
+                                    ResponseMessage = res.ResponseMessage,
+                                    PaymentScheduleId = _USAePayPaymentScheduleId,
+                                    TransactionId = res.TransactionId
+                                };
+
+                                await _cardTokenizationHelper.CreatePaymentScheduleHistory(paymentScheduleHistoryObj, "CBT");
+
+
+                                //cc payment insert 
+                                await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
+                                {
+                                    debtorAcc = requestCcPayment.debtorAcc,
+                                    approvalCode = "",
+                                    approvalStatus = "APPROVED",
+                                    chargeTotal = (decimal)requestCcPayment.amount,
+                                    company = "AARGON AGENCY",
+                                    sif = "Y",
+                                    paymentDate = DateTime.Now,
+                                    refNo = "USAEPAY2",
+                                    orderNumber = res.TransactionId,
+                                    userId = "WEB",
+                                }, "T");
+
+
+                                //
+
                                 var response = _response.Response(true, true, res);
 
                                 return Ok(response);
@@ -365,7 +461,7 @@ namespace AargonTools.Controllers.TestEnvironment
                         var scheduleDateTime = DateTime.Now;//todo 
                         var acctLimitTemp = requestCcPayment.debtorAcc.Split('-');
                         var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
-                        if (acctLimitCheck >= 4950000001 && acctLimitCheck < 4950999999)
+                        if (acctLimitCheck >= 4950000001 && acctLimitCheck < 4950999999 || acctLimitCheck >= 4984000001 && acctLimitCheck < 4984999999)
                         {
 
                             ResponseModel response;
@@ -383,7 +479,7 @@ namespace AargonTools.Controllers.TestEnvironment
 
                         }
 
-                        if (acctLimitCheck >= 4953000001 && acctLimitCheck < 4953999999)
+                        if (acctLimitCheck >= 4953000001 && acctLimitCheck < 4953999999 || acctLimitCheck >= 4985000001 && acctLimitCheck < 4985999999)
                         {
                             ResponseModel response;
                             if (scheduleDateTime.Date == DateTime.Now.Date)
@@ -427,6 +523,7 @@ namespace AargonTools.Controllers.TestEnvironment
                                 }
                                 else
                                 {
+                                    //todo elavon
                                     response = await _processCcUniversal.ProcessCardAuthorizationForIProGateway(requestCcPayment, "CBT");
                                 }
 

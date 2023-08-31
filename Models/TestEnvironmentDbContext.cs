@@ -63,6 +63,7 @@ namespace AargonTools.Models
         public virtual DbSet<LcgPaymentSchedule> LcgPaymentSchedules { get; set; }
         public virtual DbSet<LcgPaymentScheduleHistory> LcgPaymentScheduleHistories { get; set; }
         public virtual DbSet<LarryCcIndex> LarryCcIndices { get; set; }
+        public virtual DbSet<LarryCcIndex2> LarryCcIndex2s { get; set; }
 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

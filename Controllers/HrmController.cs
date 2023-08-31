@@ -28,7 +28,14 @@ namespace AargonTools.Controllers
         /// **Details**:
         /// Get the time log for an employee on a specific date by passing the parametrize emp id ann date. A valid token is required for getting the data
         /// Pass the param with API client like  https://g14.aargontools.com/api/Hrm/GetEmployeeTimeLog/65&amp;2020-02-22
-
+        /// 
+        /// Tables:
+        /// 
+        /// employee_time_log
+        /// 
+        /// Insert:
+        /// 
+        /// employee,log_time,station_name,num_minutes,reason
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>

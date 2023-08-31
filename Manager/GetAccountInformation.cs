@@ -1165,8 +1165,8 @@ namespace AargonTools.Manager
                                                     " ELSE 0" +
                                                     " END as amount_due_client," +
                                                     " debtor_acct_info.cosigner_last_name" +
-                                                    " FROM debtor_acct_info," +
-                                                    " debtor_master," +
+                                                    " FROM debtor_acct_info"+flag+"," +
+                                                    " debtor_master" + flag + "," +
                                                     " debtor_payment_master" +
                                                     " WHERE debtor_payment_master.debtor_acct = debtor_master.debtor_acct" +
                                                     " AND debtor_payment_master.debtor_acct = debtor_acct_info.debtor_acct" +
@@ -1241,8 +1241,8 @@ namespace AargonTools.Manager
                                                     " ELSE 0" +
                                                     " END as amount_due_client," +
                                                     " debtor_acct_info.cosigner_last_name" +
-                                                    " FROM debtor_acct_info," +
-                                                    " debtor_master," +
+                                                    " FROM debtor_acct_info" + flag + "," +
+                                                    " debtor_master" + flag + "," +
                                                     " debtor_payment_master" +
                                                     " WHERE debtor_payment_master.debtor_acct = debtor_master.debtor_acct" +
                                                     " AND debtor_payment_master.debtor_acct = debtor_acct_info.debtor_acct" +
@@ -1316,8 +1316,8 @@ namespace AargonTools.Manager
                                                     " ELSE 0" +
                                                     " END as amount_due_client," +
                                                     " debtor_acct_info.cosigner_last_name" +
-                                                    " FROM debtor_acct_info," +
-                                                    " debtor_master," +
+                                                    " FROM debtor_acct_info" + flag + "," +
+                                                    " debtor_master" + flag + "," +
                                                     " debtor_payment_master" +
                                                     " WHERE debtor_payment_master.debtor_acct = debtor_master.debtor_acct" +
                                                     " AND debtor_payment_master.debtor_acct = debtor_acct_info.debtor_acct" +
@@ -1481,8 +1481,8 @@ namespace AargonTools.Manager
                                                 "LEFT OUTER JOIN client_acct_info" + flag + " cai on cai.client_acct=SUBSTRING(dai.debtor_acct, 1, 4) " +
                                                 "WHERE (@acctNoVar IS NULL OR  dai.debtor_acct=@acctNoVar)" +
                                                 " AND(@ssnVar IS NULL OR dm.ssn=@ssnVar) " +
-                                                "AND (@areaCode IS NULL OR dpi.home_area_code=@areaCode) " +
-                                                "AND (@phoneNo IS NULL OR dpi.home_phone=@phoneNo)", environment);
+                                                "AND (@areaCode IS NULL OR dpi.cell_area_code=@areaCode OR dpi.home_area_code=@areaCode) " +
+                                                "AND (@phoneNo IS NULL OR dpi.cell_phone=@phoneNo OR dpi.home_phone=@phoneNo)", environment);
 
 
             var listOfItems = new List<GetInteractionAcctDataViewModel>();
@@ -1499,18 +1499,18 @@ namespace AargonTools.Manager
                     address1 = Convert.ToString(rowAdo.Rows[i]["address1"]),
                     address2 = Convert.ToString(rowAdo.Rows[i]["address2"]),
                     birthDate = birthDateProcess,
-                    cellPhoneNumber = Convert.ToString(rowAdo.Rows[i]["cell_area_code"]) + "-" + Convert.ToString(rowAdo.Rows[i]["cell_phone"]),
+                    cellPhoneNumber = Convert.ToString(rowAdo.Rows[i]["cell_area_code"]) + "" + Convert.ToString(rowAdo.Rows[i]["cell_phone"]),
                     city = Convert.ToString(rowAdo.Rows[i]["city"]),
                     clientName = Convert.ToString(rowAdo.Rows[i]["client_name"]),
                     debtType = Convert.ToString(rowAdo.Rows[i]["acct_type"]),
                     emailAddress = Convert.ToString(rowAdo.Rows[i]["email_address"]),
                     firstName = Convert.ToString(rowAdo.Rows[i]["first_name"]),
-                    homePhoneNumber = Convert.ToString(rowAdo.Rows[i]["home_area_code"]) + "-" + Convert.ToString(rowAdo.Rows[i]["home_phone"]),
+                    homePhoneNumber = Convert.ToString(rowAdo.Rows[i]["home_area_code"]) + "" + Convert.ToString(rowAdo.Rows[i]["home_phone"]),
                     lastName = Convert.ToString(rowAdo.Rows[i]["last_name"]),
-                    otherPhoneNumer = Convert.ToString(rowAdo.Rows[i]["other_area_code"]) + "-" + Convert.ToString(rowAdo.Rows[i]["other_phone"]),
-                    relatiovePhoneNumber = Convert.ToString(rowAdo.Rows[i]["relative_area_code"]) + "-" + Convert.ToString(rowAdo.Rows[i]["relative_phone"]),
+                    otherPhoneNumer = Convert.ToString(rowAdo.Rows[i]["other_area_code"]) + "" + Convert.ToString(rowAdo.Rows[i]["other_phone"]),
+                    relatiovePhoneNumber = Convert.ToString(rowAdo.Rows[i]["relative_area_code"]) + "" + Convert.ToString(rowAdo.Rows[i]["relative_phone"]),
                     stateCode = Convert.ToString(rowAdo.Rows[i]["state_code"]),
-                    workPhoneNumber = Convert.ToString(rowAdo.Rows[i]["work_area_code"]) + "-" + Convert.ToString(rowAdo.Rows[i]["work_phone"]),
+                    workPhoneNumber = Convert.ToString(rowAdo.Rows[i]["work_area_code"]) + "" + Convert.ToString(rowAdo.Rows[i]["work_phone"]),
                     zip = Convert.ToString(rowAdo.Rows[i]["zip"]),
                     accountStatus = Convert.ToString(rowAdo.Rows[i]["acct_status"])
                 };

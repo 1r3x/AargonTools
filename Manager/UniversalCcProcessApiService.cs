@@ -43,12 +43,17 @@ namespace AargonTools.Manager
 
         private readonly AdoDotNetConnection _adoConnection;
         //
+        private static ExistingDataDbContext _context;
+        private static TestEnvironmentDbContext _contextTest;
+        private static ProdOldDbContext _contextProdOld;
+        private static CurrentBackupTestEnvironmentDbContext _currentTestEnvironment;
 
         public UniversalCcProcessApiService(HttpClient clientForInstaMed,
             IOptions<CentralizeVariablesModel> centralizeVariablesModel, IAddNotesV3 addNotes,
             IAddCcPaymentV2 addCcPayment,
             ICardTokenizationDataHelper cardTokenizationHelper, ICryptoGraphy crypto, ResponseModel response,
-            AdoDotNetConnection adoConnection, GetTheCompanyFlag getTheCompanyFlag)
+            AdoDotNetConnection adoConnection, GetTheCompanyFlag getTheCompanyFlag, ExistingDataDbContext context, TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld,
+            CurrentBackupTestEnvironmentDbContext currentTestEnvironment)
         {
             _addCcPayment = addCcPayment;
             _addNotes = addNotes;
@@ -57,6 +62,11 @@ namespace AargonTools.Manager
             _response = response;
             _adoConnection = adoConnection;
             _getTheCompanyFlag = getTheCompanyFlag;
+            //
+            _context = context;
+            _contextTest = contextTest;
+            _contextProdOld = contextProdOld;
+            _currentTestEnvironment = currentTestEnvironment;
             //
             _centralizeVariablesModel = centralizeVariablesModel;
             _clientForInstaMed = clientForInstaMed;
@@ -627,9 +637,9 @@ namespace AargonTools.Manager
 
             var data = "xmldata=" +
                        @"<txn>" +
-                       "<ssl_merchant_id>" + _centralizeVariablesModel.Value.ElavonCredentials.ssl_merchant_id + "</ssl_merchant_id>" +
-                       "<ssl_user_id>" + _centralizeVariablesModel.Value.ElavonCredentials.ssl_user_id + "</ssl_user_id>" +
-                       "<ssl_pin>" + _centralizeVariablesModel.Value.ElavonCredentials.ssl_pin + "</ssl_pin>" +
+                       "<ssl_merchant_id>" + request.Outlet.MerchantID + "</ssl_merchant_id>" +//
+                       "<ssl_user_id>" + request.Outlet.StoreID + "</ssl_user_id>" +//StoreID is user_id
+                       "<ssl_pin>" + request.Outlet.TerminalID + "</ssl_pin>" +//TerminalID is pin
                        "<ssl_description>Test Authorization for 1.00</ssl_description>" +
                        "<ssl_transaction_type>ccsale</ssl_transaction_type>" +
                        "<ssl_card_number>" + request.Card.CardNumber + "</ssl_card_number>" +
@@ -638,6 +648,21 @@ namespace AargonTools.Manager
                        "<ssl_cvv2cvc2>" + request.Card.CVN + "</ssl_cvv2cvc2>" +
                        "<ssl_cardholder_ip>72.206.60.98</ssl_cardholder_ip>" +
                        "</txn>";
+
+
+            //var data = "xmldata=" +
+            //          @"<txn>" +
+            //          "<ssl_merchant_id>807485</ssl_merchant_id>" +//
+            //          "<ssl_user_id>8032017132</ssl_user_id>" +
+            //          "<ssl_pin>59WAMNKEGMMZVZARP37FUEST83WIOZYU6AJXKOMLHAZIIDP4LKGIZ65DDSSBMJ9M</ssl_pin>" +
+            //          "<ssl_transaction_type>CCSALE</ssl_transaction_type>" +
+            //          "<ssl_card_number>4000000000000002</ssl_card_number>" +
+            //          "<ssl_exp_date>1222</ssl_exp_date>" +
+            //          "<ssl_amount>100.00</ssl_amount>" +
+            //          "<ssl_cvv2cvc2_indicator>1</ssl_cvv2cvc2_indicator>" +
+            //          "<ssl_cvv2cvc2>123</ssl_cvv2cvc2>" +
+            //          "<ssl_healthcare_amount>32.00</ssl_healthcare_amount>" +
+            //          "</txn>";
 
 
 
@@ -882,79 +907,83 @@ namespace AargonTools.Manager
                 var placements = _adoConnection.GetData("SELECT ISNULL(placement,0) as placement FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
                 DataTable feePct = null;
                 decimal feePctSimplified = 0;
-                switch ((int)placements.Rows[0]["placement"])
+
+                if (placements.Columns.Count > 1 && balance.Columns.Count > 1 && interestAmount.Columns.Count > 1)
                 {
-                    case 1:
-                        feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                        feePctSimplified = (decimal)feePct.Rows[0]["commission_pct1"];
-                        break;
-                    case 2:
-                        feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                        feePctSimplified = (decimal)feePct.Rows[0]["commission_pct2"];
-                        break;
+
+                    switch ((int)placements.Rows[0]["placement"])
+                    {
+                        case 1:
+                            feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            feePctSimplified = (decimal)feePct.Rows[0]["commission_pct1"];
+                            break;
+                        case 2:
+                            feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            feePctSimplified = (decimal)feePct.Rows[0]["commission_pct2"];
+                            break;
+                    }
+
+
+                    switch ((int)placements.Rows[0]["placement"])
+                    {
+                        case 1:
+                            feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            break;
+                        case 2:
+                            feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            break;
+                    }
+
+
+                    var qFrom = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
+                    //for now
+                    var qTo = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
+
+                    var remit = _adoConnection.GetData("SELECT remit_full_pmt FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                    var adminAmount = _adoConnection.GetData("SELECT CAST(total_fees_balance as float) as total_fees_balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
+
+                    string paymentType;
+                    if (companyFlag == "_t")
+                    {
+                        paymentType = "DIRECT";
+                    }
+                    else
+                    {
+                        paymentType = "CREDIT CARD";
+                    }
+
+
+
+
+                    // debugger
+                    var a = request.debtorAcc;
+                    var b = request.amount;
+                    var balanceT = balance.Rows[0]["balance"];
+                    var interestAmountT = interestAmount.Rows[0]["interest_amt_life"];
+                    var e = feePctSimplified;
+                    var qFromT = qFrom.Rows[0]["employee"];
+                    var qToT = qTo.Rows[0]["employee"];
+                    var remitT = remit.Rows[0]["remit_full_pmt"];
+                    var m = paymentType;
+                    var j = companyFlag;
+                    var adminAmountT = adminAmount.Rows[0]["total_fees_balance"];
+                    var l = request.debtorAcc;
+                    //
+                    var balanceC = Convert.ToSingle(balanceT);
+                    var interestAmountC = Convert.ToDecimal(interestAmountT);
+                    var qFromC = Convert.ToInt32(qFromT);
+                    var qToC = Convert.ToInt32(qToT);
+                    var remitC = Convert.ToString(remitT);
+                    var adminAmountC = Convert.ToSingle(adminAmountT);
+
+
+
+
+                    await PostPaymentA(request.debtorAcc, request.amount, balanceC,
+                        interestAmountC, feePctSimplified, request.sif,
+                        qFromC, qToC, remitC,
+                        paymentType, companyFlag, adminAmountC, request.debtorAcc, environment);
                 }
-
-
-                switch ((int)placements.Rows[0]["placement"])
-                {
-                    case 1:
-                        feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                        break;
-                    case 2:
-                        feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                        break;
-                }
-
-
-                var qFrom = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
-                //for now
-                var qTo = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
-
-                var remit = _adoConnection.GetData("SELECT remit_full_pmt FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                var adminAmount = _adoConnection.GetData("SELECT CAST(total_fees_balance as float) as total_fees_balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
-
-                string paymentType;
-                if (companyFlag == "_t")
-                {
-                    paymentType = "DIRECT";
-                }
-                else
-                {
-                    paymentType = "CREDIT CARD";
-                }
-
-
-
-
-                // debugger
-                var a = request.debtorAcc;
-                var b = request.amount;
-                var balanceT = balance.Rows[0]["balance"];
-                var interestAmountT = interestAmount.Rows[0]["interest_amt_life"];
-                var e = feePctSimplified;
-                var qFromT = qFrom.Rows[0]["employee"];
-                var qToT = qTo.Rows[0]["employee"];
-                var remitT = remit.Rows[0]["remit_full_pmt"];
-                var m = paymentType;
-                var j = companyFlag;
-                var adminAmountT = adminAmount.Rows[0]["total_fees_balance"];
-                var l = request.debtorAcc;
-                //
-                var balanceC = Convert.ToSingle(balanceT);
-                var interestAmountC = Convert.ToDecimal(interestAmountT);
-                var qFromC = Convert.ToInt32(qFromT);
-                var qToC = Convert.ToInt32(qToT);
-                var remitC = Convert.ToString(remitT);
-                var adminAmountC = Convert.ToSingle(adminAmountT);
-
-
-
-
-                await PostPaymentA(request.debtorAcc, request.amount, balanceC,
-                    interestAmountC, feePctSimplified, request.sif,
-                    qFromC, qToC, remitC,
-                    paymentType, companyFlag, adminAmountC, request.debtorAcc, environment);
-
 
             }
             catch (Exception)
@@ -1642,7 +1671,7 @@ namespace AargonTools.Manager
                         BillingName = "", //todo billing person name 
                         ApprovalCode = _responseModelForIProGateway.response_code,
                         OrderNumber = _responseModelForIProGateway.transactionid,
-                        RefNumber = "INSTAMEDLH",
+                        RefNumber = "IPROGATEWAY",
                         Sif = "N"
                     };
                     await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
@@ -1658,81 +1687,85 @@ namespace AargonTools.Manager
                 var placements = _adoConnection.GetData("SELECT ISNULL(placement,0) as placement FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
                 DataTable feePct = null;
                 decimal feePctSimplified = 0;
-                switch ((int)placements.Rows[0]["placement"])
+
+                if (placements.Columns.Count > 1 && balance.Columns.Count > 1 && interestAmount.Columns.Count > 1)
                 {
-                    case 1:
-                        feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                        feePctSimplified = (decimal)feePct.Rows[0]["commission_pct1"];
-                        break;
-                    case 2:
-                        feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                        feePctSimplified = (decimal)feePct.Rows[0]["commission_pct2"];
-                        break;
+
+                    switch ((int)placements.Rows[0]["placement"])
+                    {
+                        case 1:
+                            feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            feePctSimplified = (decimal)feePct.Rows[0]["commission_pct1"];
+                            break;
+                        case 2:
+                            feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            feePctSimplified = (decimal)feePct.Rows[0]["commission_pct2"];
+                            break;
+                    }
+
+
+                    switch ((int)placements.Rows[0]["placement"])
+                    {
+                        case 1:
+                            feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            break;
+                        case 2:
+                            feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            break;
+                    }
+
+
+                    var qFrom = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
+                    //for now
+                    var qTo = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
+
+                    var remit = _adoConnection.GetData("SELECT remit_full_pmt FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                    var adminAmount = _adoConnection.GetData("SELECT CAST(total_fees_balance as float) as total_fees_balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
+
+                    string paymentType;
+                    if (companyFlag == "_t")
+                    {
+                        paymentType = "DIRECT";
+                    }
+                    else
+                    {
+                        paymentType = "CREDIT CARD";
+                    }
+
+
+
+
+                    // debugger
+                    var a = request.debtorAcc;
+                    var b = request.amount;
+                    var balanceT = balance.Rows[0]["balance"];
+                    var interestAmountT = interestAmount.Rows[0]["interest_amt_life"];
+                    var e = feePctSimplified;
+                    var qFromT = qFrom.Rows[0]["employee"];
+                    var qToT = qTo.Rows[0]["employee"];
+                    var remitT = remit.Rows[0]["remit_full_pmt"];
+                    var m = paymentType;
+                    var j = companyFlag;
+                    var adminAmountT = adminAmount.Rows[0]["total_fees_balance"];
+                    var l = request.debtorAcc;
+                    //
+                    var balanceC = Convert.ToSingle(balanceT);
+                    var interestAmountC = Convert.ToDecimal(interestAmountT);
+                    var qFromC = Convert.ToInt32(qFromT);
+                    var qToC = Convert.ToInt32(qToT);
+                    var remitC = Convert.ToString(remitT);
+                    var adminAmountC = Convert.ToSingle(adminAmountT);
+
+
+
+
+                    await PostPaymentA(request.debtorAcc, request.amount, balanceC,
+                        interestAmountC, feePctSimplified, request.sif,
+                        qFromC, qToC, remitC,
+                        paymentType, companyFlag, adminAmountC, request.debtorAcc, environment);
+
+
                 }
-
-
-                switch ((int)placements.Rows[0]["placement"])
-                {
-                    case 1:
-                        feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                        break;
-                    case 2:
-                        feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                        break;
-                }
-
-
-                var qFrom = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
-                //for now
-                var qTo = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
-
-                var remit = _adoConnection.GetData("SELECT remit_full_pmt FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                var adminAmount = _adoConnection.GetData("SELECT CAST(total_fees_balance as float) as total_fees_balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
-
-                string paymentType;
-                if (companyFlag == "_t")
-                {
-                    paymentType = "DIRECT";
-                }
-                else
-                {
-                    paymentType = "CREDIT CARD";
-                }
-
-
-
-
-                // debugger
-                var a = request.debtorAcc;
-                var b = request.amount;
-                var balanceT = balance.Rows[0]["balance"];
-                var interestAmountT = interestAmount.Rows[0]["interest_amt_life"];
-                var e = feePctSimplified;
-                var qFromT = qFrom.Rows[0]["employee"];
-                var qToT = qTo.Rows[0]["employee"];
-                var remitT = remit.Rows[0]["remit_full_pmt"];
-                var m = paymentType;
-                var j = companyFlag;
-                var adminAmountT = adminAmount.Rows[0]["total_fees_balance"];
-                var l = request.debtorAcc;
-                //
-                var balanceC = Convert.ToSingle(balanceT);
-                var interestAmountC = Convert.ToDecimal(interestAmountT);
-                var qFromC = Convert.ToInt32(qFromT);
-                var qToC = Convert.ToInt32(qToT);
-                var remitC = Convert.ToString(remitT);
-                var adminAmountC = Convert.ToSingle(adminAmountT);
-
-
-
-
-                await PostPaymentA(request.debtorAcc, request.amount, balanceC,
-                    interestAmountC, feePctSimplified, request.sif,
-                    qFromC, qToC, remitC,
-                    paymentType, companyFlag, adminAmountC, request.debtorAcc, environment);
-
-
-
             }
             catch (Exception e)
             {
@@ -1743,7 +1776,7 @@ namespace AargonTools.Manager
 
         }
 
-     
+
 
         public async Task<ResponseModel> ProcessSaleTransForIProGateway(ProcessCcPaymentUniversalRequestModel request, string environment)
         {
@@ -1789,26 +1822,26 @@ namespace AargonTools.Manager
                 //magic 
                 await SaveCardInfoAndScheduleDataForIProGateway(request, environment);
                 // for success
-                var ccPaymentObj = new CcPayment()
-                {
-                    DebtorAcct = request.debtorAcc,
-                    Company = "TOTAL CREDIT RECOVERY",
-                    //UserId = username,
-                    UserId = "_username", //todo   
-                    //UserName = username + " -LCG",
-                    UserName = "_username", //todo 
-                    ChargeTotal = request.amount,
-                    Subtotal = request.amount,
-                    PaymentDate = DateTime.Now,
-                    ApprovalStatus = "APPROVED",
-                    BillingName = "", // todo is it valid  for api transaction ? 
-                    ApprovalCode = _responseModelForIProGateway.response_code,
-                    OrderNumber = _responseModelForIProGateway.transactionid,
-                    RefNumber = "INSTAMEDLH",
-                    Sif = "N",
-                    VoidSale = "N"
-                };
-                await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
+                //var ccPaymentObj = new CcPayment()
+                //{
+                //    DebtorAcct = request.debtorAcc,
+                //    Company = "TOTAL CREDIT RECOVERY",
+                //    //UserId = username,
+                //    UserId = "_username", //todo   
+                //    //UserName = username + " -LCG",
+                //    UserName = "_username", //todo 
+                //    ChargeTotal = request.amount,
+                //    Subtotal = request.amount,
+                //    PaymentDate = DateTime.Now,
+                //    ApprovalStatus = "APPROVED",
+                //    BillingName = "", // todo is it valid  for api transaction ? 
+                //    ApprovalCode = _responseModelForIProGateway.response_code,
+                //    OrderNumber = _responseModelForIProGateway.transactionid,
+                //    RefNumber = "INSTAMEDLH",
+                //    Sif = "N",
+                //    VoidSale = "N"
+                //};
+                //await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
             }
             else
             {
@@ -1919,26 +1952,26 @@ namespace AargonTools.Manager
                 //magic 
                 await SaveCardInfoAndScheduleDataForIProGateway(request, environment);
                 // for success
-                var ccPaymentObj = new CcPayment()
-                {
-                    DebtorAcct = request.debtorAcc,
-                    Company = "TOTAL CREDIT RECOVERY",
-                    //UserId = username,
-                    UserId = "_username", //todo   
-                    //UserName = username + " -LCG",
-                    UserName = "_username", //todo 
-                    ChargeTotal = request.amount,
-                    Subtotal = request.amount,
-                    PaymentDate = DateTime.Now,
-                    ApprovalStatus = "APPROVED",
-                    BillingName = "", // todo is it valid  for api transaction ? 
-                    ApprovalCode = _responseModelForIProGateway.response_code,
-                    OrderNumber = _responseModelForIProGateway.transactionid,
-                    RefNumber = "INSTAMEDLH",
-                    Sif = "N",
-                    VoidSale = "N"
-                };
-                await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
+                //var ccPaymentObj = new CcPayment()
+                //{
+                //    DebtorAcct = request.debtorAcc,
+                //    Company = "TOTAL CREDIT RECOVERY",
+                //    //UserId = username,
+                //    UserId = "_username", //todo   
+                //    //UserName = username + " -LCG",
+                //    UserName = "_username", //todo 
+                //    ChargeTotal = request.amount,
+                //    Subtotal = request.amount,
+                //    PaymentDate = DateTime.Now,
+                //    ApprovalStatus = "APPROVED",
+                //    BillingName = "", // todo is it valid  for api transaction ? 
+                //    ApprovalCode = _responseModelForIProGateway.response_code,
+                //    OrderNumber = _responseModelForIProGateway.transactionid,
+                //    RefNumber = "INSTAMEDLH",
+                //    Sif = "N",
+                //    VoidSale = "N"
+                //};
+                //await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
             }
             else
             {
@@ -2486,76 +2519,86 @@ namespace AargonTools.Manager
 
                 var interestAmount = _adoConnection.GetData("SELECT interest_amt_life FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
 
-                var placements = _adoConnection.GetData("SELECT ISNULL(placement,0) as placement FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
+                var placements = _adoConnection.GetData("SELECT ISNULL((SELECT  placement FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'),0) as placement", environment);
                 DataTable feePct = null;
                 decimal feePctSimplified = 0;
-                switch ((int)placements.Rows[0]["placement"])
+                if (placements.Columns.Count > 1 && balance.Columns.Count > 1 && interestAmount.Columns.Count > 1)
                 {
-                    case 1:
-                        feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                        feePctSimplified = (decimal)feePct.Rows[0]["commission_pct1"];
-                        break;
-                    case 2:
-                        feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                        feePctSimplified = (decimal)feePct.Rows[0]["commission_pct2"];
-                        break;
+
+                    switch ((int)placements.Rows[0]["placement"])
+                    {
+                        case 1:
+                            feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            feePctSimplified = (decimal)feePct.Rows[0]["commission_pct1"];
+                            break;
+                        case 2:
+                            feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            feePctSimplified = (decimal)feePct.Rows[0]["commission_pct2"];
+                            break;
+                    }
+
+
+                    switch ((int)placements.Rows[0]["placement"])
+                    {
+                        case 1:
+                            feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            break;
+                        case 2:
+                            feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            break;
+                    }
+
+
+
+
+
+
+                    var qFrom = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
+                    //for now
+                    var qTo = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
+
+                    var remit = _adoConnection.GetData("SELECT remit_full_pmt FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                    var adminAmount = _adoConnection.GetData("SELECT CAST(total_fees_balance as float) as total_fees_balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
+
+                    string paymentType = "DIRECT";//for elavon it's valid
+
+
+
+
+
+                    // debugger
+                    var a = request.debtorAcc;
+                    var b = request.amount;
+                    var balanceT = balance.Rows[0]["balance"];
+                    var interestAmountT = interestAmount.Rows[0]["interest_amt_life"];
+                    var e = feePctSimplified;
+                    var qFromT = qFrom.Rows[0]["employee"];
+                    var qToT = qTo.Rows[0]["employee"];
+                    var remitT = remit.Rows[0]["remit_full_pmt"];
+                    var m = paymentType;
+                    var j = companyFlag;
+                    var adminAmountT = adminAmount.Rows[0]["total_fees_balance"];
+                    var l = request.debtorAcc;
+                    //
+                    var balanceC = Convert.ToSingle(balanceT);
+                    var interestAmountC = Convert.ToDecimal(interestAmountT);
+                    var qFromC = Convert.ToInt32(qFromT);
+                    var qToC = Convert.ToInt32(qToT);
+                    var remitC = Convert.ToString(remitT);
+                    var adminAmountC = Convert.ToSingle(adminAmountT);
+
+
+
+
+                    await PostPaymentA(request.debtorAcc, request.amount, balanceC,
+                        interestAmountC, feePctSimplified, request.sif,
+                        qFromC, qToC, remitC,
+                        paymentType, companyFlag, adminAmountC, request.debtorAcc, environment);
                 }
 
 
-                switch ((int)placements.Rows[0]["placement"])
-                {
-                    case 1:
-                        feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                        break;
-                    case 2:
-                        feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                        break;
-                }
-
-
-                var qFrom = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
-                //for now
-                var qTo = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
-
-                var remit = _adoConnection.GetData("SELECT remit_full_pmt FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                var adminAmount = _adoConnection.GetData("SELECT CAST(total_fees_balance as float) as total_fees_balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
-
-                string paymentType = "DIRECT";//for elavon it's valid
-
-
-
-
-
-                // debugger
-                var a = request.debtorAcc;
-                var b = request.amount;
-                var balanceT = balance.Rows[0]["balance"];
-                var interestAmountT = interestAmount.Rows[0]["interest_amt_life"];
-                var e = feePctSimplified;
-                var qFromT = qFrom.Rows[0]["employee"];
-                var qToT = qTo.Rows[0]["employee"];
-                var remitT = remit.Rows[0]["remit_full_pmt"];
-                var m = paymentType;
-                var j = companyFlag;
-                var adminAmountT = adminAmount.Rows[0]["total_fees_balance"];
-                var l = request.debtorAcc;
-                //
-                var balanceC = Convert.ToSingle(balanceT);
-                var interestAmountC = Convert.ToDecimal(interestAmountT);
-                var qFromC = Convert.ToInt32(qFromT);
-                var qToC = Convert.ToInt32(qToT);
-                var remitC = Convert.ToString(remitT);
-                var adminAmountC = Convert.ToSingle(adminAmountT);
-
-
-
-
-                await PostPaymentA(request.debtorAcc, request.amount, balanceC,
-                    interestAmountC, feePctSimplified, request.sif,
-                    qFromC, qToC, remitC,
-                    paymentType, companyFlag, adminAmountC, request.debtorAcc, environment);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 throw;
             }
@@ -2565,27 +2608,78 @@ namespace AargonTools.Manager
 
         public async Task<ResponseModel> ProcessSaleTransForElavon(ProcessCcPaymentUniversalRequestModel request, string environment)
         {
-            var saleRequestModel = new SaleRequestModelForInstamed()
+            var saleRequestModel = new SaleRequestModelForInstamed();
+            if (environment == "P")
             {
-                Outlet = new InstaMedOutlet()
+                string ElavonclientUser= "8032017132";
+                string ElavonclientPass="59WAMNKEGMMZVZARP37FUEST83WIOZYU6AJXKOMLHAZIIDP4LKGIZ65DDSSBMJ9M";
+                if (request.debtorAcc.Substring(0, 4) == "1902")
                 {
-                    MerchantID = _centralizeVariablesModel.Value.InstaMedOutlet.MerchantID,
-                    StoreID = _centralizeVariablesModel.Value.InstaMedOutlet.StoreID,
-                    TerminalID = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalID
-                },
-                Amount = request.amount,
-                PaymentMethod = "Card",
-                Card = new Card()
-                {
-                    CVN = request.cvv,
-                    CardNumber = request.ccNumber,
-                    EntryMode = "key",
-                    Expiration = request.expiredDate,
-                    IsCardDataEncrypted = false,
-                    IsEMVCapableDevice = false,
+                    ElavonclientUser = "8032017132";
+                    ElavonclientPass = "59WAMNKEGMMZVZARP37FUEST83WIOZYU6AJXKOMLHAZIIDP4LKGIZ65DDSSBMJ9M";
                 }
+                else
+                {
+                    ElavonclientUser = (from r in _context.LarryCcIndex2s
+                                        where (r.AcctStatus == "A" && r.ClientAcct == request.debtorAcc.Substring(0, 4))
+                                        select r.ClientUser).ToString();
+                    ElavonclientPass = (from r in _context.LarryCcIndex2s
+                                        where (r.AcctStatus == "A" && r.ClientAcct == request.debtorAcc.Substring(0, 4))
+                                        select r.ClientPass).ToString();
+                }
+              
 
-            };
+
+
+
+                saleRequestModel = new SaleRequestModelForInstamed()
+                {
+                    Outlet = new InstaMedOutlet()
+                    {
+                        MerchantID = _centralizeVariablesModel.Value.ElavonCredentials.ssl_merchant_id,
+                        StoreID = ElavonclientUser,
+                        TerminalID = ElavonclientPass
+
+                    },
+                    Amount = request.amount,
+                    PaymentMethod = "Card",
+                    Card = new Card()
+                    {
+                        CVN = request.cvv,
+                        CardNumber = request.ccNumber,
+                        EntryMode = "key",
+                        Expiration = request.expiredDate,
+                        IsCardDataEncrypted = false,
+                        IsEMVCapableDevice = false,
+                    }
+
+                };
+            }
+            else
+            {
+                saleRequestModel = new SaleRequestModelForInstamed()
+                {
+                    Outlet = new InstaMedOutlet()
+                    {
+                        MerchantID = _centralizeVariablesModel.Value.ElavonCredentials.ssl_merchant_id,
+                        StoreID = _centralizeVariablesModel.Value.ElavonCredentials.ssl_user_id,
+                        TerminalID = _centralizeVariablesModel.Value.ElavonCredentials.ssl_pin
+                    },
+                    Amount = request.amount,
+                    PaymentMethod = "Card",
+                    Card = new Card()
+                    {
+                        CVN = request.cvv,
+                        CardNumber = request.ccNumber,
+                        EntryMode = "key",
+                        Expiration = request.expiredDate,
+                        IsCardDataEncrypted = false,
+                        IsEMVCapableDevice = false,
+                    }
+
+                };
+            }
+
             var resultVerify = await ElavonSale(saleRequestModel);
             if (resultVerify.Contains("FieldErrors"))
             {
@@ -2625,7 +2719,7 @@ namespace AargonTools.Manager
                     BillingName = "", // todo is it valid  for api transaction ? 
                     ApprovalCode = _deserializeObjForElavon.ssl_approval_code,
                     OrderNumber = _deserializeObjForElavon.ssl_txn_id,
-                    RefNumber = "INSTAMEDLH",
+                    RefNumber = "ELAVON",
                     Sif = "N",
                     VoidSale = "N"
                 };
@@ -2655,7 +2749,7 @@ namespace AargonTools.Manager
                         BillingName = "", // todo is it valid  for api transaction ? 
                         ApprovalCode = _deserializeObjForElavon.ssl_approval_code,
                         OrderNumber = _deserializeObjForElavon.ssl_txn_id,
-                        RefNumber = "INSTAMEDLH",
+                        RefNumber = "ELAVON",
                         Sif = "N",
                         VoidSale = "N"
                     };

@@ -30,6 +30,10 @@ namespace AargonTools.Controllers
         /// You can use this end point to set the time log for an employee on a specific date by passing the parameters. You need a valid token
         /// for this endpoint . You can pass the param with API client like  https://g14.aargontools.com/api/SetHrm/SetEmployeeTimeLog/65&amp;Station07&amp;2020-02-22 07:55:23&amp;Reasons 
         /// and please don't forget about valid token.
+        /// Tables:
+        /// employee_time_log
+        /// Insert:
+        /// employee,log_time,station_name,num_minutes,reason
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
