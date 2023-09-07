@@ -17,6 +17,7 @@ using AargonTools.Manager.GenericManager;
 using AargonTools.Models;
 using AargonTools.Models.Helper;
 using AargonTools.ViewModel;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Options;
 using Microsoft.VisualBasic;
@@ -71,13 +72,7 @@ namespace AargonTools.Manager
             _centralizeVariablesModel = centralizeVariablesModel;
             _clientForInstaMed = clientForInstaMed;
             _clientForInstaMed.BaseAddress = new Uri(_centralizeVariablesModel.Value.InstaMedCredentials.BaseAddress);
-            _clientForInstaMed.DefaultRequestHeaders.Add("api-key",
-                _centralizeVariablesModel.Value.InstaMedCredentials.APIkey);
-            _clientForInstaMed.DefaultRequestHeaders.Add("api-secret",
-                _centralizeVariablesModel.Value.InstaMedCredentials.APIsecret);
-            _clientForInstaMed.DefaultRequestHeaders.Accept.Clear();
-            _clientForInstaMed.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
+
         }
 
         public Task PostPaymentA(string debtorAccount, decimal paymentAmount, float balance, decimal interestAmount,
@@ -553,10 +548,34 @@ namespace AargonTools.Manager
 
         public async Task<string> InstaMedSale(SaleRequestModelForInstamed request)
         {
+            _clientForInstaMed.DefaultRequestHeaders.Add("api-key",
+               _centralizeVariablesModel.Value.InstaMedCredentials.APIkey);
+            _clientForInstaMed.DefaultRequestHeaders.Add("api-secret",
+                _centralizeVariablesModel.Value.InstaMedCredentials.APIsecret);
+            _clientForInstaMed.DefaultRequestHeaders.Accept.Clear();
+            _clientForInstaMed.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
             var response = await _clientForInstaMed.PostAsJsonAsync(
                 "rest/payment/sale", request);
             var resultString = response.Content.ReadAsStringAsync();
             //var ensureSuccessStatusCode = response.EnsureSuccessStatusCode();
+            return resultString.Result;
+        }
+
+        public async Task<string> InstaMedSalePro(SaleRequestModelForInstamed request)
+        {
+            _clientForInstaMed.DefaultRequestHeaders.Add("api-key",
+                _centralizeVariablesModel.Value.InstaMedCredentials.APIkeyPro);
+            _clientForInstaMed.DefaultRequestHeaders.Add("api-secret",
+                _centralizeVariablesModel.Value.InstaMedCredentials.APIsecretPro);
+            _clientForInstaMed.DefaultRequestHeaders.Accept.Clear();
+            _clientForInstaMed.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+            var response = await _clientForInstaMed.PostAsJsonAsync(
+                "rest/payment/sale", request);
+            var resultString = response.Content.ReadAsStringAsync();
+            //var ensureSuccessStatusCode = response.EnsureSuccessStatusCode();
+            Serilog.Log.Information(resultString.Result);
             return resultString.Result;
         }
 
@@ -570,9 +589,21 @@ namespace AargonTools.Manager
 
         public async Task<string> InstaMedTokenization(SaleRequestModelForInstamed request)
         {
+           
             var response = await _clientForInstaMed.PostAsJsonAsync(
                 "rest/payment/paymentplan", request);
             var resultString = response.Content.ReadAsStringAsync();
+            Serilog.Log.Information(resultString.Result);
+            return resultString.Result;
+        }
+
+        public async Task<string> InstaMedTokenizationPro(SaleRequestModelForInstamed request)
+        {
+           
+            var response = await _clientForInstaMed.PostAsJsonAsync(
+                "rest/payment/paymentplan", request);
+            var resultString = response.Content.ReadAsStringAsync();
+            Serilog.Log.Information(resultString.Result);
             return resultString.Result;
         }
 
@@ -584,18 +615,43 @@ namespace AargonTools.Manager
             string cvv = request.Card.CVN;
             string amount = Convert.ToString(request.Amount);
             String security_key = _centralizeVariablesModel.Value.IClassProCredentials.security_key;
-            //String firstname = request.Patient.FirstName;
-            //String lastname = request.Patient.LastName;
+            String firstname = request.Patient.FirstName;
+            String lastname = request.Patient.LastName;
+            String supplied_acct = request.Patient.AccountNumber;
 
-            String firstname = "First Name";
-            String lastname = "Last Name";
 
 
 
             String strPost = "security_key=" + security_key
                                              + "&firstname=" + firstname + "&lastname=" + lastname
                                              + "&payment=creditcard&type=sale"
-                                             + "&amount=" + amount + "&ccnumber=" + ccNumber + "&ccexp=" + ccExp + "&cvv=" + cvv;
+                                             + "&amount=" + amount + "&ccnumber=" + ccNumber + "&ccexp=" + ccExp + "&cvv=" + cvv
+                                             + "&merchant_defined_field_1=" + supplied_acct + "&merchant_defined_field_2=" + firstname + "&merchant_defined_field_3=" + lastname;
+
+
+
+            return ReadHtmlPageAsync(_centralizeVariablesModel.Value.IClassProCredentials.BaseAddress, strPost);
+        }
+        public Task<string> IProGatewaySalePro(SaleRequestModelForInstamed request)
+        {
+            //setup variables
+            string ccNumber = request.Card.CardNumber;
+            string ccExp = request.Card.Expiration;
+            string cvv = request.Card.CVN;
+            string amount = Convert.ToString(request.Amount);
+            String security_key = _centralizeVariablesModel.Value.IClassProCredentials.security_keyPro;
+            String firstname = request.Patient.FirstName;
+            String lastname = request.Patient.LastName;
+            String supplied_acct = request.Patient.AccountNumber;
+
+
+
+
+            String strPost = "security_key=" + security_key
+                                             + "&firstname=" + firstname + "&lastname=" + lastname
+                                             + "&payment=creditcard&type=sale"
+                                             + "&amount=" + amount + "&ccnumber=" + ccNumber + "&ccexp=" + ccExp + "&cvv=" + cvv
+                                             + "&merchant_defined_field_1="+ supplied_acct + "&merchant_defined_field_2=" + firstname + "&merchant_defined_field_3=" + lastname;
 
 
 
@@ -640,13 +696,19 @@ namespace AargonTools.Manager
                        "<ssl_merchant_id>" + request.Outlet.MerchantID + "</ssl_merchant_id>" +//
                        "<ssl_user_id>" + request.Outlet.StoreID + "</ssl_user_id>" +//StoreID is user_id
                        "<ssl_pin>" + request.Outlet.TerminalID + "</ssl_pin>" +//TerminalID is pin
-                       "<ssl_description>Test Authorization for 1.00</ssl_description>" +
+                       "<ssl_description>Description</ssl_description>" +
+                       "<ssl_patient_account_number>1231213</ssl_patient_account_number>" +//patirnt account no 
+                       "<ssl_first_name>First </ssl_first_name>" +//patirnt name  1st 
+                       "<ssl_last_name>Last</ssl_last_name>" +//patirnt name  Lst 
+                       "<ssl_merchant_txn_id>1231213</ssl_merchant_txn_id>" +//marchent txn 
+                       "<ssl_avs_address>Address 1 </ssl_avs_address>" +//address 
+                       "<ssl_avs_zip>12998</ssl_avs_zip>" +//zip
+                       "<ssl_invoice_number>122998</ssl_invoice_number>" +//ssl_invoice_number
                        "<ssl_transaction_type>ccsale</ssl_transaction_type>" +
                        "<ssl_card_number>" + request.Card.CardNumber + "</ssl_card_number>" +
                        "<ssl_exp_date>" + request.Card.Expiration + "</ssl_exp_date>" +
                        "<ssl_amount>" + request.Amount + "</ssl_amount>" +
                        "<ssl_cvv2cvc2>" + request.Card.CVN + "</ssl_cvv2cvc2>" +
-                       "<ssl_cardholder_ip>72.206.60.98</ssl_cardholder_ip>" +
                        "</txn>";
 
 
@@ -665,6 +727,140 @@ namespace AargonTools.Manager
             //          "</txn>";
 
 
+
+
+
+
+            using (var streamWriter = new StreamWriter(httpRequest.GetRequestStream()))
+            {
+                streamWriter.Write(data);
+            }
+
+            var httpResponse = (HttpWebResponse)httpRequest.GetResponse();
+            using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+            {
+                result = await streamReader.ReadToEndAsync();
+            }
+            return result;
+        }
+
+        public async Task<string> ElavonSalePro(SaleRequestModelForInstamed request)
+        {
+            var url = _centralizeVariablesModel.Value.ElavonCredentials.BaseAddressPro;
+            var result = "";
+            var httpRequest = (HttpWebRequest)WebRequest.Create(url);
+            httpRequest.Method = "POST";
+
+
+            httpRequest.ContentType = "application/x-www-form-urlencoded ";
+            httpRequest.Accept = "application/xml";
+
+            var data = "xmldata=" +
+                       @"<txn>" +
+                       "<ssl_merchant_id>" + request.Outlet.MerchantID + "</ssl_merchant_id>" +//
+                       "<ssl_user_id>" + request.Outlet.StoreID + "</ssl_user_id>" +//StoreID is user_id
+                       "<ssl_pin>" + request.Outlet.TerminalID + "</ssl_pin>" +//TerminalID is pin
+                       "<ssl_description>" + request.Patient.FirstName + " " + request.Patient.LastName + "</ssl_description>" +
+                       "<ssl_patient_account_number>" + request.Patient.AccountNumber + "</ssl_patient_account_number>" +//patirnt account no 
+                       "<ssl_first_name>" + request.Patient.FirstName + " </ssl_first_name>" +//patirnt name  1st 
+                       "<ssl_last_name>" + request.Patient.LastName + "</ssl_last_name>" +//patirnt name  Lst 
+                       "<ssl_merchant_txn_id>" + request.Patient.AccountNumber + "</ssl_merchant_txn_id>" +//marchent txn 
+                       "<ssl_avs_address>" + request.BillingAddress.Street1 + " " + request.BillingAddress.City + " " + request.BillingAddress.State + "</ssl_avs_address>" +//address 
+                       "<ssl_avs_zip>" + request.BillingAddress.Zip + "</ssl_avs_zip>" +//zip
+                       "<ssl_invoice_number>" + request.Patient.FirstName + " " + request.Patient.LastName + "</ssl_invoice_number>" +//ssl_invoice_number
+                       "<ssl_transaction_type>ccsale</ssl_transaction_type>" +
+                       "<ssl_card_number>" + request.Card.CardNumber + "</ssl_card_number>" +
+                       "<ssl_exp_date>" + request.Card.Expiration + "</ssl_exp_date>" +
+                       "<ssl_amount>" + request.Amount + "</ssl_amount>" +
+                       "<ssl_cvv2cvc2>" + request.Card.CVN + "</ssl_cvv2cvc2>" +
+                       "</txn>";
+
+            //var data = "xmldata=" +
+            //          @"<txn>" +
+            //          "<ssl_merchant_id>" + request.Outlet.MerchantID + "</ssl_merchant_id>" +//
+            //          "<ssl_user_id>" + request.Outlet.StoreID + "</ssl_user_id>" +//StoreID is user_id
+            //          "<ssl_pin>" + request.Outlet.TerminalID + "</ssl_pin>" +//TerminalID is pin
+            //          "<ssl_description>staging to avoid null</ssl_description>" +
+            //          "<ssl_patient_account_number>staging</ssl_patient_account_number>" +//patirnt account no 
+            //          "<ssl_first_name>staging</ssl_first_name>" +//patirnt name  1st 
+            //          "<ssl_last_name>staging</ssl_last_name>" +//patirnt name  Lst 
+            //          "<ssl_merchant_txn_id>staging</ssl_merchant_txn_id>" +//marchent txn 
+            //          "<ssl_avs_address>staging</ssl_avs_address>" +//address 
+            //          "<ssl_avs_zip>staging</ssl_avs_zip>" +//zip
+            //          "<ssl_invoice_number>staging</ssl_invoice_number>" +//ssl_invoice_number
+            //          "<ssl_transaction_type>ccsale</ssl_transaction_type>" +
+            //          "<ssl_card_number>" + request.Card.CardNumber + "</ssl_card_number>" +
+            //          "<ssl_exp_date>" + request.Card.Expiration + "</ssl_exp_date>" +
+            //          "<ssl_amount>" + request.Amount + "</ssl_amount>" +
+            //          "<ssl_cvv2cvc2>" + request.Card.CVN + "</ssl_cvv2cvc2>" +
+            //          "</txn>";
+
+
+
+
+            using (var streamWriter = new StreamWriter(httpRequest.GetRequestStream()))
+            {
+                streamWriter.Write(data);
+            }
+
+            var httpResponse = (HttpWebResponse)httpRequest.GetResponse();
+            using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+            {
+                result = await streamReader.ReadToEndAsync();
+            }
+            return result;
+        }
+
+        public async Task<string> ElavonSaleTmcPro(SaleRequestModelForInstamed request)
+        {
+            var url = _centralizeVariablesModel.Value.ElavonCredentials.BaseAddressPro;
+            var result = "";
+            var httpRequest = (HttpWebRequest)WebRequest.Create(url);
+            httpRequest.Method = "POST";
+
+
+            httpRequest.ContentType = "application/x-www-form-urlencoded ";
+            httpRequest.Accept = "application/xml";
+
+            var data = "xmldata=" +
+                       @"<txn>" +
+                       "<ssl_merchant_id>" + request.Outlet.MerchantID + "</ssl_merchant_id>" +//
+                       "<ssl_user_id>" + request.Outlet.StoreID + "</ssl_user_id>" +//StoreID is user_id
+                       "<ssl_pin>" + request.Outlet.TerminalID + "</ssl_pin>" +//TerminalID is pin
+                       "<ssl_description>" + request.Patient.FirstName + " " + request.Patient.LastName + "</ssl_description>" +
+                       "<ssl_patient_account_number>" + request.Patient.AccountNumber + "</ssl_patient_account_number>" +//patirnt account no 
+                       "<ssl_first_name>" + request.Patient.FirstName + " </ssl_first_name>" +//patirnt name  1st 
+                       "<ssl_last_name>" + request.Patient.LastName + "</ssl_last_name>" +//patirnt name  Lst 
+                       "<ssl_merchant_txn_id>" + request.Patient.AccountNumber + "</ssl_merchant_txn_id>" +//marchent txn 
+                       "<ssl_avs_address>" + request.BillingAddress.Street1 + " " + request.BillingAddress.City + " " + request.BillingAddress.State + "</ssl_avs_address>" +//address 
+                       "<ssl_avs_zip>" + request.BillingAddress.Zip + "</ssl_avs_zip>" +//zip
+                       "<ssl_invoice_number>" + request.Patient.AccountNumber + "</ssl_invoice_number>" +//ssl_invoice_number
+                       "<ssl_transaction_type>ccsale</ssl_transaction_type>" +
+                       "<ssl_card_number>" + request.Card.CardNumber + "</ssl_card_number>" +
+                       "<ssl_exp_date>" + request.Card.Expiration + "</ssl_exp_date>" +
+                       "<ssl_amount>" + request.Amount + "</ssl_amount>" +
+                       "<ssl_cvv2cvc2>" + request.Card.CVN + "</ssl_cvv2cvc2>" +
+                       "</txn>";
+
+            //var data = "xmldata=" +
+            //          @"<txn>" +
+            //          "<ssl_merchant_id>" + request.Outlet.MerchantID + "</ssl_merchant_id>" +//
+            //          "<ssl_user_id>" + request.Outlet.StoreID + "</ssl_user_id>" +//StoreID is user_id
+            //          "<ssl_pin>" + request.Outlet.TerminalID + "</ssl_pin>" +//TerminalID is pin
+            //          "<ssl_description>staging to avoid null</ssl_description>" +
+            //          "<ssl_patient_account_number>staging</ssl_patient_account_number>" +//patirnt account no 
+            //          "<ssl_first_name>staging</ssl_first_name>" +//patirnt name  1st 
+            //          "<ssl_last_name>staging</ssl_last_name>" +//patirnt name  Lst 
+            //          "<ssl_merchant_txn_id>staging</ssl_merchant_txn_id>" +//marchent txn 
+            //          "<ssl_avs_address>staging</ssl_avs_address>" +//address 
+            //          "<ssl_avs_zip>staging</ssl_avs_zip>" +//zip
+            //          "<ssl_invoice_number>staging</ssl_invoice_number>" +//ssl_invoice_number
+            //          "<ssl_transaction_type>ccsale</ssl_transaction_type>" +
+            //          "<ssl_card_number>" + request.Card.CardNumber + "</ssl_card_number>" +
+            //          "<ssl_exp_date>" + request.Card.Expiration + "</ssl_exp_date>" +
+            //          "<ssl_amount>" + request.Amount + "</ssl_amount>" +
+            //          "<ssl_cvv2cvc2>" + request.Card.CVN + "</ssl_cvv2cvc2>" +
+            //          "</txn>";
 
 
 
@@ -780,13 +976,41 @@ namespace AargonTools.Manager
 
         public async Task SaveCardInfoAndScheduleData(ProcessCcPaymentUniversalRequestModel request, string environment)
         {
+            string merchantId;
+            string storeId;
+            string terminalId;
+            if (environment == "P")
+            {
+                merchantId = _centralizeVariablesModel.Value.InstaMedOutlet.MerchantIDPro;
+
+                storeId = _centralizeVariablesModel.Value.InstaMedOutlet.StoreID;
+                var acctLimitTemp = request.debtorAcc.Split('-');
+                var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
+                if (acctLimitCheck >= 4950000001 && acctLimitCheck < 4950999999 || acctLimitCheck >= 4984000001 && acctLimitCheck < 4984999999)
+                {
+                    terminalId = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalIDProHB;
+                }
+                else
+                {
+                    terminalId = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalIDProPB;
+                }
+
+            }
+            else
+            {
+                merchantId = _centralizeVariablesModel.Value.InstaMedOutlet.MerchantID;
+                storeId = _centralizeVariablesModel.Value.InstaMedOutlet.StoreID;
+                terminalId = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalID;
+            }
+
+
             var saleRequestModel = new SaleRequestModelForInstamed()
             {
                 Outlet = new InstaMedOutlet()
                 {
-                    MerchantID = _centralizeVariablesModel.Value.InstaMedOutlet.MerchantID,
-                    StoreID = _centralizeVariablesModel.Value.InstaMedOutlet.StoreID,
-                    TerminalID = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalID
+                    MerchantID = merchantId,
+                    StoreID = storeId,
+                    TerminalID = terminalId
                 },
                 PaymentPlanType = "SaveOnFile",
                 Amount = request.amount,
@@ -803,11 +1027,19 @@ namespace AargonTools.Manager
             };
             try
             {
-                var resultVerify = await InstaMedTokenization(saleRequestModel);
+                string resultVerify;
+                if (environment=="P")
+                {
+                    resultVerify = await InstaMedTokenizationPro(saleRequestModel);
+                }
+                else
+                {
+                    resultVerify = await InstaMedTokenization(saleRequestModel);
+                }
 
+                Serilog.Log.Information("Tokenization End");
                 var cardInfoData = new TokenizeResponseModelForInstaMed(resultVerify);
-
-
+                Serilog.Log.Information("Card info Initialize");
                 var cardInfoObj = new LcgCardInfo()
                 {
                     IsActive = true,
@@ -822,9 +1054,8 @@ namespace AargonTools.Manager
                     CardHolderName = ""
                 };
 
-
                 await _cardTokenizationHelper.CreateCardInfo(cardInfoObj, environment);
-
+                Serilog.Log.Information("Cardinfo Saved");
 
                 var paymentScheduleObj = new LcgPaymentSchedule()
                 {
@@ -860,7 +1091,7 @@ namespace AargonTools.Manager
                     paymentDate = paymentDate.AddMonths(1);
 
                 }
-
+                Serilog.Log.Information("Payment Schedule Saved.");
 
                 var paymentScheduleHistoryObj = new LcgPaymentScheduleHistory()
                 {
@@ -986,9 +1217,9 @@ namespace AargonTools.Manager
                 }
 
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                throw;
+                throw e;
             }
 
 
@@ -996,13 +1227,41 @@ namespace AargonTools.Manager
 
         public async Task<ResponseModel> ProcessSaleTransForInstaMed(ProcessCcPaymentUniversalRequestModel request, string environment)
         {
+            string merchantId;
+            string storeId;
+            string terminalId;
+            if (environment == "P")
+            {
+                merchantId = _centralizeVariablesModel.Value.InstaMedOutlet.MerchantIDPro;
+
+                storeId = _centralizeVariablesModel.Value.InstaMedOutlet.StoreID;
+                var acctLimitTemp = request.debtorAcc.Split('-');
+                var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
+                if (acctLimitCheck >= 4950000001 && acctLimitCheck < 4950999999 || acctLimitCheck >= 4984000001 && acctLimitCheck < 4984999999)
+                {
+                    terminalId = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalIDProHB;
+                }
+                else
+                {
+                    terminalId = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalIDProPB;
+                }
+
+            }
+            else
+            {
+                merchantId = _centralizeVariablesModel.Value.InstaMedOutlet.MerchantID;
+                storeId = _centralizeVariablesModel.Value.InstaMedOutlet.StoreID;
+                terminalId = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalID;
+            }
+
+
             var saleRequestModel = new SaleRequestModelForInstamed()
             {
                 Outlet = new InstaMedOutlet()
                 {
-                    MerchantID = _centralizeVariablesModel.Value.InstaMedOutlet.MerchantID,
-                    StoreID = _centralizeVariablesModel.Value.InstaMedOutlet.StoreID,
-                    TerminalID = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalID
+                    MerchantID = merchantId,
+                    StoreID = storeId,
+                    TerminalID = terminalId
                 },
                 Amount = request.amount,
                 PaymentMethod = "Card",
@@ -1017,7 +1276,15 @@ namespace AargonTools.Manager
                 }
 
             };
-            var resultVerify = await InstaMedSale(saleRequestModel);
+            string resultVerify;
+            if (environment == "P")
+            {
+                resultVerify = await InstaMedSalePro(saleRequestModel);
+            }
+            else
+            {
+                resultVerify = await InstaMedSale(saleRequestModel);
+            }
 
             if (resultVerify.Contains("FieldErrors"))
             {
@@ -1780,6 +2047,27 @@ namespace AargonTools.Manager
 
         public async Task<ResponseModel> ProcessSaleTransForIProGateway(ProcessCcPaymentUniversalRequestModel request, string environment)
         {
+
+            var patientAccountInfo = await _context.DebtorAcctInfoTs.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+                  new DebtorAcctInfoT()
+                  {
+                      SuppliedAcct = i.SuppliedAcct,
+                      Balance = i.Balance
+                  }).SingleOrDefaultAsync();
+
+            var patientInfo = await _context.PatientMasters.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+             new PatientMaster()
+             {
+                 FirstName = i.FirstName,
+                 LastName = i.LastName,
+                 StateCode = i.StateCode,
+                 Zip = i.Zip,
+                 Address1 = i.Address1,
+                 Address2 = i.Address2,
+                 City = i.City
+             }).SingleOrDefaultAsync();
+
+
             var saleRequestModel = new SaleRequestModelForInstamed()
             {
                 Outlet = new InstaMedOutlet()
@@ -1798,10 +2086,25 @@ namespace AargonTools.Manager
                     Expiration = request.expiredDate,
                     IsCardDataEncrypted = false,
                     IsEMVCapableDevice = false,
+                },
+                Patient=new Patient()
+                {
+                    AccountNumber= patientAccountInfo.SuppliedAcct,
+                    FirstName= patientInfo.FirstName,
+                    LastName= patientInfo.LastName
                 }
 
             };
-            var resultVerify = await IProGatewaySale(saleRequestModel);
+            string resultVerify;
+            if (environment == "P")
+            {
+                resultVerify = await IProGatewaySalePro(saleRequestModel);
+            }
+            else
+            {
+                resultVerify = await IProGatewaySale(saleRequestModel);
+            }
+
 
             if (resultVerify.Contains("FieldErrors"))
             {
@@ -1815,7 +2118,7 @@ namespace AargonTools.Manager
             string noteText = null;
             if (_responseModelForIProGateway != null && _responseModelForIProGateway.response_code == "100")
             {
-                noteText = "INSTAMED CC APPROVED FOR $" + request.amount + " " +
+                noteText = "ICLASSPRO CC APPROVED FOR $" + request.amount + " " +
                            _responseModelForIProGateway.responsetext.ToUpper() +
                            " AUTH #:" + _responseModelForIProGateway.authcode;
 
@@ -1846,7 +2149,7 @@ namespace AargonTools.Manager
             else
             {
                 if (_responseModelForIProGateway != null)
-                    noteText = "INSTAMED CC DECLINED FOR $" + request.amount + " " +
+                    noteText = "ICLASSPRO CC DECLINED FOR $" + request.amount + " " +
                                _responseModelForIProGateway.responsetext.ToUpper() +
                                " AUTH #:" + _responseModelForIProGateway.authcode;
                 // for DECLINED
@@ -1867,7 +2170,7 @@ namespace AargonTools.Manager
                         BillingName = "", // todo is it valid  for api transaction ? 
                         ApprovalCode = _responseModelForIProGateway.response_code,
                         OrderNumber = _responseModelForIProGateway.transactionid,
-                        RefNumber = "INSTAMEDLH",
+                        RefNumber = "ICLASSPRO",
                         Sif = "N",
                         VoidSale = "N"
                     };
@@ -2608,35 +2911,54 @@ namespace AargonTools.Manager
 
         public async Task<ResponseModel> ProcessSaleTransForElavon(ProcessCcPaymentUniversalRequestModel request, string environment)
         {
+            var resultVerify = "";
+
             var saleRequestModel = new SaleRequestModelForInstamed();
             if (environment == "P")
             {
-                string ElavonclientUser= "8032017132";
-                string ElavonclientPass="59WAMNKEGMMZVZARP37FUEST83WIOZYU6AJXKOMLHAZIIDP4LKGIZ65DDSSBMJ9M";
+                string ElavonclientUser = "hosweb";
+                string ElavonclientPass = "TBA6I645MMWSG6I540N549GX1GAXO2R66Y5TOMJIKX4AS6EIA9EKQIWVSL379WCT";
                 if (request.debtorAcc.Substring(0, 4) == "1902")
                 {
-                    ElavonclientUser = "8032017132";
-                    ElavonclientPass = "59WAMNKEGMMZVZARP37FUEST83WIOZYU6AJXKOMLHAZIIDP4LKGIZ65DDSSBMJ9M";
+                    ElavonclientUser = "hosweb";
+                    ElavonclientPass = "TBA6I645MMWSG6I540N549GX1GAXO2R66Y5TOMJIKX4AS6EIA9EKQIWVSL379WCT";
                 }
                 else
                 {
-                    ElavonclientUser = (from r in _context.LarryCcIndex2s
-                                        where (r.AcctStatus == "A" && r.ClientAcct == request.debtorAcc.Substring(0, 4))
-                                        select r.ClientUser).ToString();
+                    //ElavonclientUser = (from r in _context.LarryCcIndex2s
+                    //                    where (r.AcctStatus == "A" && r.ClientAcct == request.debtorAcc.Substring(0, 4))
+                    //                    select r.ClientUser).ToString();
                     ElavonclientPass = (from r in _context.LarryCcIndex2s
                                         where (r.AcctStatus == "A" && r.ClientAcct == request.debtorAcc.Substring(0, 4))
                                         select r.ClientPass).ToString();
                 }
-              
 
 
+                var patientAccountInfo = await _context.DebtorAcctInfoTs.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+                   new DebtorAcctInfoT()
+                   {
+                       SuppliedAcct = i.SuppliedAcct,
+                       Balance = i.Balance
+                   }).SingleOrDefaultAsync();
+
+                var patientInfo = await _context.PatientMasters.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+                 new PatientMaster()
+                 {
+                     FirstName = i.FirstName,
+                     LastName = i.LastName,
+                     StateCode = i.StateCode,
+                     Zip = i.Zip,
+                     Address1 = i.Address1,
+                     Address2 = i.Address2,
+                     City = i.City
+                 }).SingleOrDefaultAsync();
 
 
                 saleRequestModel = new SaleRequestModelForInstamed()
                 {
                     Outlet = new InstaMedOutlet()
                     {
-                        MerchantID = _centralizeVariablesModel.Value.ElavonCredentials.ssl_merchant_id,
+                        MerchantID = "807485",
                         StoreID = ElavonclientUser,
                         TerminalID = ElavonclientPass
 
@@ -2651,9 +2973,24 @@ namespace AargonTools.Manager
                         Expiration = request.expiredDate,
                         IsCardDataEncrypted = false,
                         IsEMVCapableDevice = false,
+                    },
+                    Patient = new Patient()
+                    {
+                        AccountNumber = patientAccountInfo.SuppliedAcct,
+                        FirstName = patientInfo.FirstName,
+                        LastName = patientInfo.LastName
+                    },
+                    BillingAddress = new BillingAddress()
+                    {
+                        City = patientInfo.City,
+                        State = patientInfo.StateCode,
+                        Zip = patientInfo.Zip,
+                        Street1 = patientInfo.Address1,
+                        Street2 = patientInfo.Address2
                     }
 
                 };
+                resultVerify = await ElavonSalePro(saleRequestModel);
             }
             else
             {
@@ -2678,9 +3015,10 @@ namespace AargonTools.Manager
                     }
 
                 };
+                resultVerify = await ElavonSale(saleRequestModel);
             }
 
-            var resultVerify = await ElavonSale(saleRequestModel);
+
             if (resultVerify.Contains("FieldErrors"))
             {
                 return _response.Response(true, true, resultVerify);
@@ -2697,9 +3035,9 @@ namespace AargonTools.Manager
             string noteText = null;
             if (_deserializeObjForElavon != null && _deserializeObjForElavon.ssl_issuer_response == "00")
             {
-                noteText = "INSTAMED CC APPROVED FOR $" + request.amount + " " +
+                noteText = "Converge CC APPROVED FOR $" + request.amount + " " +
                            _deserializeObjForElavon.ssl_result_message.ToUpper() +
-                           " AUTH #:" + _deserializeObjForElavon.ssl_oar_data;
+                           " AUTH #:" + _deserializeObjForElavon.ssl_approval_code;
 
                 //magic
                 await SaveCardInfoAndScheduleDataForElavon(request, environment);
@@ -2728,9 +3066,217 @@ namespace AargonTools.Manager
             else
             {
                 if (_responseModelForInstamed != null)
-                    noteText = "INSTAMED CC DECLINED FOR $" + request.amount + " " +
+                    noteText = "Converge CC DECLINED FOR $" + request.amount + " " +
                                _deserializeObjForElavon.ssl_result_message.ToUpper() +
-                               " AUTH #:" + _deserializeObjForElavon.ssl_oar_data;
+                               " AUTH #:" + _deserializeObjForElavon.ssl_approval_code;
+                // for DECLINED
+                if (_responseModelForInstamed != null)
+                {
+                    var ccPaymentObj = new CcPayment()
+                    {
+                        DebtorAcct = request.debtorAcc,
+                        Company = "TOTAL CREDIT RECOVERY",
+                        //UserId = username,
+                        UserId = "_username", //todo   
+                        //UserName = username + " -LCG",
+                        UserName = "_username", //todo 
+                        ChargeTotal = request.amount,
+                        Subtotal = request.amount,
+                        PaymentDate = DateTime.Now,
+                        ApprovalStatus = "DECLINED",
+                        BillingName = "", // todo is it valid  for api transaction ? 
+                        ApprovalCode = _deserializeObjForElavon.ssl_approval_code,
+                        OrderNumber = _deserializeObjForElavon.ssl_txn_id,
+                        RefNumber = "ELAVON",
+                        Sif = "N",
+                        VoidSale = "N"
+                    };
+                    await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
+                }
+            }
+
+            var noteObj = new NoteMaster()
+            {
+                DebtorAcct = request.debtorAcc,
+                Employee = 31950,
+                ActivityCode = "RA",
+                NoteText = noteText,
+                Important = "N",
+                ActionCode = null
+
+            };
+
+            await _addNotes.CreateNotes(noteObj, environment); //PO for prod_old & T is for test_db
+
+
+
+
+            if (_deserializeObjForElavon != null)
+            {
+                var response = new CommonResponseModelForCCProcess()
+                {
+                    AuthorizationNumber = _deserializeObjForElavon.ssl_oar_data,
+                    ResponseCode = _deserializeObjForElavon.ssl_approval_code,
+                    ResponseMessage = _deserializeObjForElavon.ssl_result_message,
+                    TransactionId = _deserializeObjForElavon.ssl_txn_id
+                };
+
+
+                return _response.Response(true, true, response);
+            }
+            else
+            {
+                return _response.Response(true, "Oops! Something went wrong. ");
+            }
+        }
+
+        public async Task<ResponseModel> ProcessSaleTransForTmcElavon(ProcessCcPaymentUniversalRequestModel request, string environment)
+        {
+            var resultVerify = "";
+
+            var saleRequestModel = new SaleRequestModelForInstamed();
+            if (environment == "P")
+            {
+                string ElavonclientUser = "tmcapi";
+                string ElavonclientPass = "UY4BFNX26LEZF0LKBXG8N0GD7KZK04CAX47CUI0PQZ380YOZKGTOXJ21I4VGR9C3";
+               
+
+
+                var patientAccountInfo = await _context.DebtorAcctInfoTs.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+                   new DebtorAcctInfoT()
+                   {
+                       SuppliedAcct = i.SuppliedAcct,
+                       Balance = i.Balance
+                   }).SingleOrDefaultAsync();
+
+                var patientInfo = await _context.PatientMasters.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+                 new PatientMaster()
+                 {
+                     FirstName = i.FirstName,
+                     LastName = i.LastName,
+                     StateCode = i.StateCode,
+                     Zip = i.Zip,
+                     Address1 = i.Address1,
+                     Address2 = i.Address2,
+                     City = i.City
+                 }).SingleOrDefaultAsync();
+
+
+                saleRequestModel = new SaleRequestModelForInstamed()
+                {
+                    Outlet = new InstaMedOutlet()
+                    {
+                        MerchantID = "2110915",
+                        StoreID = ElavonclientUser,
+                        TerminalID = ElavonclientPass
+
+                    },
+                    Amount = request.amount,
+                    PaymentMethod = "Card",
+                    Card = new Card()
+                    {
+                        CVN = request.cvv,
+                        CardNumber = request.ccNumber,
+                        EntryMode = "key",
+                        Expiration = request.expiredDate,
+                        IsCardDataEncrypted = false,
+                        IsEMVCapableDevice = false,
+                    },
+                    Patient = new Patient()
+                    {
+                        AccountNumber = patientAccountInfo.SuppliedAcct,
+                        FirstName = patientInfo.FirstName,
+                        LastName = patientInfo.LastName
+                    },
+                    BillingAddress = new BillingAddress()
+                    {
+                        City = patientInfo.City,
+                        State = patientInfo.StateCode,
+                        Zip = patientInfo.Zip,
+                        Street1 = patientInfo.Address1,
+                        Street2 = patientInfo.Address2
+                    }
+
+                };
+                resultVerify = await ElavonSaleTmcPro(saleRequestModel);
+            }
+            else
+            {
+                saleRequestModel = new SaleRequestModelForInstamed()
+                {
+                    Outlet = new InstaMedOutlet()
+                    {
+                        MerchantID = _centralizeVariablesModel.Value.ElavonCredentials.ssl_merchant_id,
+                        StoreID = _centralizeVariablesModel.Value.ElavonCredentials.ssl_user_id,
+                        TerminalID = _centralizeVariablesModel.Value.ElavonCredentials.ssl_pin
+                    },
+                    Amount = request.amount,
+                    PaymentMethod = "Card",
+                    Card = new Card()
+                    {
+                        CVN = request.cvv,
+                        CardNumber = request.ccNumber,
+                        EntryMode = "key",
+                        Expiration = request.expiredDate,
+                        IsCardDataEncrypted = false,
+                        IsEMVCapableDevice = false,
+                    }
+
+                };
+                resultVerify = await ElavonSale(saleRequestModel);
+            }
+
+
+            if (resultVerify.Contains("FieldErrors"))
+            {
+                return _response.Response(true, true, resultVerify);
+            }
+            else
+            {
+                var ser = new XmlSerializer(typeof(txn));
+
+                using var sr = new StringReader(resultVerify);
+                _deserializeObjForElavon = (txn)ser.Deserialize(sr);
+
+            }
+
+            string noteText = null;
+            if (_deserializeObjForElavon != null && _deserializeObjForElavon.ssl_issuer_response == "00")
+            {
+                noteText = "Converge CC APPROVED FOR $" + request.amount + " " +
+                           _deserializeObjForElavon.ssl_result_message.ToUpper() +
+                           " AUTH #:" + _deserializeObjForElavon.ssl_approval_code;
+
+                //magic
+                await SaveCardInfoAndScheduleDataForElavon(request, environment);
+                // for success
+                var ccPaymentObj = new CcPayment()
+                {
+                    DebtorAcct = request.debtorAcc,
+                    Company = "TOTAL CREDIT RECOVERY",
+                    //UserId = username,
+                    UserId = "_username", //todo   
+                    //UserName = username + " -LCG",
+                    UserName = "_username", //todo 
+                    ChargeTotal = request.amount,
+                    Subtotal = request.amount,
+                    PaymentDate = DateTime.Now,
+                    ApprovalStatus = "APPROVED",
+                    BillingName = "", // todo is it valid  for api transaction ? 
+                    ApprovalCode = _deserializeObjForElavon.ssl_approval_code,
+                    OrderNumber = _deserializeObjForElavon.ssl_txn_id,
+                    RefNumber = "ELAVON",
+                    Sif = "N",
+                    VoidSale = "N"
+                };
+                await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
+            }
+            else
+            {
+                if (_responseModelForInstamed != null)
+                    noteText = "Converge CC DECLINED FOR $" + request.amount + " " +
+                               _deserializeObjForElavon.ssl_result_message.ToUpper() +
+                               " AUTH #:" + _deserializeObjForElavon.ssl_approval_code;
                 // for DECLINED
                 if (_responseModelForInstamed != null)
                 {

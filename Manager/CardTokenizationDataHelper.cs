@@ -146,7 +146,7 @@ namespace AargonTools.Manager
         {
             try
             {
-                if (environment == "p")
+                if (environment == "P")
                 {
                     var paymentScheduleUpdate =
                         _context.LcgPaymentSchedules.FirstAsync(x => x.Id == paymentScheduleId);

@@ -278,6 +278,23 @@ namespace AargonTools.Controllers
                                 return Ok(response);
                             }
 
+                            if (gatewaySelect.Result == "TMCBONHAMELAVON")
+                            {
+                                ResponseModel response;
+                                if (scheduleDateTime.Date == DateTime.Now.Date)
+                                {
+                                    response = await _processCcUniversal.ProcessSaleTransForTmcElavon(requestCcPayment, "P");
+                                }
+                                else
+                                {
+                                    response = await _processCcUniversal.ProcessCardAuthorizationForIProGateway(requestCcPayment, "P");
+                                }
+
+                                return Ok(response);
+                            }
+
+
+
                             if (gatewaySelect.Result == "")
                             {
 

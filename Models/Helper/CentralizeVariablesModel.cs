@@ -24,8 +24,11 @@ namespace AargonTools.Models.Helper
     public class InstaMedOutlet
     {
         public string MerchantID { get; set; }
+        public string MerchantIDPro { get; set; }
         public string StoreID { get; set; }
         public string TerminalID { get; set; }
+        public string TerminalIDProHB { get; set; }
+        public string TerminalIDProPB { get; set; }
     }
 
 
@@ -33,17 +36,21 @@ namespace AargonTools.Models.Helper
     {
         public string BaseAddress { get; set; }
         public string APIkey { get; set; }
+        public string APIkeyPro { get; set; }
         public string APIsecret { get; set; }
+        public string APIsecretPro { get; set; }
     }
 
     public class IClassProCredentials
     {
         public string BaseAddress { get; set; }
         public string security_key { get; set; }
+        public string security_keyPro { get; set; }
     }
     public class ElavonCredentials
     {
         public string BaseAddress { get; set; }
+        public string BaseAddressPro { get; set; }
         public string ssl_merchant_id { get; set; }
         public string ssl_user_id { get; set; }
         public string ssl_pin { get; set; }

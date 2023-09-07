@@ -24,10 +24,15 @@ namespace AargonTools.Interfaces
 
 
         Task<string> InstaMedSale(SaleRequestModelForInstamed request);
+        Task<string> InstaMedSalePro(SaleRequestModelForInstamed request);
         Task<string> InstaMedAuth(SaleRequestModelForInstamed request);
         Task<string> InstaMedTokenization(SaleRequestModelForInstamed request);
+        Task<string> InstaMedTokenizationPro(SaleRequestModelForInstamed request);
         Task<string> IProGatewaySale(SaleRequestModelForInstamed request);
+        Task<string> IProGatewaySalePro(SaleRequestModelForInstamed request);
         Task<string> IProGatewayAuth(SaleRequestModelForInstamed request);
+        Task<string> ElavonSalePro(SaleRequestModelForInstamed request);
+        Task<string> ElavonSaleTmcPro(SaleRequestModelForInstamed request);
         Task<string> ElavonSale(SaleRequestModelForInstamed request);
         Task<string> ElavonAuth(SaleRequestModelForInstamed request);
         Task<string> ElavonTokenization(SaleRequestModelForInstamed request);
@@ -67,6 +72,9 @@ namespace AargonTools.Interfaces
 
         Task<ResponseModel> ProcessSaleTransForElavon(ProcessCcPaymentUniversalRequestModel request,
             string environment);
+        Task<ResponseModel> ProcessSaleTransForTmcElavon(ProcessCcPaymentUniversalRequestModel request,
+            string environment);
+        
         Task<ResponseModel> ProcessSaleTransForElavonQA(ProcessCcPaymentUniversalRequestModel request,
             string environment);
 
