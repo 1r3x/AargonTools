@@ -1253,8 +1253,26 @@ namespace AargonTools.Manager
                 storeId = _centralizeVariablesModel.Value.InstaMedOutlet.StoreID;
                 terminalId = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalID;
             }
+            //patient info
+            var patientAccountInfo = await _context.DebtorAcctInfoTs.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+                 new DebtorAcctInfoT()
+                 {
+                     SuppliedAcct = i.SuppliedAcct,
+                     Balance = i.Balance
+                 }).SingleOrDefaultAsync();
 
-
+            var patientInfo = await _context.PatientMasters.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+             new PatientMaster()
+             {
+                 FirstName = i.FirstName,
+                 LastName = i.LastName,
+                 StateCode = i.StateCode,
+                 Zip = i.Zip,
+                 Address1 = i.Address1,
+                 Address2 = i.Address2,
+                 City = i.City
+             }).SingleOrDefaultAsync();
+            //patient info end 
             var saleRequestModel = new SaleRequestModelForInstamed()
             {
                 Outlet = new InstaMedOutlet()
@@ -1273,6 +1291,20 @@ namespace AargonTools.Manager
                     Expiration = request.expiredDate,
                     IsCardDataEncrypted = false,
                     IsEMVCapableDevice = false,
+                },
+                Patient = new Patient()
+                {
+                    AccountNumber = patientAccountInfo.SuppliedAcct,
+                    FirstName = patientInfo.FirstName,
+                    LastName = patientInfo.LastName
+                },
+                BillingAddress = new BillingAddress()
+                {
+                    City = patientInfo.City,
+                    State = patientInfo.StateCode,
+                    Zip = patientInfo.Zip,
+                    Street1 = patientInfo.Address1,
+                    Street2 = patientInfo.Address2
                 }
 
             };

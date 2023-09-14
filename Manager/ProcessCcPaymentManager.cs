@@ -52,8 +52,8 @@ namespace AargonTools.Manager
         {
             if (environment == "P")
             {
-                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.Url, "v2");
-                USAePay.API.SetAuthentication(_centralizeVariablesModel.Value.USAePayDefault.Key, _centralizeVariablesModel.Value.USAePayDefault.Pin);
+                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.UrlProd, "v2");
+                USAePay.API.SetAuthentication(_centralizeVariablesModel.Value.USAePayDefault.KeyProd, _centralizeVariablesModel.Value.USAePayDefault.PinProd);
 
                 var creditCardObj = new Dictionary<string, object>();
                 creditCardObj["number"] = cardNo;
@@ -102,8 +102,8 @@ namespace AargonTools.Manager
                 string tempPin;
                 if (hsa == false)
                 {
-                    tempkey = _centralizeVariablesModel.Value.USAePayDefault.Key;
-                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.Pin;
+                    tempkey = _centralizeVariablesModel.Value.USAePayDefault.KeyProd;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.PinProd;
                 }
                 else
                 {
@@ -111,7 +111,7 @@ namespace AargonTools.Manager
                     tempPin = pin;
 
                 }
-                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.Url, "v2");
+                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.UrlProd, "v2");
                 USAePay.API.SetAuthentication(tempkey, tempPin);
 
                 var creditCardObj = new Dictionary<string, object> { ["number"] = tokenizeCc };

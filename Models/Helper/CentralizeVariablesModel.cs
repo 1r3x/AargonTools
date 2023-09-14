@@ -17,8 +17,11 @@ namespace AargonTools.Models.Helper
     public class USAePayDefault
     {
         public string Url { get; set; }
+        public string UrlProd { get; set; }
         public string Key { get; set; }
+        public string KeyProd { get; set; }
         public string Pin { get; set; }
+        public string PinProd { get; set; }
     }
 
     public class InstaMedOutlet
