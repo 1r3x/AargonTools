@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
-using FoolProof.Core;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace AargonTools.ViewModel
 {
@@ -17,6 +12,7 @@ namespace AargonTools.ViewModel
         public string? expiredDate { get; set; }
         [Required]
         public string? cvv { get; set; }
+        public string? cardHolderName { get; set; }
         [Required]
         public int? numberOfPayments { get; set; }
         [Required]
@@ -25,9 +21,9 @@ namespace AargonTools.ViewModel
         public string? sif { get; set; }
         [Required]
         public bool? hsa { get; set; }
-        [RequiredIf("hsa", true)]
-        public string? key { get; set; }
-        [RequiredIf("hsa", true)]
-        public string? pin { get; set; }
+        //[RequiredIf("hsa", true)]
+        //public string? key { get; set; }
+        //[RequiredIf("hsa", true)]
+        //public string? pin { get; set; }
     }
 }

@@ -8,6 +8,7 @@ using AargonTools.Manager.GenericManager;
 using AargonTools.Models;
 using AargonTools.Models.Helper;
 using AargonTools.ViewModel;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
@@ -25,10 +26,11 @@ namespace AargonTools.Manager
         private readonly ISetCCPayment _setCcPayment;//fro ccPayment Insert
         private readonly IAddNotes _addNotes;//fro notes Insert
         private readonly IOptions<CentralizeVariablesModel> _centralizeVariablesModel;
+        private static GetTheCompanyFlag _companyFlag;
 
         public ProcessCcPaymentManager(ExistingDataDbContext context, ResponseModel response,
             TestEnvironmentDbContext contextTest, IAddNotes addNotes, AdoDotNetConnection adoConnection, IUserService userService,
-            ISetCCPayment setCcPayment, IOptions<CentralizeVariablesModel> centralizeVariablesModel)
+            ISetCCPayment setCcPayment, IOptions<CentralizeVariablesModel> centralizeVariablesModel, GetTheCompanyFlag companyFlag)
         {
             _context = context;
             _response = response;
@@ -38,6 +40,7 @@ namespace AargonTools.Manager
             _setCcPayment = setCcPayment;
             _addNotes = addNotes;
             _centralizeVariablesModel = centralizeVariablesModel;
+            _companyFlag = companyFlag;
         }
         //models
         private class SaveCard
@@ -48,12 +51,25 @@ namespace AargonTools.Manager
         }
 
         //for tokenize the cc
-        private async Task<ResponseModel> TokenizeCc(string cardNo, string expireDate, string environment)
+        public async Task<ResponseModel> TokenizeCc(string cardNo, string expireDate, bool hsa, string environment)
         {
             if (environment == "P")
             {
-                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.UrlProd, "v2");
-                USAePay.API.SetAuthentication(_centralizeVariablesModel.Value.USAePayDefault.KeyProd, _centralizeVariablesModel.Value.USAePayDefault.PinProd);
+                string tempkey;
+                string tempPin;
+                if (hsa == false)
+                {
+                    tempkey = _centralizeVariablesModel.Value.USAePayDefault.KeyProd;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.PinProd;
+                }
+                else
+                {
+                    tempkey = _centralizeVariablesModel.Value.USAePayDefault.KeyProdHSA;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.PinProd;
+
+                }
+                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.UrlProd);
+                USAePay.API.SetAuthentication(tempkey, tempPin);
 
                 var creditCardObj = new Dictionary<string, object>();
                 creditCardObj["number"] = cardNo;
@@ -67,8 +83,9 @@ namespace AargonTools.Manager
 
                 var tokenizeObjects = await USAePay.API.Transactions.PostAsync(request);
 
-                string json = JsonConvert.SerializeObject(tokenizeObjects.ElementAt(8).Value, Formatting.Indented);
-
+                string success = JsonConvert.SerializeObject(tokenizeObjects.ElementAt(5).Value, Formatting.Indented);
+                if (success != "\"Approved\"") return _response.Response(null);
+                var json = JsonConvert.SerializeObject(tokenizeObjects.ElementAt(8).Value, Formatting.Indented);
                 return _response.Response(json);
             }
             else
@@ -86,6 +103,7 @@ namespace AargonTools.Manager
                 var request = new Dictionary<string, object> { ["command"] = "cc:save", ["creditcard"] = creditCardObj };
 
                 var tokenizeObjects = await USAePay.API.Transactions.PostAsync(request);
+
                 string success = JsonConvert.SerializeObject(tokenizeObjects.ElementAt(5).Value, Formatting.Indented);
                 if (success != "\"Approved\"") return _response.Response(null);
                 var json = JsonConvert.SerializeObject(tokenizeObjects.ElementAt(8).Value, Formatting.Indented);
@@ -94,7 +112,7 @@ namespace AargonTools.Manager
 
         }
 
-        private async Task<ResponseModel> ProcessingTransaction(string tokenizeCc, decimal amount, bool hsa, string key, string pin, string environment)
+        public async Task<ResponseModel> ProcessingTransaction(string tokenizeCc, decimal amount, bool hsa, string environment)
         {
             if (environment == "P")
             {
@@ -107,11 +125,11 @@ namespace AargonTools.Manager
                 }
                 else
                 {
-                    tempkey = key;
-                    tempPin = pin;
+                    tempkey = _centralizeVariablesModel.Value.USAePayDefault.KeyProd; ;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.PinProd;
 
                 }
-                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.UrlProd, "v2");
+                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.UrlProd);
                 USAePay.API.SetAuthentication(tempkey, tempPin);
 
                 var creditCardObj = new Dictionary<string, object> { ["number"] = tokenizeCc };
@@ -132,7 +150,7 @@ namespace AargonTools.Manager
                     return _response.Response(processSaleObjects);
                 }
 
-                return _response.Response("Oops something went wrong");
+                return _response.Response(processSaleObjects);
             }
             else
             {
@@ -145,11 +163,170 @@ namespace AargonTools.Manager
                 }
                 else
                 {
-                    tempKey = key;
-                    tempPin = pin;
+                    tempKey = _centralizeVariablesModel.Value.USAePayDefault.Key;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.Pin;
 
                 }
-                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.Url, "v2");
+                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.Url);
+                USAePay.API.SetAuthentication(tempKey, tempPin);
+
+                var creditCardObj = new Dictionary<string, object> { ["number"] = tokenizeCc };
+
+                var request = new Dictionary<string, object>
+                {
+                    ["command"] = "cc:sale",
+                    ["amount"] = amount,
+                    ["creditcard"] = creditCardObj
+                };
+
+
+                var processSaleObjects = await USAePay.API.Transactions.PostAsync(request);
+                var json = JsonConvert.SerializeObject(processSaleObjects.Values, Formatting.Indented);
+                var test = json.Contains("Approved");
+                if (json.Contains("Approved"))
+                {
+                    return _response.Response(processSaleObjects);
+                }
+
+                return _response.Response("Error 404");
+
+            }
+
+        }
+
+
+        public async Task<ResponseModel> ProcessingTransactionV2(string tokenizeCc, decimal amount, bool hsa,
+            string debtorAccount, string cardHolder, string environment)
+        {
+            if (environment == "P")
+            {
+                string tempkey;
+                string tempPin;
+                if (hsa == false)
+                {
+                    tempkey = _centralizeVariablesModel.Value.USAePayDefault.KeyProd;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.PinProd;
+                }
+                else
+                {
+                    tempkey = _centralizeVariablesModel.Value.USAePayDefault.KeyProdHSA;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.PinProd;
+
+                }
+
+                //
+
+                var patientAccountInfo = await _companyFlag.GetFlagForDebtorAccount(debtorAccount, environment)
+                 .Result.Where(a => a.DebtorAcct == debtorAccount)
+                 .Select(a => new
+                 {
+                     a.Balance,
+                     a.SuppliedAcct,
+                 }).SingleOrDefaultAsync();
+
+                var patientInfo = await _companyFlag
+                                        .GetFlagForDebtorMaster(debtorAccount, environment).Result
+                                        .Where(x => x.DebtorAcct == debtorAccount).Select (x=>
+                                        new DebtorMaster()
+                                        {
+                                            FirstName = x.FirstName,
+                                            LastName = x.LastName,
+                                            StateCode = x.StateCode,
+                                            Zip = x.Zip,
+                                            Address1 = x.Address1,
+                                            Address2 = x.Address2,
+                                            City = x.City,
+
+                                        }).SingleOrDefaultAsync();
+
+
+                //var patientInfo_fake = await _context.PatientMasters.Where(x => x.DebtorAcct == debtorAccount).Select(i =>
+                // new PatientMaster()
+                // {
+                //     FirstName = i.FirstName,
+                //     LastName = i.LastName,
+                //     StateCode = i.StateCode,
+                //     Zip = i.Zip,
+                //     Address1 = i.Address1,
+                //     Address2 = i.Address2,
+                //     City = i.City,
+                // }).SingleOrDefaultAsync();
+
+                if (patientInfo == null)
+                {
+                    patientInfo = new DebtorMaster()
+                    {
+                        FirstName = "Not",
+                        LastName = "Available",
+                        StateCode = "",
+                        Zip = "",
+                        Address1 = "",
+                        Address2 = "",
+                        City = ""
+                    };
+                }
+                var cardHolderTemp = cardHolder;
+                if (cardHolder == "" || cardHolder == null)
+                {
+                    cardHolderTemp = patientInfo.FirstName + " " + patientInfo.LastName;
+                }
+
+                //
+                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.UrlProd);
+                USAePay.API.SetAuthentication(tempkey, tempPin);
+                var creditCardObj = new Dictionary<string, object> { ["number"] = tokenizeCc, ["cardholder"] = cardHolderTemp };
+                var billingAddressObj = new Dictionary<string, object>
+                {
+                    ["firstname"] = patientInfo.FirstName,
+                    ["lastname"] = patientInfo.LastName,
+                    ["street"] = patientInfo.Address1,
+                    ["city"] = patientInfo.City,
+                    ["state"] = patientInfo.StateCode,
+                    ["postalcode"] = ""
+                };
+
+                var request = new Dictionary<string, object>
+                {
+                    ["command"] = "cc:sale",
+                    ["invoice"] = debtorAccount.Replace("-", ""),
+                    ["customerid"] = debtorAccount.Replace("-", ""),
+                    ["ponum"] = debtorAccount.Replace("-", ""),
+                    ["orderid"] = debtorAccount.Replace("-", ""),
+                    ["description"] = "Repayment of Debt for account " + debtorAccount.Replace("-", ""),
+                    ["send_receipt"] = "false",
+                    ["amount"] = amount,
+                    ["creditcard"] = creditCardObj,
+                    ["billing_address"] = billingAddressObj
+
+                };
+
+
+                var processSaleObjects = await USAePay.API.Transactions.PostAsync(request);
+                var json = JsonConvert.SerializeObject(processSaleObjects.Values, Formatting.Indented);
+
+                if (json.Contains("Approved"))
+                {
+                    return _response.Response(processSaleObjects);
+                }
+
+                return _response.Response(processSaleObjects);
+            }
+            else
+            {
+                string tempKey;
+                string tempPin;
+                if (hsa == false)
+                {
+                    tempKey = _centralizeVariablesModel.Value.USAePayDefault.Key;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.Pin;
+                }
+                else
+                {
+                    tempKey = _centralizeVariablesModel.Value.USAePayDefault.Key;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.Pin;
+
+                }
+                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.Url);
                 USAePay.API.SetAuthentication(tempKey, tempPin);
 
                 var creditCardObj = new Dictionary<string, object> { ["number"] = tokenizeCc };
@@ -436,8 +613,8 @@ namespace AargonTools.Manager
             //todo
             try
             {
-                var tokenizeDataJsonResult = TokenizeCc(request.ccNumber, request.expiredDate, environment).Result;
-                SaveCard tokenizeCObj=new SaveCard()
+                var tokenizeDataJsonResult = TokenizeCc(request.ccNumber, request.expiredDate, request.hsa != null && (bool)request.hsa, environment).Result;
+                SaveCard tokenizeCObj = new SaveCard()
                 {
                     CardNumber = "",
                     Key = "",
@@ -453,7 +630,7 @@ namespace AargonTools.Manager
                 if (request.amount != null && tokenizeCObj.CardNumber != "" && tokenizeCObj.Key != "")
                 {
 
-                    var processTransactionJsonResult = ProcessingTransaction(tokenizeCObj.Key, (decimal)request.amount, request.hsa != null && (bool)request.hsa, request.key, request.pin, environment).Result.Data;
+                    var processTransactionJsonResult = ProcessingTransaction(tokenizeCObj.Key, (decimal)request.amount, request.hsa != null && (bool)request.hsa, environment).Result.Data;
 
 
                     //var responseResults = JsonConvert.DeserializeObject<SetProcessCCResponse>(processTransactionJsonResult.ToString() ?? string.Empty);
@@ -527,5 +704,7 @@ namespace AargonTools.Manager
 
 
         }
+
+
     }
 }

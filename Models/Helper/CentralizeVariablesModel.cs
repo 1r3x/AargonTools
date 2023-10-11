@@ -20,6 +20,7 @@ namespace AargonTools.Models.Helper
         public string UrlProd { get; set; }
         public string Key { get; set; }
         public string KeyProd { get; set; }
+        public string KeyProdHSA { get; set; }
         public string Pin { get; set; }
         public string PinProd { get; set; }
     }

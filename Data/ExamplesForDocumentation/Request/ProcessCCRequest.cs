@@ -17,12 +17,11 @@ namespace AargonTools.Data.ExamplesForDocumentation.Request
                 ccNumber = "378282246310005",
                 expiredDate = "12/24",
                 cvv = "1234",
+                cardHolderName="Card Holder",
                 numberOfPayments = 1,
                 amount = 9,
                 sif = "Y",
-                hsa = false,
-                key = null,
-                pin = null
+                hsa = false
             };
         }
     }

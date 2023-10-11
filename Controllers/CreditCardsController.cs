@@ -33,10 +33,11 @@ namespace AargonTools.Controllers
         private readonly AdoDotNetConnection _adoConnection;
         private static ICryptoGraphy _crypto;
         private static ICardTokenizationDataHelper _cardTokenizationHelper;
+        private static IProcessCcPayment _usaEPay;
 
         public CreditCardsController(IProcessCcPayment processCcPayment, ISetCCPayment setCcPayment,
             IUniversalCcProcessApiService processCcUniversal, GatewaySelectionHelper gatewaySelectionHelper, IPreSchedulePaymentProcessing preSchedulePaymentProcessing,
-            ResponseModel response, AdoDotNetConnection adoConnection, ICryptoGraphy crypto, ICardTokenizationDataHelper cardTokenizationHelper)
+            ResponseModel response, AdoDotNetConnection adoConnection, ICryptoGraphy crypto, ICardTokenizationDataHelper cardTokenizationHelper, IProcessCcPayment usaEPayIMlementtaions)
         {
             _processCcPayment = processCcPayment;
             _setCcPayment = setCcPayment;
@@ -47,6 +48,7 @@ namespace AargonTools.Controllers
             _adoConnection = adoConnection;
             _crypto = crypto;
             _cardTokenizationHelper = cardTokenizationHelper;
+            _usaEPay = usaEPayIMlementtaions;
         }
 
         /// <summary>
@@ -263,7 +265,7 @@ namespace AargonTools.Controllers
                         {
                             var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(requestCcPayment.debtorAcc, "P");
 
-                            if (gatewaySelect.Result == "ELAVON" || acctLimitCheck >= 1902000001 && acctLimitCheck < 1902999999)
+                            if (gatewaySelect.Result == "ELAVON" || acctLimitCheck >= 1902000001 && acctLimitCheck < 1902999999)//for staging 
                             {
                                 ResponseModel response;
                                 if (scheduleDateTime.Date == DateTime.Now.Date)
@@ -306,15 +308,35 @@ namespace AargonTools.Controllers
                                     debtorAcc = requestCcPayment.debtorAcc,
                                     expiredDate = requestCcPayment.expiredDate,
                                     hsa = requestCcPayment.hsa,
-                                    key = requestCcPayment.key,
-                                    numberOfPayments = requestCcPayment.numberOfPayments,
-                                    pin = requestCcPayment.pin
+                                    numberOfPayments = requestCcPayment.numberOfPayments
                                 };
 
+                                //must be break the implementtaion 
+                                //var data = await _processCcPayment.ProcessCcPayment(requestForUsaEPay, "P");
+                                //
+                                var tokenizeDataJsonResult = _usaEPay.TokenizeCc(requestForUsaEPay.ccNumber, requestForUsaEPay.expiredDate,
+                                    requestForUsaEPay.hsa != null && (bool)requestForUsaEPay.hsa, "P").Result;
+                                SaveCard tokenizeCObj = new SaveCard()
+                                {
+                                    CardNumber = "",
+                                    Key = "",
+                                    Type = ""
+                                };
+                                if (tokenizeDataJsonResult.Data != null)
+                                {
+                                    tokenizeCObj = JsonConvert.DeserializeObject<SaveCard>(tokenizeDataJsonResult.Data.ToString() ?? string.Empty);
+                                }
 
-                                var data = await _processCcPayment.ProcessCcPayment(requestForUsaEPay, "P");
 
-                                var json = JsonConvert.SerializeObject(data.Data, Formatting.Indented);
+
+
+                                var processTransactionJsonResult = _usaEPay.ProcessingTransactionV2(tokenizeCObj.Key,
+                                    (decimal)requestForUsaEPay.amount, requestForUsaEPay.hsa != null && (bool)requestForUsaEPay.hsa,
+                                     requestForUsaEPay.debtorAcc, requestCcPayment.cardHolderName, "P").Result.Data;
+
+                                //
+
+                                var json = JsonConvert.SerializeObject(processTransactionJsonResult, Formatting.Indented);
 
                                 var obj = JsonConvert.DeserializeObject<SetProcessCCResponse.TransactionDetails>(json);
                                 var res = new CommonResponseModelForCCProcess()
@@ -322,16 +344,14 @@ namespace AargonTools.Controllers
                                     AuthorizationNumber = obj.result_code,
                                     ResponseCode = obj.authcode,
                                     ResponseMessage = obj.result,
-                                    TransactionId = obj.key
+                                    TransactionId = obj.refnum
                                 };
 
                                 //updated 
 
                                 var ccNUmber = requestForUsaEPay.ccNumber;
 
-                                var (Key, IVBase64) = _crypto.InitSymmetricEncryptionKeyIv();
 
-                                var encryptedCC = _crypto.Encrypt(ccNUmber, IVBase64, Key);
 
                                 var cardInfoObj = new LcgCardInfo()
                                 {
@@ -341,10 +361,10 @@ namespace AargonTools.Controllers
                                     ExpirationMonth = 1,//todo 
                                     ExpirationYear = 2,//todo
                                     LastFour = ccNUmber.Substring(ccNUmber.Length - 4),
-                                    PaymentMethodId = encryptedCC,
-                                    Type = "VISA",
+                                    PaymentMethodId = tokenizeCObj.Key,
+                                    Type = tokenizeCObj.Type,
                                     AssociateDebtorAcct = requestForUsaEPay.debtorAcc,
-                                    CardHolderName = ""
+                                    CardHolderName = requestCcPayment.cardHolderName
                                 };
 
 
@@ -394,7 +414,8 @@ namespace AargonTools.Controllers
                                     AuthorizationText = "_username", //todo user name 
                                     ResponseMessage = res.ResponseMessage,
                                     PaymentScheduleId = _USAePayPaymentScheduleId,
-                                    TransactionId = res.TransactionId
+                                    TransactionId = res.TransactionId,
+                                    TimeLog = DateTime.Now
                                 };
 
                                 await _cardTokenizationHelper.CreatePaymentScheduleHistory(paymentScheduleHistoryObj, "P");
@@ -441,5 +462,12 @@ namespace AargonTools.Controllers
         }
 
 
+    }
+
+    internal class SaveCard
+    {
+        public string Type { get; set; }
+        public string Key { get; set; }
+        public string CardNumber { get; set; }
     }
 }

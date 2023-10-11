@@ -1490,11 +1490,26 @@ namespace AargonTools.Manager
             {
                 var birthDateProcess = Convert.ToDateTime(rowAdo.Rows[i]["birth_date"]).ToString("d/M/yyyy");
                 var balanceProcess = Math.Round(Convert.ToDouble(rowAdo.Rows[i]["balance"]), 2);
+                //
+
+                var ssnExposed = Convert.ToString(rowAdo.Rows[i]["ssn"]);
+
+                var sslMaskLast4 = "";
+
+                for (int a = 0; a < ssnExposed.Length - 4; a++)
+                {
+                    sslMaskLast4 += "*";
+                }
+
+                sslMaskLast4 += ssnExposed.Substring(ssnExposed.Length - 4);
+
+                //
+
                 var itemData = new GetInteractionAcctDataViewModel
                 {
                     debtorAcct = Convert.ToString(rowAdo.Rows[i]["debtor_acct"]),
                     date = latestDate,
-                    ssn = Convert.ToString(rowAdo.Rows[i]["ssn"]),
+                    ssn = sslMaskLast4,
                     balance = balanceProcess,
                     address1 = Convert.ToString(rowAdo.Rows[i]["address1"]),
                     address2 = Convert.ToString(rowAdo.Rows[i]["address2"]),
@@ -1586,11 +1601,23 @@ namespace AargonTools.Manager
             {
                 var birthDateProcess = Convert.ToDateTime(rowAdo.Rows[i]["birth_date"]).ToString("d/M/yyyy");
                 var balanceProcess = Math.Round(Convert.ToDouble(rowAdo.Rows[i]["balance"]), 2);
+                var ssnExposed= Convert.ToString(rowAdo.Rows[i]["ssn"]);
+                //
+                var sslMaskLast4 = "";
+
+                for (int a = 0; a < ssnExposed.Length - 4; a++)
+                {
+                    sslMaskLast4 += "*";
+                }
+
+                sslMaskLast4 += ssnExposed.Substring(ssnExposed.Length - 4);
+                //
+
                 var itemData = new GetInteractionAcctDataViewModel
                 {
                     debtorAcct = Convert.ToString(rowAdo.Rows[i]["debtor_acct"]),
                     date = null,
-                    ssn = Convert.ToString(rowAdo.Rows[i]["ssn"]),
+                    ssn = sslMaskLast4,
                     balance = balanceProcess,
                     address1 = Convert.ToString(rowAdo.Rows[i]["address1"]),
                     address2 = Convert.ToString(rowAdo.Rows[i]["address2"]),
