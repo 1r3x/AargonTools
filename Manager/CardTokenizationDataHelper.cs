@@ -146,8 +146,10 @@ namespace AargonTools.Manager
         {
             try
             {
+                
                 if (environment == "P")
                 {
+                  
                     var paymentScheduleUpdate =
                         _context.LcgPaymentSchedules.FirstAsync(x => x.Id == paymentScheduleId);
                     paymentScheduleUpdate.Result.IsActive = false;
@@ -171,6 +173,56 @@ namespace AargonTools.Manager
                 {
                     var paymentScheduleUpdate =
                         _contextTest.LcgPaymentSchedules.FirstAsync(x => x.Id == paymentScheduleId);
+                    paymentScheduleUpdate.Result.IsActive = false;
+                    await _contextTest.SaveChangesAsync();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            return "Successful";
+
+
+        }
+
+        public async Task<string> InactivePaymentSchedule2(string paymentScheduleId,int numberOfPayments, string environment)
+        {
+            try
+            {
+                int paymentSchedule;
+                if (environment == "P")
+                {
+
+                    paymentSchedule = _context.LcgCardInfos.Where(x => x.PaymentMethodId == paymentScheduleId).Select(a => a.Id).FirstOrDefault();
+                    var paymentScheduleUpdate =
+                        _context.LcgPaymentSchedules.FirstAsync(x => x.CardInfoId == paymentSchedule);
+                    paymentScheduleUpdate.Result.IsActive = false;
+                    await _context.SaveChangesAsync();
+                }
+                else if (environment == "PO")
+                {
+                    paymentSchedule = _contextProdOld.LcgCardInfos.Where(x => x.PaymentMethodId == paymentScheduleId).Select(a => a.Id).FirstOrDefault();
+                    var paymentScheduleUpdate =
+                        _contextProdOld.LcgPaymentSchedules.FirstAsync(x => x.CardInfoId == paymentSchedule);
+                    paymentScheduleUpdate.Result.IsActive = false;
+                    await _contextProdOld.SaveChangesAsync();
+                }
+                else if (environment == "CBT")
+                {
+                    paymentSchedule = _contextCurrentBackupTest.LcgCardInfos.Where(x => x.PaymentMethodId == paymentScheduleId).Select(a => a.Id).FirstOrDefault();
+                    var paymentScheduleUpdateId = _contextCurrentBackupTest.LcgPaymentSchedules.Where(x => x.CardInfoId == paymentSchedule && x.NumberOfPayments==numberOfPayments).Select(a => a.Id).FirstOrDefault();
+                    var paymentScheduleUpdate =
+                       _contextCurrentBackupTest.LcgPaymentSchedules.FirstAsync(x => x.Id == paymentScheduleUpdateId);
+                    paymentScheduleUpdate.Result.IsActive = false;
+                    await _contextCurrentBackupTest.SaveChangesAsync();
+                }
+                else
+                {
+                    paymentSchedule = _contextTest.LcgCardInfos.Where(x => x.PaymentMethodId == paymentScheduleId).Select(a => a.Id).FirstOrDefault();
+                    var paymentScheduleUpdate =
+                        _contextTest.LcgPaymentSchedules.FirstAsync(x => x.CardInfoId == paymentSchedule);
                     paymentScheduleUpdate.Result.IsActive = false;
                     await _contextTest.SaveChangesAsync();
                 }

@@ -25,7 +25,7 @@ namespace AargonTools.Manager
             _contextProdOld = contextProdOld;
         }
         //amountDisputed doesn't have any implementation 
-        public async Task<ResponseModel> SetMoveToDispute(string debtorAcct, decimal amountDisputed, string environment)
+        public async Task<ResponseModel> SetMoveToDispute(string debtorAcct, string environment)
         {
             if (environment == "P")
             {

@@ -5,6 +5,6 @@ namespace AargonTools.Interfaces
 {
     public interface ISetMoveToDispute
     {
-        Task<ResponseModel> SetMoveToDispute(string debtorAcct, decimal amountDisputed, string environment);
+        Task<ResponseModel> SetMoveToDispute(string debtorAcct, string environment);// decimal amountDisputed, removed 26 oct 23
     }
 }

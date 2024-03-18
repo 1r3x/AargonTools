@@ -90,8 +90,21 @@ namespace AargonTools.Manager
             }
             else
             {
-                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.Url, "v2");
-                USAePay.API.SetAuthentication(_centralizeVariablesModel.Value.USAePayDefault.Key, _centralizeVariablesModel.Value.USAePayDefault.Pin);
+                string tempKey;
+                string tempPin;
+                if (hsa == false)
+                {
+                    tempKey = _centralizeVariablesModel.Value.USAePayDefault.Key;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.Pin;
+                }
+                else
+                {
+                    tempKey = _centralizeVariablesModel.Value.USAePayDefault.Key;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.Pin;
+
+                }
+                USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.Url);
+                USAePay.API.SetAuthentication(tempKey, tempPin);
 
                 var creditCardObj = new Dictionary<string, object>();
                 creditCardObj["number"] = cardNo;
@@ -125,7 +138,7 @@ namespace AargonTools.Manager
                 }
                 else
                 {
-                    tempkey = _centralizeVariablesModel.Value.USAePayDefault.KeyProd; ;
+                    tempkey = _centralizeVariablesModel.Value.USAePayDefault.KeyProdHSA;
                     tempPin = _centralizeVariablesModel.Value.USAePayDefault.PinProd;
 
                 }

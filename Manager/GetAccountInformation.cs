@@ -500,7 +500,7 @@ namespace AargonTools.Manager
                                             var itemData = new GetInteractionAcctDataViewModel
                                             {
                                                 debtorAcct = null,
-                                                date = null,
+                                                promiseDate = null,
                                                 ssn = null,
                                                 balance = 0,
                                                 address1 = null,
@@ -515,7 +515,7 @@ namespace AargonTools.Manager
                                                 homePhoneNumber = (phoneInfoDataFromHome.Select(a => a.HomeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.HomePhone)),
                                                 lastName = null,
                                                 otherPhoneNumer = (phoneInfoDataFromHome.Select(a => a.OtherAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.OtherPhone)),
-                                                relatiovePhoneNumber = (phoneInfoDataFromHome.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.RelativePhone)),
+                                                relativePhoneNumber = (phoneInfoDataFromHome.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.RelativePhone)),
                                                 stateCode = null,
                                                 workPhoneNumber = (phoneInfoDataFromHome.Select(a => a.WorkAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.WorkPhone)),
                                                 zip = null
@@ -664,7 +664,7 @@ namespace AargonTools.Manager
                                             var itemData = new GetInteractionAcctDataViewModel
                                             {
                                                 debtorAcct = null,
-                                                date = null,
+                                                promiseDate = null,
                                                 ssn = null,
                                                 balance = 0,
                                                 address1 = null,
@@ -679,7 +679,7 @@ namespace AargonTools.Manager
                                                 homePhoneNumber = (phoneInfoDataFromHome.Select(a => a.HomeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.HomePhone)),
                                                 lastName = null,
                                                 otherPhoneNumer = (phoneInfoDataFromHome.Select(a => a.OtherAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.OtherPhone)),
-                                                relatiovePhoneNumber = (phoneInfoDataFromHome.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.RelativePhone)),
+                                                relativePhoneNumber = (phoneInfoDataFromHome.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.RelativePhone)),
                                                 stateCode = null,
                                                 workPhoneNumber = (phoneInfoDataFromHome.Select(a => a.WorkAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.WorkPhone)),
                                                 zip = null
@@ -828,7 +828,7 @@ namespace AargonTools.Manager
                                             var itemData = new GetInteractionAcctDataViewModel
                                             {
                                                 debtorAcct = null,
-                                                date = null,
+                                                promiseDate = null,
                                                 ssn = null,
                                                 balance = 0,
                                                 address1 = null,
@@ -843,7 +843,7 @@ namespace AargonTools.Manager
                                                 homePhoneNumber = (phoneInfoDataFromHome.Select(a => a.HomeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.HomePhone)),
                                                 lastName = null,
                                                 otherPhoneNumer = (phoneInfoDataFromHome.Select(a => a.OtherAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.OtherPhone)),
-                                                relatiovePhoneNumber = (phoneInfoDataFromHome.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.RelativePhone)),
+                                                relativePhoneNumber = (phoneInfoDataFromHome.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.RelativePhone)),
                                                 stateCode = null,
                                                 workPhoneNumber = (phoneInfoDataFromHome.Select(a => a.WorkAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.WorkPhone)),
                                                 zip = null
@@ -1165,7 +1165,7 @@ namespace AargonTools.Manager
                                                     " ELSE 0" +
                                                     " END as amount_due_client," +
                                                     " debtor_acct_info.cosigner_last_name" +
-                                                    " FROM debtor_acct_info"+flag+"," +
+                                                    " FROM debtor_acct_info" + flag + "," +
                                                     " debtor_master" + flag + "," +
                                                     " debtor_payment_master" +
                                                     " WHERE debtor_payment_master.debtor_acct = debtor_master.debtor_acct" +
@@ -1434,7 +1434,7 @@ namespace AargonTools.Manager
 
 
             var flag = await _companyFlag.GetStringFlagForAdoQuery(debtorAcct, environment);
-
+            var CompanyflagString = await _companyFlag.GetStringFlag(debtorAcct, environment);
 
 
 
@@ -1453,6 +1453,8 @@ namespace AargonTools.Manager
                                                 "dai.balance," +
                                                 "dai.email_address," +
                                                 "dai.acct_status," +
+                                                "dai.date_of_Service," +
+                                                "dai.employee," +
                                                 "dm.ssn," +
                                                 "dm.address1," +
                                                 "dm.address2," +
@@ -1489,6 +1491,7 @@ namespace AargonTools.Manager
             for (var i = 0; i < rowAdo.Rows.Count; i++)
             {
                 var birthDateProcess = Convert.ToDateTime(rowAdo.Rows[i]["birth_date"]).ToString("d/M/yyyy");
+                var date_of_ServiceProcess = Convert.ToDateTime(rowAdo.Rows[i]["date_of_Service"]).ToString("d/M/yyyy");
                 var balanceProcess = Math.Round(Convert.ToDouble(rowAdo.Rows[i]["balance"]), 2);
                 //
 
@@ -1508,7 +1511,7 @@ namespace AargonTools.Manager
                 var itemData = new GetInteractionAcctDataViewModel
                 {
                     debtorAcct = Convert.ToString(rowAdo.Rows[i]["debtor_acct"]),
-                    date = latestDate,
+                    promiseDate = latestDate,
                     ssn = sslMaskLast4,
                     balance = balanceProcess,
                     address1 = Convert.ToString(rowAdo.Rows[i]["address1"]),
@@ -1523,11 +1526,15 @@ namespace AargonTools.Manager
                     homePhoneNumber = Convert.ToString(rowAdo.Rows[i]["home_area_code"]) + "" + Convert.ToString(rowAdo.Rows[i]["home_phone"]),
                     lastName = Convert.ToString(rowAdo.Rows[i]["last_name"]),
                     otherPhoneNumer = Convert.ToString(rowAdo.Rows[i]["other_area_code"]) + "" + Convert.ToString(rowAdo.Rows[i]["other_phone"]),
-                    relatiovePhoneNumber = Convert.ToString(rowAdo.Rows[i]["relative_area_code"]) + "" + Convert.ToString(rowAdo.Rows[i]["relative_phone"]),
+                    relativePhoneNumber = Convert.ToString(rowAdo.Rows[i]["relative_area_code"]) + "" + Convert.ToString(rowAdo.Rows[i]["relative_phone"]),
                     stateCode = Convert.ToString(rowAdo.Rows[i]["state_code"]),
                     workPhoneNumber = Convert.ToString(rowAdo.Rows[i]["work_area_code"]) + "" + Convert.ToString(rowAdo.Rows[i]["work_phone"]),
                     zip = Convert.ToString(rowAdo.Rows[i]["zip"]),
-                    accountStatus = Convert.ToString(rowAdo.Rows[i]["acct_status"])
+                    accountStatus = Convert.ToString(rowAdo.Rows[i]["acct_status"]),
+                    date_of_Service = date_of_ServiceProcess,
+                    employee = Convert.ToString(rowAdo.Rows[i]["employee"]),
+                    companyFlag = CompanyflagString
+
                 };
                 listOfItems.Add(itemData);
             }
@@ -1545,6 +1552,7 @@ namespace AargonTools.Manager
 
 
             var flag = await _companyFlag.GetStringFlagForAdoQuery(debtorAcct, environment);
+            var CompanyflagString  = await _companyFlag.GetStringFlag(debtorAcct, environment);
 
 
 
@@ -1564,6 +1572,8 @@ namespace AargonTools.Manager
                                                 "dai.balance," +
                                                 "dai.email_address," +
                                                 "dai.acct_status," +
+                                                 "dai.date_of_Service," +
+                                                "dai.employee," +
                                                 "dm.ssn," +
                                                 "dm.address1," +
                                                 "dm.address2," +
@@ -1600,8 +1610,9 @@ namespace AargonTools.Manager
             for (var i = 0; i < rowAdo.Rows.Count; i++)
             {
                 var birthDateProcess = Convert.ToDateTime(rowAdo.Rows[i]["birth_date"]).ToString("d/M/yyyy");
+                var date_of_ServiceProcess = Convert.ToDateTime(rowAdo.Rows[i]["date_of_Service"]).ToString("d/M/yyyy");
                 var balanceProcess = Math.Round(Convert.ToDouble(rowAdo.Rows[i]["balance"]), 2);
-                var ssnExposed= Convert.ToString(rowAdo.Rows[i]["ssn"]);
+                var ssnExposed = Convert.ToString(rowAdo.Rows[i]["ssn"]);
                 //
                 var sslMaskLast4 = "";
 
@@ -1616,7 +1627,7 @@ namespace AargonTools.Manager
                 var itemData = new GetInteractionAcctDataViewModel
                 {
                     debtorAcct = Convert.ToString(rowAdo.Rows[i]["debtor_acct"]),
-                    date = null,
+                    promiseDate = null,
                     ssn = sslMaskLast4,
                     balance = balanceProcess,
                     address1 = Convert.ToString(rowAdo.Rows[i]["address1"]),
@@ -1631,11 +1642,14 @@ namespace AargonTools.Manager
                     homePhoneNumber = Convert.ToString(rowAdo.Rows[i]["home_area_code"]) + "-" + Convert.ToString(rowAdo.Rows[i]["home_phone"]),
                     lastName = Convert.ToString(rowAdo.Rows[i]["last_name"]),
                     otherPhoneNumer = Convert.ToString(rowAdo.Rows[i]["other_area_code"]) + "-" + Convert.ToString(rowAdo.Rows[i]["other_phone"]),
-                    relatiovePhoneNumber = Convert.ToString(rowAdo.Rows[i]["relative_area_code"]) + "-" + Convert.ToString(rowAdo.Rows[i]["relative_phone"]),
+                    relativePhoneNumber = Convert.ToString(rowAdo.Rows[i]["relative_area_code"]) + "-" + Convert.ToString(rowAdo.Rows[i]["relative_phone"]),
                     stateCode = Convert.ToString(rowAdo.Rows[i]["state_code"]),
                     workPhoneNumber = Convert.ToString(rowAdo.Rows[i]["work_area_code"]) + "-" + Convert.ToString(rowAdo.Rows[i]["work_phone"]),
                     zip = Convert.ToString(rowAdo.Rows[i]["zip"]),
-                    accountStatus = Convert.ToString(rowAdo.Rows[i]["acct_status"])
+                    accountStatus = Convert.ToString(rowAdo.Rows[i]["acct_status"]),
+                    date_of_Service = date_of_ServiceProcess,
+                    employee = Convert.ToString(rowAdo.Rows[i]["employee"]),
+                    companyFlag = CompanyflagString
                 };
                 listOfItems.Add(itemData);
             }

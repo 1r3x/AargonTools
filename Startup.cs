@@ -171,6 +171,7 @@ namespace AargonTools
             services.AddScoped<IAddCcPaymentV2, AddCcPaymentV2>();
             services.AddScoped<ICardTokenizationDataHelper, CardTokenizationDataHelper>();
             services.AddScoped<ICryptoGraphy, CryptoGraphy>();
+            services.AddScoped<IViewingSchedulePayments, ViewingSchedulePayments>();
             //
 
             //services.AddScoped<IUniversalCcProcessHelper, UniversalCcProcessHelper>();

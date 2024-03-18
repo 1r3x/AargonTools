@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using AargonTools.Data.ADO;
 using AargonTools.Data.ExamplesForDocumentation.Response;
@@ -14,6 +15,7 @@ using AargonTools.ViewModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
 namespace AargonTools.Controllers.TestEnvironment
@@ -33,10 +35,14 @@ namespace AargonTools.Controllers.TestEnvironment
         private readonly AdoDotNetConnection _adoConnection;
         private static ICryptoGraphy _crypto;
         private static ICardTokenizationDataHelper _cardTokenizationHelper;
+        private static IProcessCcPayment _usaEPay;
+        private static GetTheCompanyFlag _getTheCompanyFlag;
+        private static IViewingSchedulePayments _viewingSchedulePaymnets;
 
         public CreditCardsController(IProcessCcPayment processCcPayment, ISetCCPayment setCcPayment,
             IUniversalCcProcessApiService processCcUniversal, GatewaySelectionHelper gatewaySelectionHelper, IPreSchedulePaymentProcessing preSchedulePaymentProcessing,
-            ResponseModel response, AdoDotNetConnection adoConnection, ICryptoGraphy crypto, ICardTokenizationDataHelper cardTokenizationHelper)
+            ResponseModel response, AdoDotNetConnection adoConnection, ICryptoGraphy crypto, ICardTokenizationDataHelper cardTokenizationHelper,
+            IProcessCcPayment usaEPay, GetTheCompanyFlag getTheCompanyFlag, IViewingSchedulePayments viewingSchedulePaymnets)
         {
             _processCcPayment = processCcPayment;
             _setCcPayment = setCcPayment;
@@ -47,6 +53,9 @@ namespace AargonTools.Controllers.TestEnvironment
             _adoConnection = adoConnection;
             _crypto = crypto;
             _cardTokenizationHelper = cardTokenizationHelper;
+            _usaEPay = usaEPay;
+            _getTheCompanyFlag = getTheCompanyFlag;
+            _viewingSchedulePaymnets = viewingSchedulePaymnets;
         }
 
         /// <summary>
@@ -199,7 +208,7 @@ namespace AargonTools.Controllers.TestEnvironment
         [HttpPost("ProcessCc")]
         public async Task<IActionResult> ProcessCc([FromBody] ProcessCcPaymentUniversalRequestModel requestCcPayment)
         {
-            Serilog.Log.Information("ProcessCc => POST");
+            Serilog.Log.Information("ProcessCc(test) => POST");
             try
             {
                 if (ModelState.IsValid)
@@ -211,6 +220,21 @@ namespace AargonTools.Controllers.TestEnvironment
                         var scheduleDateTime = DateTime.Now;//todo 
                         var acctLimitTemp = requestCcPayment.debtorAcc.Split('-');
                         var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
+
+                        var patientBalanceCheck = await _getTheCompanyFlag.GetFlagForDebtorAccount(requestCcPayment.debtorAcc, "T")
+                            .Result.Where(x => x.DebtorAcct == requestCcPayment.debtorAcc).Select(i =>
+                                   new DebtorAcctInfoT()
+                                   {
+                                       SuppliedAcct = i.SuppliedAcct,
+                                       Balance = i.Balance
+                                   }).FirstOrDefaultAsync();
+
+                        //if (Convert.ToDecimal(requestCcPayment.numberOfPayments) * Convert.ToDecimal(requestCcPayment.amount) <= patientBalanceCheck?.Balance)
+                        //{
+
+
+
+
                         if (acctLimitCheck >= 4950000001 && acctLimitCheck < 4950999999 || acctLimitCheck >= 4984000001 && acctLimitCheck < 4984999999)
                         {
 
@@ -218,11 +242,11 @@ namespace AargonTools.Controllers.TestEnvironment
 
                             if (scheduleDateTime.Date == DateTime.Now.Date)
                             {
-                                response = await _processCcUniversal.ProcessSaleTransForInstaMed(requestCcPayment, "CBT");
+                                response = await _processCcUniversal.ProcessSaleTransForInstaMed(requestCcPayment, "T");
                             }
                             else
                             {
-                                response = await _processCcUniversal.ProcessCardAuthorizationForInstaMed(requestCcPayment, "CBT");
+                                response = await _processCcUniversal.ProcessCardAuthorizationForInstaMed(requestCcPayment, "T");
                             }
 
                             return Ok(response);
@@ -235,11 +259,11 @@ namespace AargonTools.Controllers.TestEnvironment
                             ResponseModel response;
                             if (scheduleDateTime.Date == DateTime.Now.Date)
                             {
-                                response = await _processCcUniversal.ProcessSaleTransForInstaMed(requestCcPayment, "CBT");
+                                response = await _processCcUniversal.ProcessSaleTransForInstaMed(requestCcPayment, "T");
                             }
                             else
                             {
-                                response = await _processCcUniversal.ProcessCardAuthorizationForInstaMed(requestCcPayment, "CBT");
+                                response = await _processCcUniversal.ProcessCardAuthorizationForInstaMed(requestCcPayment, "T");
                             }
 
                             return Ok(response);
@@ -252,11 +276,11 @@ namespace AargonTools.Controllers.TestEnvironment
                             ResponseModel response;
                             if (scheduleDateTime.Date == DateTime.Now.Date)
                             {
-                                response = await _processCcUniversal.ProcessSaleTransForIProGateway(requestCcPayment, "CBT");
+                                response = await _processCcUniversal.ProcessSaleTransForIProGateway(requestCcPayment, "T");
                             }
                             else
                             {
-                                response = await _processCcUniversal.ProcessCardAuthorizationForIProGateway(requestCcPayment, "CBT");
+                                response = await _processCcUniversal.ProcessCardAuthorizationForIProGateway(requestCcPayment, "T");
                             }
 
                             return Ok(response);
@@ -264,18 +288,18 @@ namespace AargonTools.Controllers.TestEnvironment
 
                         else
                         {
-                            var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(requestCcPayment.debtorAcc, "CBT");
+                            var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(requestCcPayment.debtorAcc, "T");
 
-                            if (gatewaySelect.Result == "ELAVON" || acctLimitCheck >= 1902000001 && acctLimitCheck < 1902999999)//|| acctLimitCheck >= 1902000001 && acctLimitCheck < 1902999999 for staging 
+                            if (gatewaySelect.Result == "ELAVON" || acctLimitCheck >= 1902000001 && acctLimitCheck < 1902999999)//for staging 
                             {
                                 ResponseModel response;
                                 if (scheduleDateTime.Date == DateTime.Now.Date)
                                 {
-                                    response = await _processCcUniversal.ProcessSaleTransForElavon(requestCcPayment, "CBT");
+                                    response = await _processCcUniversal.ProcessSaleTransForElavon(requestCcPayment, "T");
                                 }
                                 else
                                 {
-                                    response = await _processCcUniversal.ProcessCardAuthorizationForIProGateway(requestCcPayment, "CBT");
+                                    response = await _processCcUniversal.ProcessCardAuthorizationForIProGateway(requestCcPayment, "T");
                                 }
 
                                 return Ok(response);
@@ -286,15 +310,17 @@ namespace AargonTools.Controllers.TestEnvironment
                                 ResponseModel response;
                                 if (scheduleDateTime.Date == DateTime.Now.Date)
                                 {
-                                    response = await _processCcUniversal.ProcessSaleTransForTmcElavon(requestCcPayment, "CBT");
+                                    response = await _processCcUniversal.ProcessSaleTransForTmcElavon(requestCcPayment, "T");
                                 }
                                 else
                                 {
-                                    response = await _processCcUniversal.ProcessCardAuthorizationForIProGateway(requestCcPayment, "CBT");
+                                    response = await _processCcUniversal.ProcessCardAuthorizationForIProGateway(requestCcPayment, "T");
                                 }
 
                                 return Ok(response);
                             }
+
+
 
                             if (gatewaySelect.Result == "")
                             {
@@ -310,10 +336,32 @@ namespace AargonTools.Controllers.TestEnvironment
                                     numberOfPayments = requestCcPayment.numberOfPayments
                                 };
 
+                                //must be break the implementtaion 
+                                //var data = await _processCcPayment.ProcessCcPayment(requestForUsaEPay, "P");
+                                //
+                                var tokenizeDataJsonResult = _usaEPay.TokenizeCc(requestForUsaEPay.ccNumber, requestForUsaEPay.expiredDate,
+                                    requestForUsaEPay.hsa != null && (bool)requestForUsaEPay.hsa, "T").Result;
+                                SaveCard tokenizeCObj = new SaveCard()
+                                {
+                                    CardNumber = "",
+                                    Key = "",
+                                    Type = ""
+                                };
+                                if (tokenizeDataJsonResult.Data != null)
+                                {
+                                    tokenizeCObj = JsonConvert.DeserializeObject<SaveCard>(tokenizeDataJsonResult.Data.ToString() ?? string.Empty);
+                                }
 
-                                var data = await _processCcPayment.ProcessCcPayment(requestForUsaEPay, "T");
 
-                                var json = JsonConvert.SerializeObject(data.Data, Formatting.Indented);
+
+
+                                var processTransactionJsonResult = _usaEPay.ProcessingTransactionV2(tokenizeCObj.Key,
+                                    (decimal)requestForUsaEPay.amount, requestForUsaEPay.hsa != null && (bool)requestForUsaEPay.hsa,
+                                     requestForUsaEPay.debtorAcc, requestCcPayment.cardHolderName, "T").Result.Data;
+
+                                //
+
+                                var json = JsonConvert.SerializeObject(processTransactionJsonResult, Formatting.Indented);
 
                                 var obj = JsonConvert.DeserializeObject<SetProcessCCResponse.TransactionDetails>(json);
                                 var res = new CommonResponseModelForCCProcess()
@@ -321,33 +369,31 @@ namespace AargonTools.Controllers.TestEnvironment
                                     AuthorizationNumber = obj.result_code,
                                     ResponseCode = obj.authcode,
                                     ResponseMessage = obj.result,
-                                    TransactionId = obj.key
+                                    TransactionId = obj.refnum
                                 };
 
                                 //updated 
 
                                 var ccNUmber = requestForUsaEPay.ccNumber;
 
-                                var (Key, IVBase64) = _crypto.InitSymmetricEncryptionKeyIv();
 
-                                var encryptedCC = _crypto.Encrypt(ccNUmber, IVBase64, Key);
-
+                                var expSplit = requestForUsaEPay.expiredDate.Split("/");
                                 var cardInfoObj = new LcgCardInfo()
                                 {
                                     IsActive = true,
                                     EntryMode = "key",
                                     BinNumber = requestForUsaEPay.cvv,
-                                    ExpirationMonth = 1,//todo 
-                                    ExpirationYear = 2,//todo
+                                    ExpirationMonth = Convert.ToInt32(expSplit[0]),
+                                    ExpirationYear = Convert.ToInt32(expSplit[1]),
                                     LastFour = ccNUmber.Substring(ccNUmber.Length - 4),
-                                    PaymentMethodId = encryptedCC,
-                                    Type = "VISA",
+                                    PaymentMethodId = tokenizeCObj.Key,
+                                    Type = tokenizeCObj.Type,
                                     AssociateDebtorAcct = requestForUsaEPay.debtorAcc,
-                                    CardHolderName = ""
+                                    CardHolderName = requestCcPayment.cardHolderName
                                 };
 
 
-                                await _cardTokenizationHelper.CreateCardInfo(cardInfoObj, "CBT");
+                                await _cardTokenizationHelper.CreateCardInfo(cardInfoObj, "T");
 
 
                                 var paymentScheduleObj = new LcgPaymentSchedule()
@@ -374,7 +420,7 @@ namespace AargonTools.Controllers.TestEnvironment
                                         PatientAccount = paymentScheduleObj.PatientAccount,
                                         Amount = paymentScheduleObj.Amount
                                     };
-                                    await _cardTokenizationHelper.CreatePaymentSchedule(lcgPaymentScheduleObj, "CBT");
+                                    await _cardTokenizationHelper.CreatePaymentSchedule(lcgPaymentScheduleObj, "T");
 
                                     if (i == 1)
                                     {
@@ -393,10 +439,11 @@ namespace AargonTools.Controllers.TestEnvironment
                                     AuthorizationText = "_username", //todo user name 
                                     ResponseMessage = res.ResponseMessage,
                                     PaymentScheduleId = _USAePayPaymentScheduleId,
-                                    TransactionId = res.TransactionId
+                                    TransactionId = res.TransactionId,
+                                    TimeLog = DateTime.Now
                                 };
 
-                                await _cardTokenizationHelper.CreatePaymentScheduleHistory(paymentScheduleHistoryObj, "CBT");
+                                await _cardTokenizationHelper.CreatePaymentScheduleHistory(paymentScheduleHistoryObj, "T");
 
 
                                 //cc payment insert 
@@ -427,6 +474,11 @@ namespace AargonTools.Controllers.TestEnvironment
                             return Ok("Oops.. something went wrong. Please submit the report with request example.");
                         }
                     }
+                    //else
+                    //{
+                    //    return new JsonResult("Balance Verification Failed") { StatusCode = 500 };
+                    //}
+                    //}
                 }
             }
             catch (Exception e)
@@ -437,6 +489,8 @@ namespace AargonTools.Controllers.TestEnvironment
 
 
             return new JsonResult("Something went wrong") { StatusCode = 500 };
+
+
         }
 
 
@@ -877,16 +931,15 @@ namespace AargonTools.Controllers.TestEnvironment
 
 
         /// <summary>
-        ///  Can process CC Payments.(New Test Environment [C-SQLTEST1])
+        ///  Can process prescheduled CC Payments.(New Test Environment [C-SQLTEST1])
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// You can process CC payments by passing required parameters.
+        /// You can manually process prescheduled CC payments by this endpoint.
         /// This endpoint can process through multiple gateways.It will automatically choose the desire gateways by debtor acct number.
         /// You need a valid token for this endpoint .
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/Test/CreditCards/ProcessCc
-        /// (pass JSON body like the request example)
+        ///You can hit ths API by any API client like https://g14.aargontools.com/api/Test/CreditCards/PreScheduledPaymentProcessing
         /// </remarks>
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
@@ -894,16 +947,14 @@ namespace AargonTools.Controllers.TestEnvironment
         ///
 
 
-        [ApiExplorerSettings(IgnoreApi = true)]
-        [ProducesResponseType(typeof(ProcessCCResponse), 200)]
         [HttpGet("PreScheduledPaymentProcessing")]
         public async Task<IActionResult> PreScheduledPaymentProcessing()
         {
-            Serilog.Log.Information("PreScheduledPaymentProcessing => POST");
+            Serilog.Log.Information("(Test)PreScheduledPaymentProcessing => POST");
 
-            AutoProcessCcUniversalViewModel requestCcPayment = null;
+            AutoProcessCcUniversalViewModel requestCcPayment = new AutoProcessCcUniversalViewModel();
 
-            SaleRequestModelForInstamed universalSaleRequestModel = null;
+            SaleRequestModelForInstamed universalSaleRequestModel = new SaleRequestModelForInstamed();
 
             var _preScheduleLcgTablesViewModel = new LcgTablesViewModel();
 
@@ -953,94 +1004,124 @@ namespace AargonTools.Controllers.TestEnvironment
                         //_tempAmount = _preScheduleLcgTablesViewModel.Amount;
                         //await ProcessSaleTrans();
                         requestCcPayment.AssociateDebtorAcct = _preScheduleLcgTablesViewModel.AssociateDebtorAcct;
-                        //requestCcPayment.amount=_preScheduleLcgTablesViewModel.
+                        requestCcPayment.Amount = _preScheduleLcgTablesViewModel.Amount;
+                        requestCcPayment.PaymentMethodId = _preScheduleLcgTablesViewModel.PaymentMethodId;
+                        requestCcPayment.PatientAccount = _preScheduleLcgTablesViewModel.PatientAccount;
+                        requestCcPayment.BinNumber = _preScheduleLcgTablesViewModel.BinNumber;
+                        requestCcPayment.ExpirationMonth = _preScheduleLcgTablesViewModel.ExpirationMonth;
+                        requestCcPayment.ExpirationYear = _preScheduleLcgTablesViewModel.ExpirationYear;
+                        requestCcPayment.NumberOfPayments = _preScheduleLcgTablesViewModel.NumberOfPayments;
 
-                    }
+                        //exp
 
 
 
-                    if (requestCcPayment.AssociateDebtorAcct != null)
-                    {
-
-                        var scheduleDateTime = DateTime.Now;//todo 
-                        var acctLimitTemp = requestCcPayment.AssociateDebtorAcct.Split('-');
-                        var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
-                        if (acctLimitCheck >= 4950000001 && acctLimitCheck < 4950999999)
+                        if (requestCcPayment.AssociateDebtorAcct != null)
                         {
 
-                            ResponseModel response;
-
-                            response = await _processCcUniversal.ProcessOnFileSaleTransForInstaMed(requestCcPayment, "CBT");
-
-                            return Ok(response);
-
-                        }
-
-                        if (acctLimitCheck >= 4953000001 && acctLimitCheck < 4953999999)
-                        {
-
-                            ResponseModel response;
-
-                            response = await _processCcUniversal.ProcessOnFileSaleTransForInstaMed(requestCcPayment, "CBT");
-
-                            return Ok(response);
-
-                        }
-
-                        if (acctLimitCheck >= 4514000001 && acctLimitCheck < 4514999999)
-                        {
-
-                            ResponseModel response;
-
-                            response = await _processCcUniversal.ProcessOnfileSaleTransForIProGateway(requestCcPayment, "CBT");
-
-                            return Ok(response);
-
-                        }
-
-                        else
-                        {
-
-                            var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(requestCcPayment.AssociateDebtorAcct, "CBT");
-
-                            if (gatewaySelect.Result == "ELAVON")
+                            var scheduleDateTime = DateTime.Now;//todo 
+                            var acctLimitTemp = requestCcPayment.AssociateDebtorAcct.Split('-');
+                            var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
+                            if (acctLimitCheck >= 4950000001 && acctLimitCheck < 4950999999)
                             {
 
                                 ResponseModel response;
 
-                                response = await _processCcUniversal.ProcessOnfileSaleTransForElavon(requestCcPayment, "CBT");
+                                response = await _processCcUniversal.ProcessOnFileSaleTransForInstaMed(requestCcPayment, "CBT");
 
-                                return Ok(response);
 
                             }
 
-                            if (gatewaySelect.Result == "")
+                            if (acctLimitCheck >= 4953000001 && acctLimitCheck < 4953999999)
                             {
 
-                                //ProcessCcPaymentRequestModel requestForUsaEPay = new()
-                                //{
-                                //    ccNumber = requestCcPayment.ccNumber,
-                                //    amount = requestCcPayment.amount,
-                                //    cvv = requestCcPayment.cvv,
-                                //    debtorAcc = requestCcPayment.debtorAcc,
-                                //    expiredDate = requestCcPayment.expiredDate,
-                                //    hsa = requestCcPayment.hsa,
-                                //    key = requestCcPayment.key,
-                                //    numberOfPayments = requestCcPayment.numberOfPayments,
-                                //    pin = requestCcPayment.pin
-                                //};
+                                ResponseModel response;
 
-
-                                //var data = await _processCcPayment.ProcessCcPayment(requestForUsaEPay, "T");
-
-
-                                //return Ok(data);
+                                response = await _processCcUniversal.ProcessOnFileSaleTransForInstaMed(requestCcPayment, "CBT");
 
 
                             }
 
-                            return Ok("Oops.. something went wrong. Please submit the report with request example.");
+                            if (acctLimitCheck >= 4514000001 && acctLimitCheck < 4514999999)
+                            {
 
+                                ResponseModel response;
+
+                                response = await _processCcUniversal.ProcessOnfileSaleTransForIProGateway(requestCcPayment, "CBT");
+
+
+                            }
+
+                            else
+                            {
+
+                                var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(requestCcPayment.AssociateDebtorAcct, "CBT");
+
+                                if (gatewaySelect.Result == "ELAVON")
+                                {
+
+                                    ResponseModel response;
+
+                                    response = await _processCcUniversal.ProcessOnfileSaleTransForElavon(requestCcPayment, "CBT");
+
+
+                                }
+                                if (gatewaySelect.Result == "TMCBONHAMELAVON")
+                                {
+
+                                    ResponseModel response;
+
+                                    response = await _processCcUniversal.ProcessOnfileSaleTransForTmcElavon(requestCcPayment, "CBT");
+
+
+                                }
+
+                                if (gatewaySelect.Result == "")
+                                {
+
+                                    var processTransactionJsonResult = _usaEPay.ProcessingTransactionV2(requestCcPayment.PaymentMethodId,
+                                        (decimal)requestCcPayment.Amount, false,
+                                         requestCcPayment.AssociateDebtorAcct, requestCcPayment.CardHolderName, "T").Result.Data;
+
+                                    //
+
+                                    var json = JsonConvert.SerializeObject(processTransactionJsonResult, Formatting.Indented);
+
+                                    var obj = JsonConvert.DeserializeObject<SetProcessCCResponse.TransactionDetails>(json);
+                                    var res = new CommonResponseModelForCCProcess()
+                                    {
+                                        AuthorizationNumber = obj.result_code,
+                                        ResponseCode = obj.authcode,
+                                        ResponseMessage = obj.result,
+                                        TransactionId = obj.refnum
+                                    };
+
+                                    //updated 
+
+
+                                    await _processCcUniversal.ChangeCardInfoAndScheduleData(requestCcPayment, environment);
+
+
+
+
+                                    //cc payment insert 
+                                    await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
+                                    {
+                                        debtorAcc = requestCcPayment.AssociateDebtorAcct,
+                                        approvalCode = "",
+                                        approvalStatus = "APPROVED",
+                                        chargeTotal = (decimal)requestCcPayment.Amount,
+                                        company = "AARGON AGENCY",
+                                        sif = "Y",
+                                        paymentDate = DateTime.Now,
+                                        refNo = "USAEPAY2",
+                                        orderNumber = res.TransactionId,
+                                        userId = "WEB",
+                                    }, "T");
+
+
+                                }
+                            }
                         }
                     }
                 }
@@ -1052,6 +1133,178 @@ namespace AargonTools.Controllers.TestEnvironment
                 Serilog.Log.Information(e.InnerException, e.Message, e.Data);
                 throw;
 
+            }
+
+
+            return new JsonResult("Tasks Done successfully") { StatusCode = 200 };
+        }
+
+
+
+        /// <summary>
+        ///  Can get all the active preschedule payment by date (New Test Environment [C-SQLTEST1])
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// Can get all the active preschedule payment by date.
+        /// You need a valid token for this endpoint .
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/Test/CreditCards/ViewingSchedulePayments
+        /// (pass JSON body like the request example)
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        /// 
+        ///
+
+        [ProducesResponseType(typeof(ViewingSchedulePaymentsResponse), 200)]
+        [HttpPost("ViewingSchedulePayments")]
+        public IActionResult ViewingSchedulePayments([FromBody] ViewingSchedulePaymentsRequestModel viewingRequest)
+        {
+            Serilog.Log.Information("SetProcessCcPayments => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = _viewingSchedulePaymnets.GetSchedulePayments(viewingRequest, "T");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
+
+        /// <summary>
+        ///  Can update active preschedule payment date by id from /ViewingSchedulePayments endpoint (New Test Environment [C-SQLTEST1])
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        ///Can update active preschedule payment date by id from /ViewingSchedulePayments endpoint
+        /// You need a valid token for this endpoint .
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/Test/CreditCards/UpdatingSchedulePayments
+        /// (pass JSON body like the request example)
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        /// 
+        ///
+
+        [ProducesResponseType(typeof(UpdatingSchedulePaymentsResponses), 200)]
+        [HttpPost("UpdatingSchedulePayments")]
+        public IActionResult UpdatingSchedulePayments([FromBody] UpdatingSchedulePayments updatingSchedulePaymentsRequest)
+        {
+            Serilog.Log.Information("UpdatingSchedulePayments => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = _viewingSchedulePaymnets.UpdatingSchedulePayment(updatingSchedulePaymentsRequest, "T");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
+        /// <summary>
+        ///  Can inactive a paymnets by specific id from /ViewingSchedulePayments endpoint (New Test Environment [C-SQLTEST1])
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// Can inactive a paymnets by specific id from /ViewingSchedulePayments endpoint 
+        /// You need a valid token for this endpoint .
+        /// You can pass the parameter with API client like https://g14.aargontools.com/api/Test/CreditCards/DeleteSchedulePayments
+        /// (pass JSON body like the request example)
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        /// 
+        ///
+
+
+
+        [ProducesResponseType(typeof(DeleteSchedulePaymnetResponse), 200)]
+        [HttpPost("DeleteSchedulePayments")]
+        public IActionResult DeleteSchedulePayments([FromBody] DeleteSchedulePayments deleteSchedulePaymentsRequest)
+        {
+            Serilog.Log.Information("DeleteSchedulePayments => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = _viewingSchedulePaymnets.DeleteSchedulePayment(deleteSchedulePaymentsRequest, "T");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
+
+        /// <summary>
+        ///  Can view list of payments(Failed/Successful) history by specific date  (New Test Environment [C-SQLTEST1])
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        ///Can view list of payments(Failed/Successful) history by specific date  
+        /// You need a valid token for this endpoint .
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/Test/CreditCards/ViewingPaymentHistory
+        /// (pass JSON body like the request example)
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        /// 
+        ///
+
+
+
+        [ProducesResponseType(typeof(ViewingPaymentsHistoryResponse), 200)]
+        [HttpPost("ViewingPaymentHistory")]
+        public IActionResult ViewingPaymentHistory([FromBody] ViewingSchedulePaymentsRequestModel viewingRequest)
+        {
+            Serilog.Log.Information("ViewingPaymentHistory => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = _viewingSchedulePaymnets.ViewPaymentHistory(viewingRequest, "T");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
             }
 
 

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using AargonTools.Data.ADO;
 using AargonTools.Data.ExamplesForDocumentation.Response;
@@ -14,6 +15,7 @@ using AargonTools.ViewModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
 namespace AargonTools.Controllers
@@ -34,10 +36,13 @@ namespace AargonTools.Controllers
         private static ICryptoGraphy _crypto;
         private static ICardTokenizationDataHelper _cardTokenizationHelper;
         private static IProcessCcPayment _usaEPay;
+        private static GetTheCompanyFlag _getTheCompanyFlag;
+        private static IViewingSchedulePayments _viewingSchedulePaymnets;
 
         public CreditCardsController(IProcessCcPayment processCcPayment, ISetCCPayment setCcPayment,
             IUniversalCcProcessApiService processCcUniversal, GatewaySelectionHelper gatewaySelectionHelper, IPreSchedulePaymentProcessing preSchedulePaymentProcessing,
-            ResponseModel response, AdoDotNetConnection adoConnection, ICryptoGraphy crypto, ICardTokenizationDataHelper cardTokenizationHelper, IProcessCcPayment usaEPayIMlementtaions)
+            ResponseModel response, AdoDotNetConnection adoConnection, ICryptoGraphy crypto, ICardTokenizationDataHelper cardTokenizationHelper,
+            IProcessCcPayment usaEPayIMlementtaions, GetTheCompanyFlag getTheCompanyFlag, IViewingSchedulePayments viewingSchedulePaymnets)
         {
             _processCcPayment = processCcPayment;
             _setCcPayment = setCcPayment;
@@ -49,6 +54,8 @@ namespace AargonTools.Controllers
             _crypto = crypto;
             _cardTokenizationHelper = cardTokenizationHelper;
             _usaEPay = usaEPayIMlementtaions;
+            _getTheCompanyFlag = getTheCompanyFlag;
+            _viewingSchedulePaymnets = viewingSchedulePaymnets;
         }
 
         /// <summary>
@@ -210,67 +217,63 @@ namespace AargonTools.Controllers
                         var scheduleDateTime = DateTime.Now;//todo 
                         var acctLimitTemp = requestCcPayment.debtorAcc.Split('-');
                         var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
-                        if (acctLimitCheck >= 4950000001 && acctLimitCheck < 4950999999 || acctLimitCheck >= 4984000001 && acctLimitCheck < 4984999999)
+
+                        var patientBalanceCheck = await _getTheCompanyFlag.GetFlagForDebtorAccount(requestCcPayment.debtorAcc, "P")
+                            .Result.Where(x => x.DebtorAcct == requestCcPayment.debtorAcc).Select(i =>
+                                   new DebtorAcctInfoT()
+                                   {
+                                       SuppliedAcct = i.SuppliedAcct,
+                                       Balance = i.Balance
+                                   }).SingleOrDefaultAsync();
+
+                        if (Convert.ToDecimal(requestCcPayment.numberOfPayments) * Convert.ToDecimal(requestCcPayment.amount) <= patientBalanceCheck?.Balance)
                         {
 
-                            ResponseModel response;
 
-                            if (scheduleDateTime.Date == DateTime.Now.Date)
+
+
+                            if (acctLimitCheck >= 4950000001 && acctLimitCheck < 4950999999 || acctLimitCheck >= 4984000001 && acctLimitCheck < 4984999999)
                             {
-                                response = await _processCcUniversal.ProcessSaleTransForInstaMed(requestCcPayment, "P");
-                            }
-                            else
-                            {
-                                response = await _processCcUniversal.ProcessCardAuthorizationForInstaMed(requestCcPayment, "P");
-                            }
 
-                            return Ok(response);
+                                ResponseModel response;
 
-                        }
+                                if (scheduleDateTime.Date == DateTime.Now.Date)
+                                {
+                                    response = await _processCcUniversal.ProcessSaleTransForInstaMed(requestCcPayment, "P");
+                                }
+                                else
+                                {
+                                    response = await _processCcUniversal.ProcessCardAuthorizationForInstaMed(requestCcPayment, "P");
+                                }
 
-                        if (acctLimitCheck >= 4953000001 && acctLimitCheck < 4953999999 || acctLimitCheck >= 4985000001 && acctLimitCheck < 4985999999)
-                        {
+                                return Ok(response);
 
-                            ResponseModel response;
-                            if (scheduleDateTime.Date == DateTime.Now.Date)
-                            {
-                                response = await _processCcUniversal.ProcessSaleTransForInstaMed(requestCcPayment, "P");
-                            }
-                            else
-                            {
-                                response = await _processCcUniversal.ProcessCardAuthorizationForInstaMed(requestCcPayment, "P");
                             }
 
-                            return Ok(response);
-
-                        }
-
-                        if (acctLimitCheck >= 4514000001 && acctLimitCheck < 4514999999)
-                        {
-
-                            ResponseModel response;
-                            if (scheduleDateTime.Date == DateTime.Now.Date)
+                            if (acctLimitCheck >= 4953000001 && acctLimitCheck < 4953999999 || acctLimitCheck >= 4985000001 && acctLimitCheck < 4985999999)
                             {
-                                response = await _processCcUniversal.ProcessSaleTransForIProGateway(requestCcPayment, "P");
-                            }
-                            else
-                            {
-                                response = await _processCcUniversal.ProcessCardAuthorizationForIProGateway(requestCcPayment, "P");
-                            }
 
-                            return Ok(response);
-                        }
-
-                        else
-                        {
-                            var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(requestCcPayment.debtorAcc, "P");
-
-                            if (gatewaySelect.Result == "ELAVON" || acctLimitCheck >= 1902000001 && acctLimitCheck < 1902999999)//for staging 
-                            {
                                 ResponseModel response;
                                 if (scheduleDateTime.Date == DateTime.Now.Date)
                                 {
-                                    response = await _processCcUniversal.ProcessSaleTransForElavon(requestCcPayment, "P");
+                                    response = await _processCcUniversal.ProcessSaleTransForInstaMed(requestCcPayment, "P");
+                                }
+                                else
+                                {
+                                    response = await _processCcUniversal.ProcessCardAuthorizationForInstaMed(requestCcPayment, "P");
+                                }
+
+                                return Ok(response);
+
+                            }
+
+                            if (acctLimitCheck >= 4514000001 && acctLimitCheck < 4514999999)
+                            {
+
+                                ResponseModel response;
+                                if (scheduleDateTime.Date == DateTime.Now.Date)
+                                {
+                                    response = await _processCcUniversal.ProcessSaleTransForIProGateway(requestCcPayment, "P");
                                 }
                                 else
                                 {
@@ -280,173 +283,197 @@ namespace AargonTools.Controllers
                                 return Ok(response);
                             }
 
-                            if (gatewaySelect.Result == "TMCBONHAMELAVON")
+                            else
                             {
-                                ResponseModel response;
-                                if (scheduleDateTime.Date == DateTime.Now.Date)
+                                var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(requestCcPayment.debtorAcc, "P");
+
+                                if (gatewaySelect.Result == "ELAVON" || acctLimitCheck >= 1902000001 && acctLimitCheck < 1902999999)//for staging 
                                 {
-                                    response = await _processCcUniversal.ProcessSaleTransForTmcElavon(requestCcPayment, "P");
-                                }
-                                else
-                                {
-                                    response = await _processCcUniversal.ProcessCardAuthorizationForIProGateway(requestCcPayment, "P");
-                                }
-
-                                return Ok(response);
-                            }
-
-
-
-                            if (gatewaySelect.Result == "")
-                            {
-
-                                ProcessCcPaymentRequestModel requestForUsaEPay = new()
-                                {
-                                    ccNumber = requestCcPayment.ccNumber,
-                                    amount = requestCcPayment.amount,
-                                    cvv = requestCcPayment.cvv,
-                                    debtorAcc = requestCcPayment.debtorAcc,
-                                    expiredDate = requestCcPayment.expiredDate,
-                                    hsa = requestCcPayment.hsa,
-                                    numberOfPayments = requestCcPayment.numberOfPayments
-                                };
-
-                                //must be break the implementtaion 
-                                //var data = await _processCcPayment.ProcessCcPayment(requestForUsaEPay, "P");
-                                //
-                                var tokenizeDataJsonResult = _usaEPay.TokenizeCc(requestForUsaEPay.ccNumber, requestForUsaEPay.expiredDate,
-                                    requestForUsaEPay.hsa != null && (bool)requestForUsaEPay.hsa, "P").Result;
-                                SaveCard tokenizeCObj = new SaveCard()
-                                {
-                                    CardNumber = "",
-                                    Key = "",
-                                    Type = ""
-                                };
-                                if (tokenizeDataJsonResult.Data != null)
-                                {
-                                    tokenizeCObj = JsonConvert.DeserializeObject<SaveCard>(tokenizeDataJsonResult.Data.ToString() ?? string.Empty);
-                                }
-
-
-
-
-                                var processTransactionJsonResult = _usaEPay.ProcessingTransactionV2(tokenizeCObj.Key,
-                                    (decimal)requestForUsaEPay.amount, requestForUsaEPay.hsa != null && (bool)requestForUsaEPay.hsa,
-                                     requestForUsaEPay.debtorAcc, requestCcPayment.cardHolderName, "P").Result.Data;
-
-                                //
-
-                                var json = JsonConvert.SerializeObject(processTransactionJsonResult, Formatting.Indented);
-
-                                var obj = JsonConvert.DeserializeObject<SetProcessCCResponse.TransactionDetails>(json);
-                                var res = new CommonResponseModelForCCProcess()
-                                {
-                                    AuthorizationNumber = obj.result_code,
-                                    ResponseCode = obj.authcode,
-                                    ResponseMessage = obj.result,
-                                    TransactionId = obj.refnum
-                                };
-
-                                //updated 
-
-                                var ccNUmber = requestForUsaEPay.ccNumber;
-
-
-
-                                var cardInfoObj = new LcgCardInfo()
-                                {
-                                    IsActive = true,
-                                    EntryMode = "key",
-                                    BinNumber = requestForUsaEPay.cvv,
-                                    ExpirationMonth = 1,//todo 
-                                    ExpirationYear = 2,//todo
-                                    LastFour = ccNUmber.Substring(ccNUmber.Length - 4),
-                                    PaymentMethodId = tokenizeCObj.Key,
-                                    Type = tokenizeCObj.Type,
-                                    AssociateDebtorAcct = requestForUsaEPay.debtorAcc,
-                                    CardHolderName = requestCcPayment.cardHolderName
-                                };
-
-
-                                await _cardTokenizationHelper.CreateCardInfo(cardInfoObj, "P");
-
-
-                                var paymentScheduleObj = new LcgPaymentSchedule()
-                                {
-                                    CardInfoId = cardInfoObj.Id,
-                                    IsActive = true,
-                                    EffectiveDate = DateTime.Now,
-                                    NumberOfPayments = (int)requestForUsaEPay.numberOfPayments,
-                                    PatientAccount = "", //todo patient account
-                                    Amount = requestForUsaEPay.amount
-                                };
-
-                                int _USAePayPaymentScheduleId = 0;
-
-                                var paymentDate = paymentScheduleObj.EffectiveDate;
-                                for (var i = 1; i <= requestForUsaEPay.numberOfPayments; i++)
-                                {
-                                    var lcgPaymentScheduleObj = new LcgPaymentSchedule()
+                                    ResponseModel response;
+                                    if (scheduleDateTime.Date == DateTime.Now.Date)
                                     {
-                                        CardInfoId = paymentScheduleObj.CardInfoId,
-                                        EffectiveDate = paymentDate,
-                                        IsActive = true,
-                                        NumberOfPayments = i,
-                                        PatientAccount = paymentScheduleObj.PatientAccount,
-                                        Amount = paymentScheduleObj.Amount
-                                    };
-                                    await _cardTokenizationHelper.CreatePaymentSchedule(lcgPaymentScheduleObj, "P");
-
-                                    if (i == 1)
+                                        response = await _processCcUniversal.ProcessSaleTransForElavon(requestCcPayment, "P");
+                                    }
+                                    else
                                     {
-                                        _USAePayPaymentScheduleId = lcgPaymentScheduleObj.Id;
+                                        response = await _processCcUniversal.ProcessCardAuthorizationForIProGateway(requestCcPayment, "P");
                                     }
 
-                                    paymentDate = paymentDate.AddMonths(1);
+                                    return Ok(response);
+                                }
 
+                                if (gatewaySelect.Result == "TMCBONHAMELAVON")
+                                {
+                                    ResponseModel response;
+                                    if (scheduleDateTime.Date == DateTime.Now.Date)
+                                    {
+                                        response = await _processCcUniversal.ProcessSaleTransForTmcElavon(requestCcPayment, "P");
+                                    }
+                                    else
+                                    {
+                                        response = await _processCcUniversal.ProcessCardAuthorizationForIProGateway(requestCcPayment, "P");
+                                    }
+
+                                    return Ok(response);
                                 }
 
 
-                                var paymentScheduleHistoryObj = new LcgPaymentScheduleHistory()
+
+                                if (gatewaySelect.Result == "")
                                 {
-                                    ResponseCode = res.ResponseCode,
-                                    AuthorizationNumber = res.AuthorizationNumber,
-                                    AuthorizationText = "_username", //todo user name 
-                                    ResponseMessage = res.ResponseMessage,
-                                    PaymentScheduleId = _USAePayPaymentScheduleId,
-                                    TransactionId = res.TransactionId,
-                                    TimeLog = DateTime.Now
-                                };
 
-                                await _cardTokenizationHelper.CreatePaymentScheduleHistory(paymentScheduleHistoryObj, "P");
+                                    ProcessCcPaymentRequestModel requestForUsaEPay = new()
+                                    {
+                                        ccNumber = requestCcPayment.ccNumber,
+                                        amount = requestCcPayment.amount,
+                                        cvv = requestCcPayment.cvv,
+                                        debtorAcc = requestCcPayment.debtorAcc,
+                                        expiredDate = requestCcPayment.expiredDate,
+                                        hsa = requestCcPayment.hsa,
+                                        numberOfPayments = requestCcPayment.numberOfPayments
+                                    };
 
-
-                                //cc payment insert 
-                                await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
-                                {
-                                    debtorAcc = requestCcPayment.debtorAcc,
-                                    approvalCode = "",
-                                    approvalStatus = "APPROVED",
-                                    chargeTotal = (decimal)requestCcPayment.amount,
-                                    company = "AARGON AGENCY",
-                                    sif = "Y",
-                                    paymentDate = DateTime.Now,
-                                    refNo = "USAEPAY2",
-                                    orderNumber = res.TransactionId,
-                                    userId = "WEB",
-                                }, "T");
-
-
-                                //
-
-                                var response = _response.Response(true, true, res);
-
-                                return Ok(response);
+                                    //must be break the implementtaion 
+                                    //var data = await _processCcPayment.ProcessCcPayment(requestForUsaEPay, "P");
+                                    //
+                                    var tokenizeDataJsonResult = _usaEPay.TokenizeCc(requestForUsaEPay.ccNumber, requestForUsaEPay.expiredDate,
+                                        requestForUsaEPay.hsa != null && (bool)requestForUsaEPay.hsa, "P").Result;
+                                    SaveCard tokenizeCObj = new SaveCard()
+                                    {
+                                        CardNumber = "",
+                                        Key = "",
+                                        Type = ""
+                                    };
+                                    if (tokenizeDataJsonResult.Data != null)
+                                    {
+                                        tokenizeCObj = JsonConvert.DeserializeObject<SaveCard>(tokenizeDataJsonResult.Data.ToString() ?? string.Empty);
+                                    }
 
 
+
+
+                                    var processTransactionJsonResult = _usaEPay.ProcessingTransactionV2(tokenizeCObj.Key,
+                                        (decimal)requestForUsaEPay.amount, requestForUsaEPay.hsa != null && (bool)requestForUsaEPay.hsa,
+                                         requestForUsaEPay.debtorAcc, requestCcPayment.cardHolderName, "P").Result.Data;
+
+                                    //
+
+                                    var json = JsonConvert.SerializeObject(processTransactionJsonResult, Formatting.Indented);
+
+                                    var obj = JsonConvert.DeserializeObject<SetProcessCCResponse.TransactionDetails>(json);
+                                    var res = new CommonResponseModelForCCProcess()
+                                    {
+                                        AuthorizationNumber = obj.result_code,
+                                        ResponseCode = obj.authcode,
+                                        ResponseMessage = obj.result,
+                                        TransactionId = obj.refnum
+                                    };
+
+                                    //updated 
+
+                                    var ccNUmber = requestForUsaEPay.ccNumber;
+
+
+
+                                    var cardInfoObj = new LcgCardInfo()
+                                    {
+                                        IsActive = true,
+                                        EntryMode = "key",
+                                        BinNumber = requestForUsaEPay.cvv,
+                                        ExpirationMonth = 1,//todo 
+                                        ExpirationYear = 2,//todo
+                                        LastFour = ccNUmber.Substring(ccNUmber.Length - 4),
+                                        PaymentMethodId = tokenizeCObj.Key,
+                                        Type = tokenizeCObj.Type,
+                                        AssociateDebtorAcct = requestForUsaEPay.debtorAcc,
+                                        CardHolderName = requestCcPayment.cardHolderName
+                                    };
+
+
+                                    await _cardTokenizationHelper.CreateCardInfo(cardInfoObj, "P");
+
+
+                                    var paymentScheduleObj = new LcgPaymentSchedule()
+                                    {
+                                        CardInfoId = cardInfoObj.Id,
+                                        IsActive = true,
+                                        EffectiveDate = DateTime.Now,
+                                        NumberOfPayments = (int)requestForUsaEPay.numberOfPayments,
+                                        PatientAccount = "", //todo patient account
+                                        Amount = requestForUsaEPay.amount
+                                    };
+
+                                    int _USAePayPaymentScheduleId = 0;
+
+                                    var paymentDate = paymentScheduleObj.EffectiveDate;
+                                    for (var i = 1; i <= requestForUsaEPay.numberOfPayments; i++)
+                                    {
+                                        var lcgPaymentScheduleObj = new LcgPaymentSchedule()
+                                        {
+                                            CardInfoId = paymentScheduleObj.CardInfoId,
+                                            EffectiveDate = paymentDate,
+                                            IsActive = true,
+                                            NumberOfPayments = i,
+                                            PatientAccount = paymentScheduleObj.PatientAccount,
+                                            Amount = paymentScheduleObj.Amount
+                                        };
+                                        await _cardTokenizationHelper.CreatePaymentSchedule(lcgPaymentScheduleObj, "P");
+
+                                        if (i == 1)
+                                        {
+                                            _USAePayPaymentScheduleId = lcgPaymentScheduleObj.Id;
+                                        }
+
+                                        paymentDate = paymentDate.AddMonths(1);
+
+                                    }
+
+
+                                    var paymentScheduleHistoryObj = new LcgPaymentScheduleHistory()
+                                    {
+                                        ResponseCode = res.ResponseCode,
+                                        AuthorizationNumber = res.AuthorizationNumber,
+                                        AuthorizationText = "_username", //todo user name 
+                                        ResponseMessage = res.ResponseMessage,
+                                        PaymentScheduleId = _USAePayPaymentScheduleId,
+                                        TransactionId = res.TransactionId,
+                                        TimeLog = DateTime.Now
+                                    };
+
+                                    await _cardTokenizationHelper.CreatePaymentScheduleHistory(paymentScheduleHistoryObj, "P");
+
+
+                                    //cc payment insert 
+                                    await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
+                                    {
+                                        debtorAcc = requestCcPayment.debtorAcc,
+                                        approvalCode = "",
+                                        approvalStatus = "APPROVED",
+                                        chargeTotal = (decimal)requestCcPayment.amount,
+                                        company = "AARGON AGENCY",
+                                        sif = "Y",
+                                        paymentDate = DateTime.Now,
+                                        refNo = "USAEPAY2",
+                                        orderNumber = res.TransactionId,
+                                        userId = "WEB",
+                                    }, "T");
+
+
+                                    //
+
+                                    var response = _response.Response(true, true, res);
+
+                                    return Ok(response);
+
+
+                                }
+
+                                return Ok("Oops.. something went wrong. Please submit the report with request example.");
                             }
-
-                            return Ok("Oops.. something went wrong. Please submit the report with request example.");
+                        }
+                        else
+                        {
+                            return new JsonResult("Balance Verification Failed") { StatusCode = 500 };
                         }
                     }
                 }
@@ -462,6 +489,109 @@ namespace AargonTools.Controllers
         }
 
 
+        //[ProducesResponseType(typeof(SetProcessCCResponse), 200)]
+        [HttpPost("ViewingSchedulePayments")]
+        public IActionResult ViewingSchedulePayments([FromBody] ViewingSchedulePaymentsRequestModel viewingRequest)
+        {
+            Serilog.Log.Information("ViewingSchedulePayments => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = _viewingSchedulePaymnets.GetSchedulePayments(viewingRequest, "P");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
+
+
+        //[ProducesResponseType(typeof(SetProcessCCResponse), 200)]
+        [HttpPost("UpdatingSchedulePayments")]
+        public IActionResult UpdatingSchedulePayments([FromBody] UpdatingSchedulePayments updatingSchedulePaymentsRequest)
+        {
+            Serilog.Log.Information("UpdatingSchedulePayments => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = _viewingSchedulePaymnets.UpdatingSchedulePayment(updatingSchedulePaymentsRequest, "P");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
+        //[ProducesResponseType(typeof(SetProcessCCResponse), 200)]
+        [HttpPost("DeleteSchedulePayments")]
+        public IActionResult DeleteSchedulePayments([FromBody] DeleteSchedulePayments deleteSchedulePaymentsRequest)
+        {
+            Serilog.Log.Information("DeleteSchedulePayments => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = _viewingSchedulePaymnets.DeleteSchedulePayment(deleteSchedulePaymentsRequest, "P");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
+
+        //[ProducesResponseType(typeof(SetProcessCCResponse), 200)]
+        [HttpPost("ViewingPaymentHistory")]
+        public IActionResult ViewingPaymentHistory([FromBody] ViewingSchedulePaymentsRequestModel viewingRequest)
+        {
+            Serilog.Log.Information("ViewingPaymentHistory => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = _viewingSchedulePaymnets.ViewPaymentHistory(viewingRequest, "P");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
     }
 
     internal class SaveCard
@@ -470,4 +600,12 @@ namespace AargonTools.Controllers
         public string Key { get; set; }
         public string CardNumber { get; set; }
     }
+
+
+
+
+
+
+
+
 }

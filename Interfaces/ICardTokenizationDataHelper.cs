@@ -12,5 +12,6 @@ namespace AargonTools.Interfaces
         Task<string> CreatePaymentSchedule(LcgPaymentSchedule cardObj, string environment);
         Task<string> CreatePaymentScheduleHistory(LcgPaymentScheduleHistory cardObj, string environment);
         Task<string> InactivePaymentSchedule(int paymentScheduleId, string environment);
+        Task<string> InactivePaymentSchedule2(string paymentScheduleId,int numberOfPayments, string environment);
     }
 }

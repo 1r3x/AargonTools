@@ -24,9 +24,12 @@ namespace AargonTools.ViewModel
         public string homePhoneNumber { get; set; }
         public string cellPhoneNumber { get; set; }
         public string workPhoneNumber { get; set; }
-        public string relatiovePhoneNumber { get; set; }
+        public string relativePhoneNumber { get; set; }
         public string otherPhoneNumer { get; set; }
         public string accountStatus { get; set; }
-        public DateTime? date { get; set; }
+        public DateTime? promiseDate { get; set; }
+        public string date_of_Service { get; set; }
+        public string employee { get; set; }
+        public string companyFlag { get; set; }
     }
 }

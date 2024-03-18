@@ -80,10 +80,13 @@ namespace AargonTools.Interfaces
 
         Task<ResponseModel> ProcessOnfileSaleTransForElavon(AutoProcessCcUniversalViewModel request,
             string environment);
+        Task<ResponseModel> ProcessOnfileSaleTransForTmcElavon(AutoProcessCcUniversalViewModel request,
+            string environment);
+        
 
         Task<ResponseModel> ProcessCardAuthorizationForElavon(ProcessCcPaymentUniversalRequestModel request,
             string environment);
-
+        Task ChangeCardInfoAndScheduleData(AutoProcessCcUniversalViewModel request, string environment);
 
     }
 }

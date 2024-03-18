@@ -548,6 +548,7 @@ namespace AargonTools.Manager
 
         public async Task<string> InstaMedSale(SaleRequestModelForInstamed request)
         {
+            _clientForInstaMed.DefaultRequestHeaders.Clear();
             _clientForInstaMed.DefaultRequestHeaders.Add("api-key",
                _centralizeVariablesModel.Value.InstaMedCredentials.APIkey);
             _clientForInstaMed.DefaultRequestHeaders.Add("api-secret",
@@ -575,7 +576,6 @@ namespace AargonTools.Manager
                 "rest/payment/sale", request);
             var resultString = response.Content.ReadAsStringAsync();
             //var ensureSuccessStatusCode = response.EnsureSuccessStatusCode();
-            Serilog.Log.Information(resultString.Result);
             return resultString.Result;
         }
 
@@ -589,21 +589,19 @@ namespace AargonTools.Manager
 
         public async Task<string> InstaMedTokenization(SaleRequestModelForInstamed request)
         {
-           
+
             var response = await _clientForInstaMed.PostAsJsonAsync(
                 "rest/payment/paymentplan", request);
             var resultString = response.Content.ReadAsStringAsync();
-            Serilog.Log.Information(resultString.Result);
             return resultString.Result;
         }
 
         public async Task<string> InstaMedTokenizationPro(SaleRequestModelForInstamed request)
         {
-           
+
             var response = await _clientForInstaMed.PostAsJsonAsync(
                 "rest/payment/paymentplan", request);
             var resultString = response.Content.ReadAsStringAsync();
-            Serilog.Log.Information(resultString.Result);
             return resultString.Result;
         }
 
@@ -651,7 +649,7 @@ namespace AargonTools.Manager
                                              + "&firstname=" + firstname + "&lastname=" + lastname
                                              + "&payment=creditcard&type=sale"
                                              + "&amount=" + amount + "&ccnumber=" + ccNumber + "&ccexp=" + ccExp + "&cvv=" + cvv
-                                             + "&merchant_defined_field_1="+ supplied_acct + "&merchant_defined_field_2=" + firstname + "&merchant_defined_field_3=" + lastname;
+                                             + "&merchant_defined_field_1=" + supplied_acct + "&merchant_defined_field_2=" + firstname + "&merchant_defined_field_3=" + lastname;
 
 
 
@@ -1028,7 +1026,7 @@ namespace AargonTools.Manager
             try
             {
                 string resultVerify;
-                if (environment=="P")
+                if (environment == "P")
                 {
                     resultVerify = await InstaMedTokenizationPro(saleRequestModel);
                 }
@@ -1037,9 +1035,7 @@ namespace AargonTools.Manager
                     resultVerify = await InstaMedTokenization(saleRequestModel);
                 }
 
-                Serilog.Log.Information("Tokenization End");
                 var cardInfoData = new TokenizeResponseModelForInstaMed(resultVerify);
-                Serilog.Log.Information("Card info Initialize");
                 var cardInfoObj = new LcgCardInfo()
                 {
                     IsActive = true,
@@ -1055,7 +1051,6 @@ namespace AargonTools.Manager
                 };
 
                 await _cardTokenizationHelper.CreateCardInfo(cardInfoObj, environment);
-                Serilog.Log.Information("Cardinfo Saved");
 
                 var paymentScheduleObj = new LcgPaymentSchedule()
                 {
@@ -1091,7 +1086,6 @@ namespace AargonTools.Manager
                     paymentDate = paymentDate.AddMonths(1);
 
                 }
-                Serilog.Log.Information("Payment Schedule Saved.");
 
                 var paymentScheduleHistoryObj = new LcgPaymentScheduleHistory()
                 {
@@ -1219,7 +1213,115 @@ namespace AargonTools.Manager
             }
             catch (Exception e)
             {
-                throw e;
+                Serilog.Log.Information(e.Message);
+                throw;
+            }
+
+
+        }
+
+
+        public async Task ChangeCardInfoAndScheduleData(AutoProcessCcUniversalViewModel request, string environment)
+        {
+            try
+            {
+
+                await _cardTokenizationHelper.InactivePaymentSchedule2(Convert.ToString(request.PaymentMethodId), request.NumberOfPayments, environment);
+
+                //new implementation 
+                var companyFlag = await _getTheCompanyFlag.GetStringFlagForAdoQuery(request.AssociateDebtorAcct, environment);
+
+                var balance = _adoConnection.GetData("SELECT CAST(balance as float) as balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.AssociateDebtorAcct + "'", environment); ;
+
+                var interestAmount = _adoConnection.GetData("SELECT interest_amt_life FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.AssociateDebtorAcct + "'", environment); ;
+
+                var placements = _adoConnection.GetData("SELECT ISNULL(placement,0) as placement FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.AssociateDebtorAcct + "'", environment);
+                DataTable feePct = null;
+                decimal feePctSimplified = 0;
+
+                if (placements.Columns.Count > 1 && balance.Columns.Count > 1 && interestAmount.Columns.Count > 1)
+                {
+
+                    switch ((int)placements.Rows[0]["placement"])
+                    {
+                        case 1:
+                            feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.AssociateDebtorAcct, 4) + "'", environment);
+                            feePctSimplified = (decimal)feePct.Rows[0]["commission_pct1"];
+                            break;
+                        case 2:
+                            feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.AssociateDebtorAcct, 4) + "'", environment);
+                            feePctSimplified = (decimal)feePct.Rows[0]["commission_pct2"];
+                            break;
+                    }
+
+
+                    switch ((int)placements.Rows[0]["placement"])
+                    {
+                        case 1:
+                            feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.AssociateDebtorAcct, 4) + "'", environment);
+                            break;
+                        case 2:
+                            feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.AssociateDebtorAcct, 4) + "'", environment);
+                            break;
+                    }
+
+
+                    var qFrom = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.AssociateDebtorAcct + "'", environment);
+                    //for now
+                    var qTo = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.AssociateDebtorAcct + "'", environment);
+
+                    var remit = _adoConnection.GetData("SELECT remit_full_pmt FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.AssociateDebtorAcct, 4) + "'", environment);
+                    var adminAmount = _adoConnection.GetData("SELECT CAST(total_fees_balance as float) as total_fees_balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.AssociateDebtorAcct + "'", environment);
+
+                    string paymentType;
+                    if (companyFlag == "_t")
+                    {
+                        paymentType = "DIRECT";
+                    }
+                    else
+                    {
+                        paymentType = "CREDIT CARD";
+                    }
+
+
+
+
+                    // debugger
+                    var a = request.AssociateDebtorAcct;
+                    var b = request.Amount;
+                    var balanceT = balance.Rows[0]["balance"];
+                    var interestAmountT = interestAmount.Rows[0]["interest_amt_life"];
+                    var e = feePctSimplified;
+                    var qFromT = qFrom.Rows[0]["employee"];
+                    var qToT = qTo.Rows[0]["employee"];
+                    var remitT = remit.Rows[0]["remit_full_pmt"];
+                    var m = paymentType;
+                    var j = companyFlag;
+                    var adminAmountT = adminAmount.Rows[0]["total_fees_balance"];
+                    var l = request.AssociateDebtorAcct;
+                    //
+                    var balanceC = Convert.ToSingle(balanceT);
+                    var interestAmountC = Convert.ToDecimal(interestAmountT);
+                    var qFromC = Convert.ToInt32(qFromT);
+                    var qToC = Convert.ToInt32(qToT);
+                    var remitC = Convert.ToString(remitT);
+                    var adminAmountC = Convert.ToSingle(adminAmountT);
+
+
+
+                    //maintain sif 
+                    //todo
+                    await PostPaymentA(request.AssociateDebtorAcct, request.Amount, balanceC,
+                        interestAmountC, feePctSimplified, "N",// per Duane, no multiple payment SIF. SIF = Y requires numberOfPayments = 1 
+                        qFromC, qToC, remitC,
+                        paymentType, companyFlag, adminAmountC, request.AssociateDebtorAcct, environment);
+                }
+
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.Message);
+                throw;
             }
 
 
@@ -1254,12 +1356,19 @@ namespace AargonTools.Manager
                 terminalId = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalID;
             }
             //patient info
-            var patientAccountInfo = await _context.DebtorAcctInfoTs.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
-                 new DebtorAcctInfoT()
-                 {
-                     SuppliedAcct = i.SuppliedAcct,
-                     Balance = i.Balance
-                 }).SingleOrDefaultAsync();
+            var patientAccountInfo = await _getTheCompanyFlag.GetFlagForDebtorAccount(request.debtorAcc, environment).Result.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+                  new DebtorAcctInfoT()
+                  {
+                      SuppliedAcct = i.SuppliedAcct,
+                      Balance = i.Balance
+                  }).SingleOrDefaultAsync();
+
+            //var patientAccountInfo2 = await _context.DebtorAcctInfoTs.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+            //     new DebtorAcctInfoT()
+            //     {
+            //         SuppliedAcct = i.SuppliedAcct,
+            //         Balance = i.Balance
+            //     }).SingleOrDefaultAsync();
 
             var patientInfo = await _context.PatientMasters.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
              new PatientMaster()
@@ -1693,33 +1802,104 @@ namespace AargonTools.Manager
             return _response.Response(true, true, _responseModelForInstamed, dbQA);
         }
 
-        //on file
+        //on file OnFile
         public async Task<ResponseModel> ProcessOnFileSaleTransForInstaMed(AutoProcessCcUniversalViewModel request, string environment)
         {
+            string merchantId;
+            string storeId;
+            string terminalId;
+            if (environment == "P")
+            {
+                merchantId = _centralizeVariablesModel.Value.InstaMedOutlet.MerchantIDPro;
+
+                storeId = _centralizeVariablesModel.Value.InstaMedOutlet.StoreID;
+                var acctLimitTemp = request.AssociateDebtorAcct.Split('-');
+                var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
+                if (acctLimitCheck >= 4950000001 && acctLimitCheck < 4950999999 || acctLimitCheck >= 4984000001 && acctLimitCheck < 4984999999)
+                {
+                    terminalId = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalIDProHB;
+                }
+                else
+                {
+                    terminalId = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalIDProPB;
+                }
+
+            }
+            else
+            {
+                merchantId = _centralizeVariablesModel.Value.InstaMedOutlet.MerchantID;
+                storeId = _centralizeVariablesModel.Value.InstaMedOutlet.StoreID;
+                terminalId = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalID;
+            }
+            //patient info
+            var patientAccountInfo = await _getTheCompanyFlag.GetFlagForDebtorAccount(request.AssociateDebtorAcct, environment).Result.Where(x => x.DebtorAcct == request.AssociateDebtorAcct).Select(i =>
+                  new DebtorAcctInfoT()
+                  {
+                      SuppliedAcct = i.SuppliedAcct,
+                      Balance = i.Balance
+                  }).SingleOrDefaultAsync();
+
+            //var patientAccountInfo2 = await _context.DebtorAcctInfoTs.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+            //     new DebtorAcctInfoT()
+            //     {
+            //         SuppliedAcct = i.SuppliedAcct,
+            //         Balance = i.Balance
+            //     }).SingleOrDefaultAsync();
+
+            var patientInfo = await _context.PatientMasters.Where(x => x.DebtorAcct == request.AssociateDebtorAcct).Select(i =>
+             new PatientMaster()
+             {
+                 FirstName = i.FirstName,
+                 LastName = i.LastName,
+                 StateCode = i.StateCode,
+                 Zip = i.Zip,
+                 Address1 = i.Address1,
+                 Address2 = i.Address2,
+                 City = i.City
+             }).SingleOrDefaultAsync();
+            //patient info end 
             var saleRequestModel = new SaleRequestModelForInstamed()
             {
                 Outlet = new InstaMedOutlet()
                 {
-                    MerchantID = _centralizeVariablesModel.Value.InstaMedOutlet.MerchantID,
-                    StoreID = _centralizeVariablesModel.Value.InstaMedOutlet.StoreID,
-                    TerminalID = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalID
+                    MerchantID = merchantId,
+                    StoreID = storeId,
+                    TerminalID = terminalId
                 },
                 Amount = request.Amount,
                 PaymentMethod = "OnFile",
                 PaymentMethodID = request.PaymentMethodId,
                 Patient = new Patient()
                 {
-                    AccountNumber = request.PatientAccount
+                    AccountNumber = patientAccountInfo.SuppliedAcct,
+                    FirstName = patientInfo.FirstName,
+                    LastName = patientInfo.LastName
+                },
+                BillingAddress = new BillingAddress()
+                {
+                    City = patientInfo.City,
+                    State = patientInfo.StateCode,
+                    Zip = patientInfo.Zip,
+                    Street1 = patientInfo.Address1,
+                    Street2 = patientInfo.Address2
                 }
 
             };
-
-            var resultVerify = await InstaMedSale(saleRequestModel);
+            string resultVerify;
+            if (environment == "P")
+            {
+                resultVerify = await InstaMedSalePro(saleRequestModel);
+            }
+            else
+            {
+                resultVerify = await InstaMedSale(saleRequestModel);
+            }
 
             if (resultVerify.Contains("FieldErrors"))
             {
+                //have to check the field error 
+                return _response.Response(true, false, resultVerify);
 
-                //todo  return the result of specific error
             }
             else
             {
@@ -1733,6 +1913,19 @@ namespace AargonTools.Manager
                            _responseModelForInstamed.ResponseMessage.ToUpper() +
                            " AUTH #:" + _responseModelForInstamed.AuthorizationNumber;
 
+                //magic
+                await ChangeCardInfoAndScheduleData(request, environment);
+                var paymentScheduleHistoryObj = new LcgPaymentScheduleHistory()
+                {
+                    ResponseCode = _responseModelForInstamed.ResponseCode,
+                    AuthorizationNumber = _responseModelForInstamed.AuthorizationNumber,
+                    AuthorizationText = "autoProcessCheck", //todo user name 
+                    ResponseMessage = _responseModelForInstamed.ResponseMessage,
+                    PaymentScheduleId = _lcgPaymentScheduleId,
+                    TransactionId = _responseModelForInstamed.TransactionId
+                };
+
+                await _cardTokenizationHelper.CreatePaymentScheduleHistory(paymentScheduleHistoryObj, environment);
 
                 // for success
                 var ccPaymentObj = new CcPayment()
@@ -1762,7 +1955,6 @@ namespace AargonTools.Manager
                     noteText = "INSTAMED CC DECLINED FOR $" + request.Amount + " " +
                                _responseModelForInstamed.ResponseMessage.ToUpper() +
                                " AUTH #:" + _responseModelForInstamed.AuthorizationNumber;
-
                 // for DECLINED
                 if (_responseModelForInstamed != null)
                 {
@@ -1785,7 +1977,6 @@ namespace AargonTools.Manager
                         Sif = "N",
                         VoidSale = "N"
                     };
-
                     await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
                 }
             }
@@ -1802,6 +1993,8 @@ namespace AargonTools.Manager
             };
 
             await _addNotes.CreateNotes(noteObj, environment); //PO for prod_old & T is for test_db
+
+
 
             return _response.Response(true, true, _responseModelForInstamed);
 
@@ -1888,13 +2081,15 @@ namespace AargonTools.Manager
 
                 var encryptedCC = _crypto.Encrypt(ccNUmber, IVBase64, Key);
 
+                var expSplit = request.expiredDate.Split("/");
+
                 var cardInfoObj = new LcgCardInfo()
                 {
                     IsActive = true,
                     EntryMode = "key",
                     BinNumber = request.cvv,
-                    ExpirationMonth = 1,//todo 
-                    ExpirationYear = 2,//todo
+                    ExpirationMonth = Convert.ToInt32(expSplit[0]),
+                    ExpirationYear = Convert.ToInt32(expSplit[1]),
                     LastFour = ccNUmber.Substring(ccNUmber.Length - 4),
                     PaymentMethodId = encryptedCC,
                     Type = "VISA",
@@ -2080,12 +2275,12 @@ namespace AargonTools.Manager
         public async Task<ResponseModel> ProcessSaleTransForIProGateway(ProcessCcPaymentUniversalRequestModel request, string environment)
         {
 
-            var patientAccountInfo = await _context.DebtorAcctInfoTs.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
-                  new DebtorAcctInfoT()
-                  {
-                      SuppliedAcct = i.SuppliedAcct,
-                      Balance = i.Balance
-                  }).SingleOrDefaultAsync();
+            var patientAccountInfo = await _getTheCompanyFlag.GetFlagForDebtorAccount(request.debtorAcc, environment).Result.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+               new DebtorAcctInfoT()
+               {
+                   SuppliedAcct = i.SuppliedAcct,
+                   Balance = i.Balance
+               }).SingleOrDefaultAsync();
 
             var patientInfo = await _context.PatientMasters.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
              new PatientMaster()
@@ -2119,11 +2314,11 @@ namespace AargonTools.Manager
                     IsCardDataEncrypted = false,
                     IsEMVCapableDevice = false,
                 },
-                Patient=new Patient()
+                Patient = new Patient()
                 {
-                    AccountNumber= patientAccountInfo.SuppliedAcct,
-                    FirstName= patientInfo.FirstName,
-                    LastName= patientInfo.LastName
+                    AccountNumber = patientAccountInfo.SuppliedAcct,
+                    FirstName = patientInfo.FirstName,
+                    LastName = patientInfo.LastName
                 }
 
             };
@@ -2546,6 +2741,26 @@ namespace AargonTools.Manager
 
             var (Key, IVBase64) = _crypto.InitSymmetricEncryptionKeyIv();
             var decryptedCC = _crypto.Decrypt(request.PaymentMethodId, IVBase64, Key);
+
+            var patientAccountInfo = await _getTheCompanyFlag.GetFlagForDebtorAccount(request.AssociateDebtorAcct, environment).Result.Where(x => x.DebtorAcct == request.AssociateDebtorAcct).Select(i =>
+              new DebtorAcctInfoT()
+              {
+                  SuppliedAcct = i.SuppliedAcct,
+                  Balance = i.Balance
+              }).SingleOrDefaultAsync();
+
+            var patientInfo = await _context.PatientMasters.Where(x => x.DebtorAcct == request.AssociateDebtorAcct).Select(i =>
+             new PatientMaster()
+             {
+                 FirstName = i.FirstName,
+                 LastName = i.LastName,
+                 StateCode = i.StateCode,
+                 Zip = i.Zip,
+                 Address1 = i.Address1,
+                 Address2 = i.Address2,
+                 City = i.City
+             }).SingleOrDefaultAsync();
+
             var saleRequestModel = new SaleRequestModelForInstamed()
             {
 
@@ -2569,11 +2784,22 @@ namespace AargonTools.Manager
                 PaymentMethodID = request.PaymentMethodId,
                 Patient = new Patient()
                 {
-                    AccountNumber = request.PatientAccount
+                    AccountNumber = request.PatientAccount,
+                    FirstName = patientInfo.FirstName,
+                    LastName = patientInfo.LastName
                 }
 
             };
-            var resultVerify = await InstaMedSale(saleRequestModel);
+            string resultVerify;
+            if (environment == "P")
+            {
+                resultVerify = await IProGatewaySalePro(saleRequestModel);
+            }
+            else
+            {
+                resultVerify = await IProGatewaySale(saleRequestModel);
+            }
+
 
             if (resultVerify.Contains("FieldErrors"))
             {
@@ -2582,15 +2808,17 @@ namespace AargonTools.Manager
             }
             else
             {
-                _responseModelForInstamed = new SaleResponseModelForInstamed(resultVerify);
+                _responseModelForIProGateway = new SaleResponseModelForIProGateway(resultVerify);
             }
+            //magic
+            await ChangeCardInfoAndScheduleData(request, environment);
 
             string noteText = null;
-            if (_responseModelForInstamed != null && _responseModelForInstamed.ResponseCode == "000")
+            if (_responseModelForIProGateway != null && _responseModelForIProGateway.response_code == "100")
             {
                 noteText = "INSTAMED CC APPROVED FOR $" + request.Amount + " " +
-                           _responseModelForInstamed.ResponseMessage.ToUpper() +
-                           " AUTH #:" + _responseModelForInstamed.AuthorizationNumber;
+                           _responseModelForIProGateway.responsetext.ToUpper() +
+                           " AUTH #:" + _responseModelForIProGateway.authcode;
 
                 // for success
                 var ccPaymentObj = new CcPayment()
@@ -2606,8 +2834,8 @@ namespace AargonTools.Manager
                     PaymentDate = DateTime.Now,
                     ApprovalStatus = "APPROVED",
                     BillingName = "", // todo is it valid  for api transaction ? 
-                    ApprovalCode = _responseModelForInstamed.ResponseCode,
-                    OrderNumber = _responseModelForInstamed.TransactionId,
+                    ApprovalCode = _responseModelForIProGateway.response_code,
+                    OrderNumber = _responseModelForIProGateway.transactionid,
                     RefNumber = "INSTAMEDLH",
                     Sif = "N",
                     VoidSale = "N"
@@ -2616,10 +2844,10 @@ namespace AargonTools.Manager
             }
             else
             {
-                if (_responseModelForInstamed != null)
+                if (_responseModelForIProGateway != null)
                     noteText = "INSTAMED CC DECLINED FOR $" + request.Amount + " " +
-                               _responseModelForInstamed.ResponseMessage.ToUpper() +
-                               " AUTH #:" + _responseModelForInstamed.AuthorizationNumber;
+                               _responseModelForIProGateway.responsetext.ToUpper() +
+                               " AUTH #:" + _responseModelForIProGateway.authcode;
                 // for DECLINED
                 if (_responseModelForInstamed != null)
                 {
@@ -2742,14 +2970,14 @@ namespace AargonTools.Manager
                 var (Key, IVBase64) = _crypto.InitSymmetricEncryptionKeyIv();
 
                 var encryptedCC = _crypto.Encrypt(ccNUmber, IVBase64, Key);
-
+                var expSplit = request.expiredDate.Split("/");
                 var cardInfoObj = new LcgCardInfo()
                 {
                     IsActive = true,
                     EntryMode = "key",
                     BinNumber = request.cvv,
-                    ExpirationMonth = 1,//todo 
-                    ExpirationYear = 2,//todo
+                    ExpirationMonth = Convert.ToInt32(expSplit[0]),
+                    ExpirationYear = Convert.ToInt32(expSplit[1]),
                     LastFour = ccNUmber.Substring(ccNUmber.Length - 4),
                     PaymentMethodId = encryptedCC,
                     Type = "VISA",
@@ -2966,12 +3194,12 @@ namespace AargonTools.Manager
                 }
 
 
-                var patientAccountInfo = await _context.DebtorAcctInfoTs.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
-                   new DebtorAcctInfoT()
-                   {
-                       SuppliedAcct = i.SuppliedAcct,
-                       Balance = i.Balance
-                   }).SingleOrDefaultAsync();
+                var patientAccountInfo = await _getTheCompanyFlag.GetFlagForDebtorAccount(request.debtorAcc, environment).Result.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+                new DebtorAcctInfoT()
+                {
+                    SuppliedAcct = i.SuppliedAcct,
+                    Balance = i.Balance
+                }).SingleOrDefaultAsync();
 
                 var patientInfo = await _context.PatientMasters.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
                  new PatientMaster()
@@ -3171,15 +3399,15 @@ namespace AargonTools.Manager
             {
                 string ElavonclientUser = "tmcapi";
                 string ElavonclientPass = "UY4BFNX26LEZF0LKBXG8N0GD7KZK04CAX47CUI0PQZ380YOZKGTOXJ21I4VGR9C3";
-               
 
 
-                var patientAccountInfo = await _context.DebtorAcctInfoTs.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
-                   new DebtorAcctInfoT()
-                   {
-                       SuppliedAcct = i.SuppliedAcct,
-                       Balance = i.Balance
-                   }).SingleOrDefaultAsync();
+
+                var patientAccountInfo = await _getTheCompanyFlag.GetFlagForDebtorAccount(request.debtorAcc, environment).Result.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+                new DebtorAcctInfoT()
+                {
+                    SuppliedAcct = i.SuppliedAcct,
+                    Balance = i.Balance
+                }).SingleOrDefaultAsync();
 
                 var patientInfo = await _context.PatientMasters.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
                  new PatientMaster()
@@ -3685,32 +3913,114 @@ namespace AargonTools.Manager
             var (Key, IVBase64) = _crypto.InitSymmetricEncryptionKeyIv();
             var decryptedCC = _crypto.Decrypt(request.PaymentMethodId, IVBase64, Key);
 
-            var saleRequestModel = new SaleRequestModelForInstamed()
+            var resultVerify = "";
+
+            var saleRequestModel = new SaleRequestModelForInstamed();
+            if (environment == "P")
             {
-                Outlet = new InstaMedOutlet()
+                string ElavonclientUser = "hosweb";
+                string ElavonclientPass = "TBA6I645MMWSG6I540N549GX1GAXO2R66Y5TOMJIKX4AS6EIA9EKQIWVSL379WCT";
+                if (request.AssociateDebtorAcct.Substring(0, 4) == "1902")
                 {
-                    MerchantID = _centralizeVariablesModel.Value.InstaMedOutlet.MerchantID,
-                    StoreID = _centralizeVariablesModel.Value.InstaMedOutlet.StoreID,
-                    TerminalID = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalID
-                },
-                Amount = request.Amount,
-                PaymentMethod = "OnFile",
-                Card = new Card()
-                {
-                    CVN = request.BinNumber,
-
-                    CardNumber = decryptedCC,//
-                    EntryMode = "key",
-                    Expiration = request.ExpirationMonth + "" + request.ExpirationYear,
-
-                },
-                PaymentMethodID = request.PaymentMethodId,
-                Patient = new Patient()
-                {
-                    AccountNumber = request.PatientAccount
+                    ElavonclientUser = "hosweb";
+                    ElavonclientPass = "TBA6I645MMWSG6I540N549GX1GAXO2R66Y5TOMJIKX4AS6EIA9EKQIWVSL379WCT";
                 }
-            };
-            var resultVerify = await ElavonSale(saleRequestModel);
+                else
+                {
+                    //ElavonclientUser = (from r in _context.LarryCcIndex2s
+                    //                    where (r.AcctStatus == "A" && r.ClientAcct == request.debtorAcc.Substring(0, 4))
+                    //                    select r.ClientUser).ToString();
+                    ElavonclientPass = (from r in _context.LarryCcIndex2s
+                                        where (r.AcctStatus == "A" && r.ClientAcct == request.AssociateDebtorAcct.Substring(0, 4))
+                                        select r.ClientPass).ToString();
+                }
+
+
+                var patientAccountInfo = await _getTheCompanyFlag.GetFlagForDebtorAccount(request.AssociateDebtorAcct, environment).Result.Where(x => x.DebtorAcct == request.AssociateDebtorAcct).Select(i =>
+                new DebtorAcctInfoT()
+                {
+                    SuppliedAcct = i.SuppliedAcct,
+                    Balance = i.Balance
+                }).SingleOrDefaultAsync();
+
+                var patientInfo = await _context.PatientMasters.Where(x => x.DebtorAcct == request.AssociateDebtorAcct).Select(i =>
+                 new PatientMaster()
+                 {
+                     FirstName = i.FirstName,
+                     LastName = i.LastName,
+                     StateCode = i.StateCode,
+                     Zip = i.Zip,
+                     Address1 = i.Address1,
+                     Address2 = i.Address2,
+                     City = i.City
+                 }).SingleOrDefaultAsync();
+
+
+                saleRequestModel = new SaleRequestModelForInstamed()
+                {
+                    Outlet = new InstaMedOutlet()
+                    {
+                        MerchantID = "807485",
+                        StoreID = ElavonclientUser,
+                        TerminalID = ElavonclientPass
+
+                    },
+                    Amount = request.Amount,
+                    PaymentMethod = "Card",
+                    Card = new Card()
+                    {
+                        CVN = request.BinNumber,
+                        CardNumber = decryptedCC,
+                        EntryMode = "key",
+                        Expiration = request.ExpirationMonth + "" + request.ExpirationYear,
+                        IsCardDataEncrypted = false,
+                        IsEMVCapableDevice = false,
+                    },
+                    Patient = new Patient()
+                    {
+                        AccountNumber = patientAccountInfo.SuppliedAcct,
+                        FirstName = patientInfo.FirstName,
+                        LastName = patientInfo.LastName
+                    },
+                    BillingAddress = new BillingAddress()
+                    {
+                        City = patientInfo.City,
+                        State = patientInfo.StateCode,
+                        Zip = patientInfo.Zip,
+                        Street1 = patientInfo.Address1,
+                        Street2 = patientInfo.Address2
+                    }
+
+                };
+                resultVerify = await ElavonSalePro(saleRequestModel);
+            }
+            else
+            {
+                saleRequestModel = new SaleRequestModelForInstamed()
+                {
+                    Outlet = new InstaMedOutlet()
+                    {
+                        MerchantID = _centralizeVariablesModel.Value.ElavonCredentials.ssl_merchant_id,
+                        StoreID = _centralizeVariablesModel.Value.ElavonCredentials.ssl_user_id,
+                        TerminalID = _centralizeVariablesModel.Value.ElavonCredentials.ssl_pin
+                    },
+                    Amount = request.Amount,
+                    PaymentMethod = "Card",
+                    Card = new Card()
+                    {
+                        CVN = request.BinNumber,
+                        CardNumber = decryptedCC,
+                        EntryMode = "key",
+                        Expiration = request.ExpirationMonth + "" + request.ExpirationYear,
+                        IsCardDataEncrypted = false,
+                        IsEMVCapableDevice = false,
+                    }
+
+                };
+                resultVerify = await ElavonSale(saleRequestModel);
+            }
+
+
             if (resultVerify.Contains("FieldErrors"))
             {
                 return _response.Response(true, true, resultVerify);
@@ -3727,11 +4037,12 @@ namespace AargonTools.Manager
             string noteText = null;
             if (_deserializeObjForElavon != null && _deserializeObjForElavon.ssl_issuer_response == "00")
             {
-                noteText = "INSTAMED CC APPROVED FOR $" + request.Amount + " " +
+                noteText = "Converge CC APPROVED FOR $" + request.Amount + " " +
                            _deserializeObjForElavon.ssl_result_message.ToUpper() +
-                           " AUTH #:" + _deserializeObjForElavon.ssl_oar_data;
+                           " AUTH #:" + _deserializeObjForElavon.ssl_approval_code;
 
-
+                //magic
+                await ChangeCardInfoAndScheduleData(request, environment);
                 // for success
                 var ccPaymentObj = new CcPayment()
                 {
@@ -3748,7 +4059,7 @@ namespace AargonTools.Manager
                     BillingName = "", // todo is it valid  for api transaction ? 
                     ApprovalCode = _deserializeObjForElavon.ssl_approval_code,
                     OrderNumber = _deserializeObjForElavon.ssl_txn_id,
-                    RefNumber = "INSTAMEDLH",
+                    RefNumber = "ELAVON",
                     Sif = "N",
                     VoidSale = "N"
                 };
@@ -3757,9 +4068,9 @@ namespace AargonTools.Manager
             else
             {
                 if (_responseModelForInstamed != null)
-                    noteText = "INSTAMED CC DECLINED FOR $" + request.Amount + " " +
+                    noteText = "Converge CC DECLINED FOR $" + request.Amount + " " +
                                _deserializeObjForElavon.ssl_result_message.ToUpper() +
-                               " AUTH #:" + _deserializeObjForElavon.ssl_oar_data;
+                               " AUTH #:" + _deserializeObjForElavon.ssl_approval_code;
                 // for DECLINED
                 if (_responseModelForInstamed != null)
                 {
@@ -3778,7 +4089,217 @@ namespace AargonTools.Manager
                         BillingName = "", // todo is it valid  for api transaction ? 
                         ApprovalCode = _deserializeObjForElavon.ssl_approval_code,
                         OrderNumber = _deserializeObjForElavon.ssl_txn_id,
-                        RefNumber = "INSTAMEDLH",
+                        RefNumber = "ELAVON",
+                        Sif = "N",
+                        VoidSale = "N"
+                    };
+                    await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
+                }
+            }
+
+            var noteObj = new NoteMaster()
+            {
+                DebtorAcct = request.AssociateDebtorAcct,
+                Employee = 31950,
+                ActivityCode = "RA",
+                NoteText = noteText,
+                Important = "N",
+                ActionCode = null
+
+            };
+
+            await _addNotes.CreateNotes(noteObj, environment); //PO for prod_old & T is for test_db
+
+
+
+
+            if (_deserializeObjForElavon != null)
+            {
+                var response = new CommonResponseModelForCCProcess()
+                {
+                    AuthorizationNumber = _deserializeObjForElavon.ssl_oar_data,
+                    ResponseCode = _deserializeObjForElavon.ssl_approval_code,
+                    ResponseMessage = _deserializeObjForElavon.ssl_result_message,
+                    TransactionId = _deserializeObjForElavon.ssl_txn_id
+                };
+
+
+                return _response.Response(true, true, response);
+            }
+            else
+            {
+                return _response.Response(true, "Oops! Something went wrong. ");
+            }
+        }
+
+        public async Task<ResponseModel> ProcessOnfileSaleTransForTmcElavon(AutoProcessCcUniversalViewModel request, string environment)
+        {
+            var (Key, IVBase64) = _crypto.InitSymmetricEncryptionKeyIv();
+            var decryptedCC = _crypto.Decrypt(request.PaymentMethodId, IVBase64, Key);
+
+            var resultVerify = "";
+
+            var saleRequestModel = new SaleRequestModelForInstamed();
+            if (environment == "P")
+            {
+                string ElavonclientUser = "tmcapi";
+                string ElavonclientPass = "UY4BFNX26LEZF0LKBXG8N0GD7KZK04CAX47CUI0PQZ380YOZKGTOXJ21I4VGR9C3";
+
+
+                var patientAccountInfo = await _getTheCompanyFlag.GetFlagForDebtorAccount(request.AssociateDebtorAcct, environment).Result.Where(x => x.DebtorAcct == request.AssociateDebtorAcct).Select(i =>
+                new DebtorAcctInfoT()
+                {
+                    SuppliedAcct = i.SuppliedAcct,
+                    Balance = i.Balance
+                }).SingleOrDefaultAsync();
+
+                var patientInfo = await _context.PatientMasters.Where(x => x.DebtorAcct == request.AssociateDebtorAcct).Select(i =>
+                 new PatientMaster()
+                 {
+                     FirstName = i.FirstName,
+                     LastName = i.LastName,
+                     StateCode = i.StateCode,
+                     Zip = i.Zip,
+                     Address1 = i.Address1,
+                     Address2 = i.Address2,
+                     City = i.City
+                 }).SingleOrDefaultAsync();
+
+
+                saleRequestModel = new SaleRequestModelForInstamed()
+                {
+                    Outlet = new InstaMedOutlet()
+                    {
+                        MerchantID = "2110915",
+                        StoreID = ElavonclientUser,
+                        TerminalID = ElavonclientPass
+
+                    },
+                    Amount = request.Amount,
+                    PaymentMethod = "Card",
+                    Card = new Card()
+                    {
+                        CVN = request.BinNumber,
+                        CardNumber = decryptedCC,
+                        EntryMode = "key",
+                        Expiration = request.ExpirationMonth + "" + request.ExpirationYear,
+                        IsCardDataEncrypted = false,
+                        IsEMVCapableDevice = false,
+                    },
+                    Patient = new Patient()
+                    {
+                        AccountNumber = patientAccountInfo.SuppliedAcct,
+                        FirstName = patientInfo.FirstName,
+                        LastName = patientInfo.LastName
+                    },
+                    BillingAddress = new BillingAddress()
+                    {
+                        City = patientInfo.City,
+                        State = patientInfo.StateCode,
+                        Zip = patientInfo.Zip,
+                        Street1 = patientInfo.Address1,
+                        Street2 = patientInfo.Address2
+                    }
+
+                };
+                resultVerify = await ElavonSaleTmcPro(saleRequestModel);
+            }
+            else
+            {
+                saleRequestModel = new SaleRequestModelForInstamed()
+                {
+                    Outlet = new InstaMedOutlet()
+                    {
+                        MerchantID = _centralizeVariablesModel.Value.ElavonCredentials.ssl_merchant_id,
+                        StoreID = _centralizeVariablesModel.Value.ElavonCredentials.ssl_user_id,
+                        TerminalID = _centralizeVariablesModel.Value.ElavonCredentials.ssl_pin
+                    },
+                    Amount = request.Amount,
+                    PaymentMethod = "Card",
+                    Card = new Card()
+                    {
+                        CVN = request.BinNumber,
+                        CardNumber = decryptedCC,
+                        EntryMode = "key",
+                        Expiration = request.ExpirationMonth + "" + request.ExpirationYear,
+                        IsCardDataEncrypted = false,
+                        IsEMVCapableDevice = false,
+                    }
+
+                };
+                resultVerify = await ElavonSale(saleRequestModel);
+            }
+
+
+            if (resultVerify.Contains("FieldErrors"))
+            {
+                return _response.Response(true, true, resultVerify);
+            }
+            else
+            {
+                var ser = new XmlSerializer(typeof(txn));
+
+                using var sr = new StringReader(resultVerify);
+                _deserializeObjForElavon = (txn)ser.Deserialize(sr);
+
+            }
+
+            string noteText = null;
+            if (_deserializeObjForElavon != null && _deserializeObjForElavon.ssl_issuer_response == "00")
+            {
+                noteText = "Converge CC APPROVED FOR $" + request.Amount + " " +
+                           _deserializeObjForElavon.ssl_result_message.ToUpper() +
+                           " AUTH #:" + _deserializeObjForElavon.ssl_approval_code;
+
+                //magic
+                await ChangeCardInfoAndScheduleData(request, environment);
+                // for success
+                var ccPaymentObj = new CcPayment()
+                {
+                    DebtorAcct = request.AssociateDebtorAcct,
+                    Company = "TOTAL CREDIT RECOVERY",
+                    //UserId = username,
+                    UserId = "_username", //todo   
+                    //UserName = username + " -LCG",
+                    UserName = "_username", //todo 
+                    ChargeTotal = request.Amount,
+                    Subtotal = request.Amount,
+                    PaymentDate = DateTime.Now,
+                    ApprovalStatus = "APPROVED",
+                    BillingName = "", // todo is it valid  for api transaction ? 
+                    ApprovalCode = _deserializeObjForElavon.ssl_approval_code,
+                    OrderNumber = _deserializeObjForElavon.ssl_txn_id,
+                    RefNumber = "ELAVON",
+                    Sif = "N",
+                    VoidSale = "N"
+                };
+                await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db
+            }
+            else
+            {
+                if (_responseModelForInstamed != null)
+                    noteText = "Converge CC DECLINED FOR $" + request.Amount + " " +
+                               _deserializeObjForElavon.ssl_result_message.ToUpper() +
+                               " AUTH #:" + _deserializeObjForElavon.ssl_approval_code;
+                // for DECLINED
+                if (_responseModelForInstamed != null)
+                {
+                    var ccPaymentObj = new CcPayment()
+                    {
+                        DebtorAcct = request.AssociateDebtorAcct,
+                        Company = "TOTAL CREDIT RECOVERY",
+                        //UserId = username,
+                        UserId = "_username", //todo   
+                        //UserName = username + " -LCG",
+                        UserName = "_username", //todo 
+                        ChargeTotal = request.Amount,
+                        Subtotal = request.Amount,
+                        PaymentDate = DateTime.Now,
+                        ApprovalStatus = "DECLINED",
+                        BillingName = "", // todo is it valid  for api transaction ? 
+                        ApprovalCode = _deserializeObjForElavon.ssl_approval_code,
+                        OrderNumber = _deserializeObjForElavon.ssl_txn_id,
+                        RefNumber = "ELAVON",
                         Sif = "N",
                         VoidSale = "N"
                     };

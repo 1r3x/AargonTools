@@ -16,6 +16,7 @@ using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Models;
 using AargonTools.Models.DTOs.Requests;
 using AargonTools.Models.DTOs.Responses;
+using AargonTools.Manager.GenericManager;
 
 namespace AargonTools.Controllers
 {
@@ -28,17 +29,19 @@ namespace AargonTools.Controllers
         private readonly JwtConfig _jwtConfig;
         private readonly TokenValidationParameters _tokenValidationParams;
         private readonly ApiDbContext _apiDbContext;
+        private readonly IUserService _userService;
 
         public AuthManagementController(
             UserManager<IdentityUser> userManager,
             IOptionsMonitor<JwtConfig> optionsMonitor,
             TokenValidationParameters tokenValidationParams,
-            ApiDbContext apiDbContext)
+            ApiDbContext apiDbContext, IUserService userService)
         {
             _userManager = userManager;
             _jwtConfig = optionsMonitor.CurrentValue;
             _tokenValidationParams = tokenValidationParams;
             _apiDbContext = apiDbContext;
+            _userService = userService;
         }
 
         [HttpPost]
@@ -89,8 +92,7 @@ namespace AargonTools.Controllers
             });
         }
 
-
-
+       
         /// <summary>
         ///  Can generate a token and a refresh token.
         /// </summary>
@@ -110,7 +112,8 @@ namespace AargonTools.Controllers
         [ProducesResponseType(typeof(LoginErrorResponse), 400)]
         public async Task<IActionResult> Login([FromBody] UserLoginRequest user)
         {
-            Serilog.Log.Information("Login => POST");
+            Serilog.Log.Information("Login => POST["+ _userService.GetClientIpAddress() + "]--> " + user.Email);
+
             try
             {
                 if (ModelState.IsValid)

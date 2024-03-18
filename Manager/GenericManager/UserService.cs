@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
+
 namespace AargonTools.Manager.GenericManager
 {
     public class UserService: IUserService
@@ -10,6 +11,19 @@ namespace AargonTools.Manager.GenericManager
         {
             _httpContextAccessor = httpContextAccessor;
         }
+
+
+        public string GetClientIpAddress()
+        {
+            string ip = _httpContextAccessor.HttpContext.GetServerVariable("REMOTE_HOST");
+            if (ip == null)
+            {
+                ip = _httpContextAccessor.HttpContext.GetServerVariable("REMOTE_ADDR");
+            }
+            return ip;
+        }
+
+
 
         public string GetLoginUserName()
         {
@@ -30,8 +44,12 @@ namespace AargonTools.Manager.GenericManager
         }
     }
 
+
+
+
     public interface IUserService
     {
         string GetLoginUserName();
+        string GetClientIpAddress();
     }
 }

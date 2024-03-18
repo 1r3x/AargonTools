@@ -407,14 +407,14 @@ namespace AargonTools.Controllers
         ///
         [ProducesResponseType(typeof(SetMoveToDisputeResponses), 200)]
         [HttpPost("SetMoveToDispute/{debtorAcct}")]
-        public async Task<IActionResult> SetMoveToDispute(string debtorAcct, decimal amountDisputed)
+        public async Task<IActionResult> SetMoveToDispute(string debtorAcct)
         {
             Serilog.Log.Information("SetMoveToDispute => POST");
             try
             {
                 if (ModelState.IsValid)
                 {
-                    var data = await _setMoveToDispute.SetMoveToDispute(debtorAcct, amountDisputed, "P");
+                    var data = await _setMoveToDispute.SetMoveToDispute(debtorAcct, "P");
 
                     return Ok(data);
 

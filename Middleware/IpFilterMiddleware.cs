@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using AargonTools.Manager.GenericManager;
 using AargonTools.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
@@ -13,10 +14,12 @@ namespace AargonTools.Middleware
     {
         private readonly RequestDelegate _next;
         private readonly ApplicationsOptions _applicationOptions;
-        public IpFilterMiddleware(RequestDelegate next, IOptions<ApplicationsOptions> applicationOptionsAccessor)
+        private readonly IUserService _userService;
+        public IpFilterMiddleware(RequestDelegate next, IOptions<ApplicationsOptions> applicationOptionsAccessor, IUserService userService)
         {
             _next = next;
             _applicationOptions = applicationOptionsAccessor.Value;
+            _userService = userService;
         }
 
         public async Task Invoke(HttpContext context)
@@ -44,6 +47,7 @@ namespace AargonTools.Middleware
                     .Equals(ipAddress));
             if (!isInWhiteListIpList)
             {
+                Serilog.Log.Information("Forbidden IP [" + _userService.GetClientIpAddress() + "]");
                 context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                 return;
             }

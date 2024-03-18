@@ -37,20 +37,20 @@ namespace AargonTools.Manager
             DateTime endDate;
             if (DateAndTime.Now.DayOfWeek.ToString() == "Monday")
             {
-                startDate = DateTime.Now.AddDays(-10000);//for testing purpose should remove 
-                endDate = DateTime.Now.AddDays(10000);//for testing purpose should remove 
+                startDate = DateTime.Now.AddDays(-1);//for testing purpose should remove 
+                endDate = DateTime.Now.AddDays(1000);//for testing purpose should remove 
             }
             else
             {
-                startDate = DateTime.Now.AddDays(-10000);//for testing purpose should remove
-                endDate = DateTime.Now.AddDays(10000);//for testing purpose should remove
+                startDate = DateTime.Now.AddDays(-1);//for testing purpose should remove
+                endDate = DateTime.Now.AddDays(1000);//for testing purpose should remove
             }
 
             if (environment == "T")
             {
                 return await (from schedule in _dbContext.LcgPaymentSchedules
                               join card in _dbContext.LcgCardInfos on schedule.CardInfoId equals card.Id
-                              where schedule.EffectiveDate >= startDate && schedule.EffectiveDate <= endDate && card.AssociateDebtorAcct.Substring(0, 4) == "4950"//todo add 4984 for every environments
+                              where schedule.EffectiveDate >= startDate && schedule.EffectiveDate <= endDate //&& card.AssociateDebtorAcct.Substring(0, 4) == "4514"//todo add 4984 for every environments
                               select schedule).ToListAsync();
 
 
@@ -62,7 +62,7 @@ namespace AargonTools.Manager
             {
                 return await (from schedule in _dbContextProdOld.LcgPaymentSchedules
                               join card in _dbContextProdOld.LcgCardInfos on schedule.CardInfoId equals card.Id
-                              where schedule.EffectiveDate >= startDate && schedule.EffectiveDate <= endDate && card.AssociateDebtorAcct.Substring(0, 4) == "4950"
+                              where schedule.EffectiveDate >= startDate && schedule.EffectiveDate <= endDate //&& card.AssociateDebtorAcct.Substring(0, 4) == "4514"
                               select schedule).ToListAsync();
 
                 //return await _dbContextProdOld.LcgPaymentSchedules.
@@ -74,7 +74,7 @@ namespace AargonTools.Manager
 
                 return await (from schedule in _dbContextForProd.LcgPaymentSchedules
                               join card in _dbContextForProd.LcgCardInfos on schedule.CardInfoId equals card.Id
-                              where schedule.EffectiveDate >= startDate && schedule.EffectiveDate <= endDate && card.AssociateDebtorAcct.Substring(0, 4) == "4950"
+                              where schedule.EffectiveDate >= startDate && schedule.EffectiveDate <= endDate //&& card.AssociateDebtorAcct.Substring(0, 4) == "4514"
                               select schedule).ToListAsync();
 
                 //return await _dbContextForProd.LcgPaymentSchedules.
@@ -85,7 +85,7 @@ namespace AargonTools.Manager
             {
                 return await (from schedule in _dbContext.LcgPaymentSchedules
                               join card in _dbContext.LcgCardInfos on schedule.CardInfoId equals card.Id
-                              where schedule.EffectiveDate >= startDate && schedule.EffectiveDate <= endDate //&& card.AssociateDebtorAcct.Substring(0, 4) == "4950"
+                              where schedule.EffectiveDate >= startDate && schedule.EffectiveDate <= endDate //&& card.AssociateDebtorAcct.Substring(0, 4) == "4514"
                               select schedule).ToListAsync();
 
                 //return await _dbContext.LcgPaymentSchedules.

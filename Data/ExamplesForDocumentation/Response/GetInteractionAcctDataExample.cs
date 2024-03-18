@@ -29,10 +29,13 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
             public string homePhoneNumber { get; set; }
             public string cellPhoneNumber { get; set; }
             public string workPhoneNumber { get; set; }
-            public string relatiovePhoneNumber { get; set; }
+            public string relativePhoneNumber { get; set; }
             public string otherPhoneNumer { get; set; }
             public string accountStatus { get; set; }
-            public DateTime date { get; set; }
+            public DateTime promiseDate { get; set; }
+            public string date_of_Service { get; set; }
+            public string employee { get; set; }
+            public string companyFlag { get; set; }
 
         }
 
@@ -60,10 +63,13 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
                     homePhoneNumber = "212-3037334",
                     cellPhoneNumber = "808-2223737",
                     workPhoneNumber = "-",
-                    relatiovePhoneNumber = "-",
+                    relativePhoneNumber = "-",
                     otherPhoneNumer = "-",
-                    accountStatus="A",
-                    date = Convert.ToDateTime("0001-01-01T00:00:00")
+                    accountStatus = "A",
+                    promiseDate = Convert.ToDateTime("0001-01-01T00:00:00"),
+                    date_of_Service = "1996-01-01",
+                    employee= "9990",
+                    companyFlag="A"
                 }
             };
         }

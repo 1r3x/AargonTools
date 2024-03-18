@@ -66,7 +66,7 @@ namespace AargonTools.Controllers
         [ProducesResponseType(typeof(GetAccountBalanceResponseModel), 200)]
         public async Task<IActionResult> GetAccountBalance(string debtorAcct)
         {
-            Serilog.Log.Information(" GetAccountBalance => GET");
+            Serilog.Log.Information("GetAccountBalance => GET");
             try
             {
                 var item = await _context.GetAccountBalanceByDebtorAccount(debtorAcct, "P");
@@ -313,6 +313,7 @@ namespace AargonTools.Controllers
             }
 
         }
+
         /// <summary>
         ///  Returns the SIF of a debtor account.(Prod.)
         /// </summary>
