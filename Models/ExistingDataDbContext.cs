@@ -67,6 +67,13 @@ namespace AargonTools.Models
         public virtual DbSet<LarryCcIndex> LarryCcIndices { get; set; }
         public virtual DbSet<LarryCcIndex2> LarryCcIndex2s { get; set; }
         public virtual DbSet<PatientMaster> PatientMasters { get; set; }
+        //added _p flag
+        public virtual DbSet<ClientAcctInfoP> ClientAcctInfoPs { get; set; }
+        public virtual DbSet<ClientMasterP> ClientMasterPs { get; set; }
+        public virtual DbSet<DebtorAcctInfoP> DebtorAcctInfoPs { get; set; }
+        public virtual DbSet<DebtorMasterP> DebtorMasterPs { get; set; }
+        public virtual DbSet<QueueMasterP> QueueMasterPs { get; set; }
+
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
