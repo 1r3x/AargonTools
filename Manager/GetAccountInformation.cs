@@ -89,6 +89,11 @@ namespace AargonTools.Manager
                     item.Add("W");
                     item.Add("True");
                 }
+                else if (await _context.DebtorAcctInfoPs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
+                {
+                    item.Add("P");
+                    item.Add("True");
+                }
                 else
                 {
                     item.Add("Not Found");
@@ -127,6 +132,11 @@ namespace AargonTools.Manager
                 else if (await _contextProdOld.DebtorAcctInfoWs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
                 {
                     item.Add("W");
+                    item.Add("True");
+                }
+                else if (await _contextProdOld.DebtorAcctInfoPs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
+                {
+                    item.Add("P");
                     item.Add("True");
                 }
                 else
@@ -172,6 +182,12 @@ namespace AargonTools.Manager
                 {
                     item.Remove("Not Found");
                     item.Add("W");
+                    item.Add("True");
+                }
+                else if (await _contextTest.DebtorAcctInfoPs.Where(x => x.DebtorAcct == debtorAcct).Select(x => x.DebtorAcct).SingleOrDefaultAsync() != null)
+                {
+                    item.Remove("Not Found");
+                    item.Add("P");
                     item.Add("True");
                 }
                 else
@@ -910,22 +926,23 @@ namespace AargonTools.Manager
                 "H" => "_h",
                 "L" => "_l",
                 "W" => "_w",
+                "P" => "_p",
                 _ => ""
             };
 
             if (environment == "P")
             {
-                var rowAdo = _adoConnection.GetData("SELECT client_acct_info.client_acct," +
-                                                    "client_master.orig_creditor," +
+                var rowAdo = _adoConnection.GetData("SELECT cai.client_acct," +
+                                                    "cm.orig_creditor," +
                                                     "remit_full_pmt," +
                                                     "address12," +
                                                     "address22," +
                                                     "city2," +
                                                     "state_code2," +
                                                     "zip2 " +
-                                                    "FROM client_acct_info" + flag + ",client_master" + flag + " " +
-                                                    "WHERE client_master.client_acct = client_acct_info.client_acct" +
-                                                    " AND client_acct_info.client_acct = '" + clientAcct + "'", environment);
+                                                    "FROM client_acct_info" + flag + " cai,client_master" + flag + " cm " +
+                                                    "WHERE cm.client_acct = cai.client_acct" +
+                                                    " AND cai.client_acct = '" + clientAcct + "'", environment);
                 await Task.CompletedTask;
                 var listOfItems = new List<GetClientInvoiceHeaderViewModel>();
                 for (var i = 0; i < rowAdo.Rows.Count; i++)
@@ -952,17 +969,17 @@ namespace AargonTools.Manager
 
             if (environment == "PO")
             {
-                var rowAdo = _adoConnection.GetData("SELECT client_acct_info.client_acct," +
-                                                    "client_master.orig_creditor," +
-                                                    "remit_full_pmt," +
-                                                    "address12," +
-                                                    "address22," +
-                                                    "city2," +
-                                                    "state_code2," +
-                                                    "zip2 " +
-                                                    "FROM client_acct_info" + flag + ",client_master" + flag + " " +
-                                                    "WHERE client_master.client_acct = client_acct_info.client_acct" +
-                                                    " AND client_acct_info.client_acct = '" + clientAcct + "'", environment);
+                var rowAdo = _adoConnection.GetData("SELECT cai.client_acct," +
+                                                     "cm.orig_creditor," +
+                                                     "remit_full_pmt," +
+                                                     "address12," +
+                                                     "address22," +
+                                                     "city2," +
+                                                     "state_code2," +
+                                                     "zip2 " +
+                                                     "FROM client_acct_info" + flag + " cai,client_master" + flag + " cm " +
+                                                     "WHERE cm.client_acct = cai.client_acct" +
+                                                     " AND cai.client_acct = '" + clientAcct + "'", environment);
                 await Task.CompletedTask;
                 var listOfItems = new List<GetClientInvoiceHeaderViewModel>();
                 for (var i = 0; i < rowAdo.Rows.Count; i++)
@@ -989,17 +1006,17 @@ namespace AargonTools.Manager
 
             if (environment == "T")
             {
-                var rowAdo = _adoConnection.GetData("SELECT client_acct_info.client_acct," +
-                                                    "client_master.orig_creditor," +
-                                                    "remit_full_pmt," +
-                                                    "address12," +
-                                                    "address22," +
-                                                    "city2," +
-                                                    "state_code2," +
-                                                    "zip2 " +
-                                                    "FROM client_acct_info" + flag + ",client_master" + flag + " " +
-                                                    "WHERE client_master.client_acct = client_acct_info.client_acct" +
-                                                    " AND client_acct_info.client_acct = '" + clientAcct + "'", environment);
+                var rowAdo = _adoConnection.GetData("SELECT cai.client_acct," +
+                                                   "cm.orig_creditor," +
+                                                   "remit_full_pmt," +
+                                                   "address12," +
+                                                   "address22," +
+                                                   "city2," +
+                                                   "state_code2," +
+                                                   "zip2 " +
+                                                   "FROM client_acct_info" + flag + " cai,client_master" + flag + " cm " +
+                                                   "WHERE cm.client_acct = cai.client_acct" +
+                                                   " AND cai.client_acct = '" + clientAcct + "'", environment);
                 await Task.CompletedTask;
                 var listOfItems = new List<GetClientInvoiceHeaderViewModel>();
                 for (var i = 0; i < rowAdo.Rows.Count; i++)
@@ -1035,6 +1052,7 @@ namespace AargonTools.Manager
                 "H" => "_h",
                 "L" => "_l",
                 "W" => "_w",
+                "P" => "_p",
                 _ => ""
             };
 
@@ -1043,7 +1061,7 @@ namespace AargonTools.Manager
                 var rowAdo = _adoConnection.GetData("SELECT " +
                                                     "first_name," +
                                                     "last_name " +
-                                                    "FROM contact_master" + flag + " " +
+                                                    "FROM contact_master " +
                                                     "WHERE client_acct = '" + clientAcct + "' " +
                                                     "AND primary_contact = 'Y'", environment);
                 await Task.CompletedTask;
@@ -1069,7 +1087,7 @@ namespace AargonTools.Manager
                 var rowAdo = _adoConnection.GetData("SELECT " +
                                                     "first_name," +
                                                     "last_name " +
-                                                    "FROM contact_master" + flag + " " +
+                                                    "FROM contact_master " +
                                                     "WHERE client_acct = '" + clientAcct + "' " +
                                                     "AND primary_contact = 'Y'", environment);
                 await Task.CompletedTask;
@@ -1092,11 +1110,11 @@ namespace AargonTools.Manager
             if (environment == "T")
             {
                 var rowAdo = _adoConnection.GetData("SELECT " +
-                                                    "first_name," +
-                                                    "last_name " +
-                                                    "FROM contact_master" + flag + " " +
-                                                    "WHERE client_acct = '" + clientAcct + "' " +
-                                                    "AND primary_contact = 'Y'", environment);
+                                                     "first_name," +
+                                                     "last_name " +
+                                                     "FROM contact_master " +
+                                                     "WHERE client_acct = '" + clientAcct + "' " +
+                                                     "AND primary_contact = 'Y'", environment);
                 await Task.CompletedTask;
                 var listOfItems = new List<GetClientPrimaryContactViewModel>();
                 for (var i = 0; i < rowAdo.Rows.Count; i++)
@@ -1127,13 +1145,14 @@ namespace AargonTools.Manager
                 "H" => "_h",
                 "L" => "_l",
                 "W" => "_w",
+                "P" => "_p",
                 _ => ""
             };
 
             if (environment == "P")
             {
                 var rowAdo = _adoConnection.GetData("SELECT " +
-                                                    " debtor_acct_info.debtor_acct," +
+                                                    " dai.debtor_acct," +
                                                     " supplied_acct," +
                                                     " date_of_service," +
                                                     " date_placed," +
@@ -1164,12 +1183,12 @@ namespace AargonTools.Manager
                                                     " END" +
                                                     " ELSE 0" +
                                                     " END as amount_due_client," +
-                                                    " debtor_acct_info.cosigner_last_name" +
-                                                    " FROM debtor_acct_info" + flag + "," +
-                                                    " debtor_master" + flag + "," +
+                                                    " dai.cosigner_last_name" +
+                                                    " FROM debtor_acct_info" + flag + " dai," +
+                                                    " debtor_master" + flag + " dm," +
                                                     " debtor_payment_master" +
-                                                    " WHERE debtor_payment_master.debtor_acct = debtor_master.debtor_acct" +
-                                                    " AND debtor_payment_master.debtor_acct = debtor_acct_info.debtor_acct" +
+                                                    " WHERE debtor_payment_master.debtor_acct = dm.debtor_acct" +
+                                                    " AND debtor_payment_master.debtor_acct = dai.debtor_acct" +
                                                     " AND payment_date >= '" + request.StartDate + "'" +
                                                     " AND payment_date <= '" + request.EndDate + "'" +
                                                     " AND show_on_invoice = 'Y'" +
@@ -1209,48 +1228,48 @@ namespace AargonTools.Manager
             else if (environment == "PO")
             {
                 var rowAdo = _adoConnection.GetData("SELECT " +
-                                                    " debtor_acct_info.debtor_acct," +
-                                                    " supplied_acct," +
-                                                    " date_of_service," +
-                                                    " date_placed," +
-                                                    " first_name," +
-                                                    " last_name," +
-                                                    " client_amt," +
-                                                    " agency_amt_decl," +
-                                                    " fee_pct," +
-                                                    " tran_date," +
-                                                    " debtor_payment_master.balance," +
-                                                    " CASE WHEN debtor_payment_master.status_code in ('PIF', 'SIF') " +
-                                                    " THEN debtor_payment_master.status_code " +
-                                                    " ELSE 'BAL' " +
-                                                    " END as status_code," +
-                                                    " payment_type," +
-                                                    " agency_amt_decl + client_amt as total_payments_amt," +
-                                                    " CASE" +
-                                                    " WHEN remit_full_pmt = 'Y'" +
-                                                    " THEN ROUND(client_amt * (fee_pct / 100), 2)" +
-                                                    " ELSE 0" +
-                                                    " END as amount_due_agency," +
-                                                    " CASE" +
-                                                    " WHEN payment_type <> 'DIRECT'" +
-                                                    " THEN CASE" +
-                                                    " WHEN remit_full_pmt = 'Y'" +
-                                                    " THEN client_amt" +
-                                                    " ELSE client_amt" +
-                                                    " END" +
-                                                    " ELSE 0" +
-                                                    " END as amount_due_client," +
-                                                    " debtor_acct_info.cosigner_last_name" +
-                                                    " FROM debtor_acct_info" + flag + "," +
-                                                    " debtor_master" + flag + "," +
-                                                    " debtor_payment_master" +
-                                                    " WHERE debtor_payment_master.debtor_acct = debtor_master.debtor_acct" +
-                                                    " AND debtor_payment_master.debtor_acct = debtor_acct_info.debtor_acct" +
-                                                    " AND payment_date >= '" + request.StartDate + "'" +
-                                                    " AND payment_date <= '" + request.EndDate + "'" +
-                                                    " AND show_on_invoice = 'Y'" +
-                                                    " AND debtor_payment_master.debtor_acct >= '" + request.ClientAccount + "-000001'" +
-                                                    " AND debtor_payment_master.debtor_acct <= '" + request.ClientAccount + "-999999'", environment);
+                                    " dai.debtor_acct," +
+                                    " supplied_acct," +
+                                    " date_of_service," +
+                                    " date_placed," +
+                                    " first_name," +
+                                    " last_name," +
+                                    " client_amt," +
+                                    " agency_amt_decl," +
+                                    " fee_pct," +
+                                    " tran_date," +
+                                    " debtor_payment_master.balance," +
+                                    " CASE WHEN debtor_payment_master.status_code in ('PIF', 'SIF') " +
+                                    " THEN debtor_payment_master.status_code " +
+                                    " ELSE 'BAL' " +
+                                    " END as status_code," +
+                                    " payment_type," +
+                                    " agency_amt_decl + client_amt as total_payments_amt," +
+                                    " CASE" +
+                                    " WHEN remit_full_pmt = 'Y'" +
+                                    " THEN ROUND(client_amt * (fee_pct / 100), 2)" +
+                                    " ELSE 0" +
+                                    " END as amount_due_agency," +
+                                    " CASE" +
+                                    " WHEN payment_type <> 'DIRECT'" +
+                                    " THEN CASE" +
+                                    " WHEN remit_full_pmt = 'Y'" +
+                                    " THEN client_amt" +
+                                    " ELSE client_amt" +
+                                    " END" +
+                                    " ELSE 0" +
+                                    " END as amount_due_client," +
+                                    " dai.cosigner_last_name" +
+                                    " FROM debtor_acct_info" + flag + " dai," +
+                                    " debtor_master" + flag + " dm," +
+                                    " debtor_payment_master" +
+                                    " WHERE debtor_payment_master.debtor_acct = dm.debtor_acct" +
+                                    " AND debtor_payment_master.debtor_acct = dai.debtor_acct" +
+                                    " AND payment_date >= '" + request.StartDate + "'" +
+                                    " AND payment_date <= '" + request.EndDate + "'" +
+                                    " AND show_on_invoice = 'Y'" +
+                                    " AND debtor_payment_master.debtor_acct >= '" + request.ClientAccount + "-000001'" +
+                                    " AND debtor_payment_master.debtor_acct <= '" + request.ClientAccount + "-999999'", environment);
                 await Task.CompletedTask;
                 var listOfItems = new List<GetClientInvoicePaymentsViewModel>();
                 for (var i = 0; i < rowAdo.Rows.Count; i++)
@@ -1284,48 +1303,48 @@ namespace AargonTools.Manager
             else if (environment == "T")
             {
                 var rowAdo = _adoConnection.GetData("SELECT " +
-                                                    " debtor_acct_info.debtor_acct," +
-                                                    " supplied_acct," +
-                                                    " date_of_service," +
-                                                    " date_placed," +
-                                                    " first_name," +
-                                                    " last_name," +
-                                                    " client_amt," +
-                                                    " agency_amt_decl," +
-                                                    " fee_pct," +
-                                                    " tran_date," +
-                                                    " debtor_payment_master.balance," +
-                                                    " CASE WHEN debtor_payment_master.status_code in ('PIF', 'SIF') " +
-                                                    " THEN debtor_payment_master.status_code " +
-                                                    " ELSE 'BAL' " +
-                                                    " END as status_code," +
-                                                    " payment_type," +
-                                                    " agency_amt_decl + client_amt as total_payments_amt," +
-                                                    " CASE" +
-                                                    " WHEN remit_full_pmt = 'Y'" +
-                                                    " THEN ROUND(client_amt * (fee_pct / 100), 2)" +
-                                                    " ELSE 0" +
-                                                    " END as amount_due_agency," +
-                                                    " CASE" +
-                                                    " WHEN payment_type <> 'DIRECT'" +
-                                                    " THEN CASE" +
-                                                    " WHEN remit_full_pmt = 'Y'" +
-                                                    " THEN client_amt" +
-                                                    " ELSE client_amt" +
-                                                    " END" +
-                                                    " ELSE 0" +
-                                                    " END as amount_due_client," +
-                                                    " debtor_acct_info.cosigner_last_name" +
-                                                    " FROM debtor_acct_info" + flag + "," +
-                                                    " debtor_master" + flag + "," +
-                                                    " debtor_payment_master" +
-                                                    " WHERE debtor_payment_master.debtor_acct = debtor_master.debtor_acct" +
-                                                    " AND debtor_payment_master.debtor_acct = debtor_acct_info.debtor_acct" +
-                                                    " AND payment_date >= '" + request.StartDate + "'" +
-                                                    " AND payment_date <= '" + request.EndDate + "'" +
-                                                    " AND show_on_invoice = 'Y'" +
-                                                    " AND debtor_payment_master.debtor_acct >= '" + request.ClientAccount + "-000001'" +
-                                                    " AND debtor_payment_master.debtor_acct <= '" + request.ClientAccount + "-999999'", environment);
+                                     " dai.debtor_acct," +
+                                     " supplied_acct," +
+                                     " date_of_service," +
+                                     " date_placed," +
+                                     " first_name," +
+                                     " last_name," +
+                                     " client_amt," +
+                                     " agency_amt_decl," +
+                                     " fee_pct," +
+                                     " tran_date," +
+                                     " debtor_payment_master.balance," +
+                                     " CASE WHEN debtor_payment_master.status_code in ('PIF', 'SIF') " +
+                                     " THEN debtor_payment_master.status_code " +
+                                     " ELSE 'BAL' " +
+                                     " END as status_code," +
+                                     " payment_type," +
+                                     " agency_amt_decl + client_amt as total_payments_amt," +
+                                     " CASE" +
+                                     " WHEN remit_full_pmt = 'Y'" +
+                                     " THEN ROUND(client_amt * (fee_pct / 100), 2)" +
+                                     " ELSE 0" +
+                                     " END as amount_due_agency," +
+                                     " CASE" +
+                                     " WHEN payment_type <> 'DIRECT'" +
+                                     " THEN CASE" +
+                                     " WHEN remit_full_pmt = 'Y'" +
+                                     " THEN client_amt" +
+                                     " ELSE client_amt" +
+                                     " END" +
+                                     " ELSE 0" +
+                                     " END as amount_due_client," +
+                                     " dai.cosigner_last_name" +
+                                     " FROM debtor_acct_info" + flag + " dai," +
+                                     " debtor_master" + flag + " dm," +
+                                     " debtor_payment_master" +
+                                     " WHERE debtor_payment_master.debtor_acct = dm.debtor_acct" +
+                                     " AND debtor_payment_master.debtor_acct = dai.debtor_acct" +
+                                     " AND payment_date >= '" + request.StartDate + "'" +
+                                     " AND payment_date <= '" + request.EndDate + "'" +
+                                     " AND show_on_invoice = 'Y'" +
+                                     " AND debtor_payment_master.debtor_acct >= '" + request.ClientAccount + "-000001'" +
+                                     " AND debtor_payment_master.debtor_acct <= '" + request.ClientAccount + "-999999'", environment);
                 await Task.CompletedTask;
                 var listOfItems = new List<GetClientInvoicePaymentsViewModel>();
                 for (var i = 0; i < rowAdo.Rows.Count; i++)
@@ -1552,7 +1571,7 @@ namespace AargonTools.Manager
 
 
             var flag = await _companyFlag.GetStringFlagForAdoQuery(debtorAcct, environment);
-            var CompanyflagString  = await _companyFlag.GetStringFlag(debtorAcct, environment);
+            var CompanyflagString = await _companyFlag.GetStringFlag(debtorAcct, environment);
 
 
 

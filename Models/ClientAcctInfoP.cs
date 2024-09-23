@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using AargonTools.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 #nullable disable
@@ -10,7 +11,7 @@ namespace AargonTools.Models
 {
     [Keyless]
     [Table("client_acct_info_p")]
-    public partial class ClientAcctInfoP
+    public partial class ClientAcctInfoP : IClientAcctInfo
     {
         [Required]
         [Column("client_acct")]

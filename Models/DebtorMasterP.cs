@@ -2,19 +2,21 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using AargonTools.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 #nullable disable
 
 namespace AargonTools.Models
 {
-    [Keyless]
+    //[Keyless]
     [Table("debtor_master_p")]
     [Index(nameof(FirstName), Name = "x_first_name")]
     [Index(nameof(LastName), Name = "x_last_name")]
     [Index(nameof(Ssn), Name = "x_ssn")]
-    public partial class DebtorMasterP
+    public partial class DebtorMasterP : IDebtorMaster
     {
+        [Key]
         [Required]
         [Column("debtor_acct")]
         [StringLength(15)]

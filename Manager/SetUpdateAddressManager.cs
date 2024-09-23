@@ -58,10 +58,10 @@ namespace AargonTools.Manager
                 {
 
                     var debtorMaster = _companyFlag
-                        .GetFlagForDebtorMaster(setUpdateAddressRequestModelModel.DebtorAcct, environment).Result.FirstOrDefault();
+                        .GetFlagForDebtorMaster(setUpdateAddressRequestModelModel.DebtorAcct, environment).Result.FirstOrDefault(x => x.DebtorAcct == setUpdateAddressRequestModelModel.DebtorAcct);
 
                     var debtorAccount = _companyFlag
-                        .GetFlagForDebtorAccount(setUpdateAddressRequestModelModel.DebtorAcct, environment).Result.FirstOrDefault();
+                        .GetFlagForDebtorAccount(setUpdateAddressRequestModelModel.DebtorAcct, environment).Result.FirstOrDefault(x => x.DebtorAcct == setUpdateAddressRequestModelModel.DebtorAcct);
 
                     if (approvalLIst.Contains(setUpdateAddressRequestModelModel.ResidenceType))
                     {
@@ -122,10 +122,10 @@ namespace AargonTools.Manager
                 else if (environment == "PO")
                 {
                     var debtorMaster = _companyFlag
-                       .GetFlagForDebtorMaster(setUpdateAddressRequestModelModel.DebtorAcct, environment).Result.FirstOrDefault();
+                       .GetFlagForDebtorMaster(setUpdateAddressRequestModelModel.DebtorAcct, environment).Result.FirstOrDefault(x => x.DebtorAcct == setUpdateAddressRequestModelModel.DebtorAcct);
 
                     var debtorAccount = _companyFlag
-                        .GetFlagForDebtorAccount(setUpdateAddressRequestModelModel.DebtorAcct, environment).Result.FirstOrDefault();
+                        .GetFlagForDebtorAccount(setUpdateAddressRequestModelModel.DebtorAcct, environment).Result.FirstOrDefault(x => x.DebtorAcct == setUpdateAddressRequestModelModel.DebtorAcct);
 
                     if (approvalLIst.Contains(setUpdateAddressRequestModelModel.ResidenceType))
                     {
@@ -185,10 +185,10 @@ namespace AargonTools.Manager
                 else
                 {
                     var debtorMaster = _companyFlag
-                      .GetFlagForDebtorMaster(setUpdateAddressRequestModelModel.DebtorAcct, environment).Result.FirstOrDefault();
+                      .GetFlagForDebtorMaster(setUpdateAddressRequestModelModel.DebtorAcct, environment).Result.FirstOrDefault(x=>x.DebtorAcct== setUpdateAddressRequestModelModel.DebtorAcct);
 
                     var debtorAccount = _companyFlag
-                        .GetFlagForDebtorAccount(setUpdateAddressRequestModelModel.DebtorAcct, environment).Result.FirstOrDefault();
+                        .GetFlagForDebtorAccount(setUpdateAddressRequestModelModel.DebtorAcct, environment).Result.FirstOrDefault(x => x.DebtorAcct == setUpdateAddressRequestModelModel.DebtorAcct);
 
                     if (approvalLIst.Contains(setUpdateAddressRequestModelModel.ResidenceType))
                     {
@@ -227,8 +227,8 @@ namespace AargonTools.Manager
                             _contextTest.Update(debtorAccount);
                         }
 
-                        await _contextTest.SaveChangesAsync();
 
+                        await _contextTest.SaveChangesAsync();
 
                         await _addNotesV2.CreateNotes(new AddNotesRequestModel()
                         {

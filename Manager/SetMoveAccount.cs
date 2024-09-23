@@ -36,6 +36,13 @@ namespace AargonTools.Manager
                 {
                     return _response.Response(true, false, "Invalid Request[This account is inactive].");
                 }
+                //new implementtaions check account for collectors queue 
+
+                var collectorsQueue = await _context.EmployeeInfos.FirstOrDefaultAsync(x => x.Employee == oldQueue.Employee);
+                if (collectorsQueue.EmployeeType == "B" || collectorsQueue.EmployeeType == "C")
+                {
+                    return _response.Response(true, false, "Invalid Request [This account is in an employee queue].");
+                }
 
                 //if it's only transfer into same company then check for it
                 var toQueueResult = await _context.EmployeeInfos.FirstOrDefaultAsync(x => x.Employee == toQueue && x.EmployeeType == "Q" && x.AcctStatus == "A");
@@ -90,6 +97,15 @@ namespace AargonTools.Manager
                 {
                     return _response.Response(true, false, "Invalid Request[This account is inactive].");
                 }
+
+                //new implementtaions check account for collectors queue 
+
+                var collectorsQueue = await _contextProdOld.EmployeeInfos.FirstOrDefaultAsync(x => x.Employee == oldQueue.Employee);
+                if (collectorsQueue.EmployeeType == "B" || collectorsQueue.EmployeeType == "C")
+                {
+                    return _response.Response(true, false, "Invalid Request [This account is in an employee queue].");
+                }
+
                 //if it's only transfer into same company then check for it
                 var toQueueResult = await _contextProdOld.EmployeeInfos.FirstOrDefaultAsync(x => x.Employee == toQueue && x.EmployeeType == "Q" && x.AcctStatus == "A");
                 if (toQueueResult == null)
@@ -143,6 +159,14 @@ namespace AargonTools.Manager
                 {
                     return _response.Response(true, false, "Invalid Request[This account is inactive].");
                 }
+                //new implementtaions check account for collectors queue 
+
+                var collectorsQueue = await _contextTest.EmployeeInfos.FirstOrDefaultAsync(x => x.Employee == oldQueue.Employee);
+                if (collectorsQueue.EmployeeType == "B" || collectorsQueue.EmployeeType=="C")
+                {
+                    return _response.Response(true, false, "Invalid Request [This account is in an employee queue].");
+                }
+
                 //if it's only transfer into same company then check for it
                 var toQueueResult = await _contextTest.EmployeeInfos.FirstOrDefaultAsync(x => x.Employee == toQueue && x.EmployeeType == "Q" && x.AcctStatus == "A");
                 if (toQueueResult == null)
@@ -151,7 +175,7 @@ namespace AargonTools.Manager
                 }
                 var targetQueue = await _companyFlag.GetFlagForQueueMaster(debtorAcct, environment).Result
                     .FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
-                if (targetQueue.Employee == null) return _response.Response(true, false, "Invalid Request.[By any how data data corrupted for" + debtorAcct + " its not in the any queue master tables].");
+                if (targetQueue.Employee == null) return _response.Response(true, false, "Invalid Request.[By any how data  corrupted for" + debtorAcct + " its not in the any queue master tables].");
                 var datetimeNow = DateTime.Now;
                 var note = new NoteMaster()
                 {
