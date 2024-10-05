@@ -1500,7 +1500,7 @@ namespace AargonTools.Manager
                                                 "LEFT JOIN debtor_phone_info dpi on dpi.debtor_acct=dai.debtor_acct " +
                                                 "LEFT OUTER JOIN client_master" + flag + " cm on cm.client_acct=SUBSTRING(dai.debtor_acct, 1, 4) " +
                                                 "LEFT OUTER JOIN client_acct_info" + flag + " cai on cai.client_acct=SUBSTRING(dai.debtor_acct, 1, 4) " +
-                                                "WHERE (@acctNoVar IS NULL OR  dai.debtor_acct=@acctNoVar)" +
+                                                "WHERE dai.acct_status='A' AND (@acctNoVar IS NULL OR  dai.debtor_acct=@acctNoVar)" +
                                                 " AND(@ssnVar IS NULL OR dm.ssn=@ssnVar) " +
                                                 "AND (@areaCode IS NULL OR dpi.cell_area_code=@areaCode OR dpi.home_area_code=@areaCode) " +
                                                 "AND (@phoneNo IS NULL OR dpi.cell_phone=@phoneNo OR dpi.home_phone=@phoneNo)", environment);
@@ -1619,7 +1619,7 @@ namespace AargonTools.Manager
                                                 "LEFT JOIN debtor_phone_info dpi on dpi.debtor_acct=dai.debtor_acct " +
                                                 "LEFT OUTER JOIN client_master" + flag + " cm on cm.client_acct=SUBSTRING(dai.debtor_acct, 1, 4) " +
                                                 "LEFT OUTER JOIN client_acct_info" + flag + " cai on cai.client_acct=SUBSTRING(dai.debtor_acct, 1, 4) " +
-                                                "WHERE (@acctNoVar IS NULL OR  dai.debtor_acct=@acctNoVar)" +
+                                                "WHERE dai.acct_status='A' AND (@acctNoVar IS NULL OR  dai.debtor_acct=@acctNoVar)" +
                                                 " AND(@ssnVar IS NULL OR dm.ssn=@ssnVar) " +
                                                 "AND (@areaCode IS NULL OR dpi.home_area_code=@areaCode) " +
                                                 "AND (@phoneNo IS NULL OR dpi.home_phone=@phoneNo)", environment);

@@ -489,6 +489,7 @@ namespace AargonTools.Controllers
         }
 
 
+
         //[ProducesResponseType(typeof(SetProcessCCResponse), 200)]
         [HttpPost("ViewingSchedulePayments")]
         public IActionResult ViewingSchedulePayments([FromBody] ViewingSchedulePaymentsRequestModel viewingRequest)

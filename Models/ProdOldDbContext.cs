@@ -69,6 +69,10 @@ namespace AargonTools.Models
         public virtual DbSet<DebtorAcctInfoP> DebtorAcctInfoPs { get; set; }
         public virtual DbSet<DebtorMasterP> DebtorMasterPs { get; set; }
         public virtual DbSet<QueueMasterP> QueueMasterPs { get; set; }
+        //AI call 
+        public virtual DbSet<AiCallResult> AiCallResults { get; set; }
+
+
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

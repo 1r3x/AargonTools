@@ -30,11 +30,12 @@ namespace AargonTools.Controllers
         private readonly IAddNotesV2 _contextAddNotesV2;
         private readonly ISetDialing _contextSetDialing;
         private readonly ISetUpdateAddress _contextSetUpdateAddress;
+        private readonly ISetBlandResults _setBlandsResults;
 
         public SetAccountsDetailsController(IAddBadNumbers contextBadNumbers, ISetMoveAccount contextSetMoveAccount, IAddNotes contextAddNotes
         , ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute, ISetPostDateChecks setPostDateChecks
         , ISetMoveToQueue setMoveToQueue, ISetInteractResults setInteractionResults, IAddNotesV2 contextAddNotesV2, ISetDialing contextSetDialing,
-        ISetUpdateAddress contextSetUpdateAddress)
+        ISetUpdateAddress contextSetUpdateAddress, ISetBlandResults setBlandsResults)
         {
             _contextBadNumbers = contextBadNumbers;
             _contextSetMoveAccount = contextSetMoveAccount;
@@ -49,6 +50,7 @@ namespace AargonTools.Controllers
             _contextAddNotesV2 = contextAddNotesV2;
             _contextSetDialing = contextSetDialing;
             _contextSetUpdateAddress = contextSetUpdateAddress;
+            _setBlandsResults = setBlandsResults;
         }
 
         /// <summary>
@@ -325,7 +327,7 @@ namespace AargonTools.Controllers
         /// You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetMoveToHouse/0001-000001
         /// 
         ///**GET Table/Fields Details**
-        
+
         /// api_move_logs,
         /// 
         /// debtor_phone_info(flag),
@@ -757,6 +759,58 @@ namespace AargonTools.Controllers
 
             return new JsonResult("Something went wrong") { StatusCode = 500 };
         }
+
+
+        /// <summary>
+        ///  This endpoint can insert Bland results (JSON body request).(Prod.)
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint you can insert Bland call results.
+        /// And please don't forget about a valid token.
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/Test/SetAccountsDetails/SetBlandResults
+        /// (pass JSON body like the request example)
+        /// 
+        ///**GET Table/Fields Details**
+        ///
+
+        /// Insert:
+        /// 
+        /// note_master->AI_call_results,note_text 
+        /// 
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [HttpPost("SetBlandResults")]
+        //[ProducesResponseType(typeof(SetUpdateAddressResponseModel
+        //), 200)]
+        public async Task<IActionResult> SetBlandResults([FromBody] BlandResultsViewModel request)
+        {
+            Serilog.Log.Information("SetBlandResults => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = await _setBlandsResults.SetBlandResults(request, "P");
+
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
+
+
 
     }
 }
