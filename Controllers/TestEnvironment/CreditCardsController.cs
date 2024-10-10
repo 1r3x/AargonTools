@@ -9,6 +9,7 @@ using AargonTools.Data.ADO;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
 using AargonTools.Manager.GenericManager;
+using AargonTools.Manager.ProcessCCManager;
 using AargonTools.Models;
 using AargonTools.Models.Helper;
 using AargonTools.ViewModel;
@@ -38,11 +39,12 @@ namespace AargonTools.Controllers.TestEnvironment
         private static IProcessCcPayment _usaEPay;
         private static GetTheCompanyFlag _getTheCompanyFlag;
         private static IViewingSchedulePayments _viewingSchedulePaymnets;
+        private readonly PaymentGatewayFactory _gatewayFactory;
 
         public CreditCardsController(IProcessCcPayment processCcPayment, ISetCCPayment setCcPayment,
             IUniversalCcProcessApiService processCcUniversal, GatewaySelectionHelper gatewaySelectionHelper, IPreSchedulePaymentProcessing preSchedulePaymentProcessing,
             ResponseModel response, AdoDotNetConnection adoConnection, ICryptoGraphy crypto, ICardTokenizationDataHelper cardTokenizationHelper,
-            IProcessCcPayment usaEPay, GetTheCompanyFlag getTheCompanyFlag, IViewingSchedulePayments viewingSchedulePaymnets)
+            IProcessCcPayment usaEPay, GetTheCompanyFlag getTheCompanyFlag, IViewingSchedulePayments viewingSchedulePaymnets, PaymentGatewayFactory gatewayFactory)
         {
             _processCcPayment = processCcPayment;
             _setCcPayment = setCcPayment;
@@ -56,6 +58,7 @@ namespace AargonTools.Controllers.TestEnvironment
             _usaEPay = usaEPay;
             _getTheCompanyFlag = getTheCompanyFlag;
             _viewingSchedulePaymnets = viewingSchedulePaymnets;
+            _gatewayFactory = gatewayFactory;
         }
 
         /// <summary>
@@ -479,6 +482,60 @@ namespace AargonTools.Controllers.TestEnvironment
                     //    return new JsonResult("Balance Verification Failed") { StatusCode = 500 };
                     //}
                     //}
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                return Ok(e);
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+
+
+        }
+
+
+
+        /// <summary>
+        ///  Can process CC Payments.(New Test Environment [C-SQLTEST1])
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// You can process CC payments by passing required parameters.
+        /// This endpoint can process through multiple gateways.It will automatically choose the desire gateways by debtor acct number.
+        /// You need a valid token for this endpoint .
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/Test/CreditCards/ProcessCcV2
+        /// (pass JSON body like the request example)
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        /// 
+        ///
+
+        [ProducesResponseType(typeof(ProcessCCResponse), 200)]
+        [HttpPost("ProcessCcV2")]
+        public async Task<IActionResult> ProcessCcV2([FromBody] ProcessCcPaymentUniversalRequestModel requestCcPayment)
+        {
+            Serilog.Log.Information("ProcessCcV2(test) => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var gateway = _gatewayFactory.GetPaymentGateway(requestCcPayment.debtorAcc, "T");
+                    var response = await gateway.ProcessPayment(requestCcPayment, "T");
+                    //if transaction is successful
+                    if (response is ResponseWithTransaction responseWithTransaction)
+                    {
+                        if (responseWithTransaction.TransactionStatus == true)
+                        {
+                            var status = await gateway.SaveCardInfo(requestCcPayment, "T");
+                        }
+                    }
+
+                    return Ok(response);
                 }
             }
             catch (Exception e)

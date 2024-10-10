@@ -1,13 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using AargonTools.Data.ExamplesForDocumentation;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
+using AargonTools.Manager.GenericManager;
 using AargonTools.Models;
 using AargonTools.ViewModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AargonTools.Controllers.TestEnvironment
 {
@@ -31,11 +38,13 @@ namespace AargonTools.Controllers.TestEnvironment
         private readonly ISetDialing _contextSetDialing;
         private readonly ISetUpdateAddress _contextSetUpdateAddress;
         private readonly ISetBlandResults _setBlandsResults;
+        private readonly IConfiguration _configuration;
+        private readonly IUserService _userService;
 
         public SetAccountsDetailsController(IAddBadNumbers contextBadNumbers, ISetMoveAccount contextSetMoveAccount, IAddNotes contextAddNotes
             , ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute, ISetPostDateChecks setPostDateChecks
             , ISetMoveToQueue setMoveToQueue, ISetInteractResults setInteractionResults, IAddNotesV2 contextAddNotesV2, ISetDialing contextSetDialing,
-            ISetUpdateAddress contextSetUpdateAddress, ISetBlandResults setBlandsResults)
+            ISetUpdateAddress contextSetUpdateAddress, ISetBlandResults setBlandsResults, IConfiguration configuration, IUserService userService)
         {
             _contextBadNumbers = contextBadNumbers;
             _contextSetMoveAccount = contextSetMoveAccount;
@@ -51,6 +60,8 @@ namespace AargonTools.Controllers.TestEnvironment
             _contextSetDialing = contextSetDialing;
             _contextSetUpdateAddress = contextSetUpdateAddress;
             _setBlandsResults = setBlandsResults;
+            _configuration = configuration;
+            _userService = userService;
         }
 
         /// <summary>
@@ -793,16 +804,50 @@ namespace AargonTools.Controllers.TestEnvironment
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
         ///
-        [HttpPost("SetBlandResults")]
+        [AllowAnonymous]
+        [HttpPost("/no-ip-filter/test/SetBlandResults")]
         //[ProducesResponseType(typeof(SetUpdateAddressResponseModel
         //), 200)]
-        public async Task<IActionResult> SetBlandResults([FromBody] BlandResultsViewModel request)
+        public async Task<IActionResult> SetBlandResults([FromBody] List<BlandResultsViewModel> request)
         {
-            Serilog.Log.Information("SetBlandResults Test => POST");
+            Serilog.Log.Information("SetBlandResults Test => POST from ->" + _userService.GetClientIpAddress());
             try
             {
                 if (ModelState.IsValid)
                 {
+                    //
+                    // Extract the token from the request
+                    var token = request[0].variables.token;
+
+                    // Perform your token validation logic here
+                    var tokenHandler = new JwtSecurityTokenHandler();
+
+                    //geting the key from centralize json 
+                    var key = _configuration["JwtConfig:Secret"];
+
+                    var validationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        RequireExpirationTime = false,
+                        ClockSkew = TimeSpan.Zero
+                    };
+
+                    try
+                    {
+                        tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+                    }
+                    catch (Exception e)
+                    {
+                        return Unauthorized("Invalid token");
+                    }
+
+
+
+                    //
                     var data = await _setBlandsResults.SetBlandResults(request, "T");
 
                     return Ok(data);

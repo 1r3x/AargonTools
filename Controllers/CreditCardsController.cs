@@ -9,6 +9,7 @@ using AargonTools.Data.ADO;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
 using AargonTools.Manager.GenericManager;
+using AargonTools.Manager.ProcessCCManager;
 using AargonTools.Models;
 using AargonTools.Models.Helper;
 using AargonTools.ViewModel;
@@ -38,11 +39,12 @@ namespace AargonTools.Controllers
         private static IProcessCcPayment _usaEPay;
         private static GetTheCompanyFlag _getTheCompanyFlag;
         private static IViewingSchedulePayments _viewingSchedulePaymnets;
+        private readonly PaymentGatewayFactory _gatewayFactory;
 
         public CreditCardsController(IProcessCcPayment processCcPayment, ISetCCPayment setCcPayment,
             IUniversalCcProcessApiService processCcUniversal, GatewaySelectionHelper gatewaySelectionHelper, IPreSchedulePaymentProcessing preSchedulePaymentProcessing,
             ResponseModel response, AdoDotNetConnection adoConnection, ICryptoGraphy crypto, ICardTokenizationDataHelper cardTokenizationHelper,
-            IProcessCcPayment usaEPayIMlementtaions, GetTheCompanyFlag getTheCompanyFlag, IViewingSchedulePayments viewingSchedulePaymnets)
+            IProcessCcPayment usaEPayIMlementtaions, GetTheCompanyFlag getTheCompanyFlag, IViewingSchedulePayments viewingSchedulePaymnets,PaymentGatewayFactory gatewayFactory)
         {
             _processCcPayment = processCcPayment;
             _setCcPayment = setCcPayment;
@@ -56,6 +58,7 @@ namespace AargonTools.Controllers
             _usaEPay = usaEPayIMlementtaions;
             _getTheCompanyFlag = getTheCompanyFlag;
             _viewingSchedulePaymnets = viewingSchedulePaymnets;
+            _gatewayFactory = gatewayFactory;
         }
 
         /// <summary>
@@ -486,6 +489,59 @@ namespace AargonTools.Controllers
 
 
             return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
+
+
+        /// <summary>
+        ///  Can process CC Payments.
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// You can process CC payments by passing required parameters.
+        /// This endpoint can process through multiple gateways.It will automatically choose the desire gateways by debtor acct number.
+        /// You need a valid token for this endpoint .
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/CreditCards/ProcessCcV2
+        /// (pass JSON body like the request example)
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        /// 
+        ///
+
+        [ProducesResponseType(typeof(ProcessCCResponse), 200)]
+        [HttpPost("ProcessCcV2")]
+        public async Task<IActionResult> ProcessCcV2([FromBody] ProcessCcPaymentUniversalRequestModel requestCcPayment)
+        {
+            Serilog.Log.Information("ProcessCcV2 => POST");
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var gateway = _gatewayFactory.GetPaymentGateway(requestCcPayment.debtorAcc, "P");
+                    var response = await gateway.ProcessPayment(requestCcPayment, "P");
+                    //if transaction is successful
+                    if (response is ResponseWithTransaction responseWithTransaction)
+                    {
+                        if (responseWithTransaction.TransactionStatus == true)
+                        {
+                            var status = await gateway.SaveCardInfo(requestCcPayment, "P");
+                        }
+                    }
+
+                    return Ok(response);
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                return Ok(e);
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+
+
         }
 
 

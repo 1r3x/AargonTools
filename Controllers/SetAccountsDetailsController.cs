@@ -8,6 +8,12 @@ using AargonTools.Models;
 using AargonTools.ViewModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using System.Collections.Generic;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using Microsoft.Extensions.Configuration;
+using AargonTools.Manager.GenericManager;
 
 namespace AargonTools.Controllers
 {
@@ -31,11 +37,13 @@ namespace AargonTools.Controllers
         private readonly ISetDialing _contextSetDialing;
         private readonly ISetUpdateAddress _contextSetUpdateAddress;
         private readonly ISetBlandResults _setBlandsResults;
+        private readonly IConfiguration _configuration;
+        private readonly IUserService _userService;
 
         public SetAccountsDetailsController(IAddBadNumbers contextBadNumbers, ISetMoveAccount contextSetMoveAccount, IAddNotes contextAddNotes
         , ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute, ISetPostDateChecks setPostDateChecks
         , ISetMoveToQueue setMoveToQueue, ISetInteractResults setInteractionResults, IAddNotesV2 contextAddNotesV2, ISetDialing contextSetDialing,
-        ISetUpdateAddress contextSetUpdateAddress, ISetBlandResults setBlandsResults)
+        ISetUpdateAddress contextSetUpdateAddress, ISetBlandResults setBlandsResults, IConfiguration configuration, IUserService userService)
         {
             _contextBadNumbers = contextBadNumbers;
             _contextSetMoveAccount = contextSetMoveAccount;
@@ -51,6 +59,8 @@ namespace AargonTools.Controllers
             _contextSetDialing = contextSetDialing;
             _contextSetUpdateAddress = contextSetUpdateAddress;
             _setBlandsResults = setBlandsResults;
+            _configuration = configuration;
+            _userService = userService;
         }
 
         /// <summary>
@@ -783,19 +793,53 @@ namespace AargonTools.Controllers
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
         ///
-        [HttpPost("SetBlandResults")]
+        [AllowAnonymous]
+        [HttpPost("/no-ip-filter/SetBlandResults")]
         //[ProducesResponseType(typeof(SetUpdateAddressResponseModel
         //), 200)]
-        public async Task<IActionResult> SetBlandResults([FromBody] BlandResultsViewModel request)
+        public async Task<IActionResult> SetBlandResults([FromBody] List<BlandResultsViewModel> request)
         {
-            Serilog.Log.Information("SetBlandResults => POST");
+            Serilog.Log.Information("SetBlandResults => POST from ->" + _userService.GetClientIpAddress());
             try
             {
                 if (ModelState.IsValid)
                 {
+                    //
+                    // Extract the token from the request
+                    var token = request[0].variables.token;
+
+                    // Perform your token validation logic here
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    //get the kay from centralize json 
+                    var key = _configuration["JwtConfig:Secret"];
+
+                    var validationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        RequireExpirationTime = false,
+                        ClockSkew = TimeSpan.Zero
+                    };
+
+                    try
+                    {
+                        tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+                    }
+                    catch (Exception e)
+                    {
+                        return Unauthorized("Invalid token");
+                    }
+
+
+
+                    //
                     var data = await _setBlandsResults.SetBlandResults(request, "P");
 
                     return Ok(data);
+
 
                 }
             }

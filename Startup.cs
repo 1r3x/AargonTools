@@ -28,6 +28,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.AspNetCore.Authorization;
 using Serilog.Context;
 using Swashbuckle.AspNetCore.Filters;
+using AargonTools.Manager.ProcessCCManager;
 
 namespace AargonTools
 {
@@ -146,6 +147,7 @@ namespace AargonTools
             services.AddScoped<AdoDotNetConnection>();
             services.AddScoped<GetTheCompanyFlag>();
             services.AddScoped<GatewaySelectionHelper>();
+            services.AddScoped<PostPaymentA>();
 
             //injected getAccountInformation v1.0
             services.AddScoped<IGetAccountInformation, GetAccountInformation>();
@@ -161,6 +163,9 @@ namespace AargonTools
             services.AddScoped<ISetPostDateChecks, SetPostDateChecksManager>();
             services.AddScoped<IProcessCcPayment, ProcessCcPaymentManager>();
             services.AddScoped<ISetCCPayment, SetCCPaymentManager>();
+            services.AddScoped<ISetBlandResults, SetBlandResultsManager>();
+
+
             //injected HrmData v1.0
             services.AddScoped<IGetHrm, GetHrmManager>();
             services.AddScoped<ISetEmployeeTimeLogEntry, SetHrmManager>();
@@ -173,12 +178,16 @@ namespace AargonTools
             services.AddScoped<ICryptoGraphy, CryptoGraphy>();
             services.AddScoped<IViewingSchedulePayments, ViewingSchedulePayments>();
             //
-
-            //services.AddScoped<IUniversalCcProcessHelper, UniversalCcProcessHelper>();
+            //injected cc process v1.0
             services.AddHttpClient<IUniversalCcProcessApiService, UniversalCcProcessApiService>();
-            //services.AddScoped<IUniversalCcProcessManager, UniversalCcProcessManager>();
             services.AddScoped<IPreSchedulePaymentProcessing, PreSchedulePaymentProcessingManager>();
-
+            //injected cc process v2.0
+            services.AddTransient<UsaEPayManager>();
+            services.AddTransient<ElavonManager>();
+            services.AddTransient<InstaMedManager>();
+            services.AddTransient<IProClassManager>();
+            services.AddTransient<TmcElavonManager>();
+            services.AddScoped<PaymentGatewayFactory>();
 
             //
             services.AddHttpContextAccessor();
@@ -195,7 +204,15 @@ namespace AargonTools
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseIPFilter();
+            //app.UseIPFilter();
+
+            //Apply IP filtering middleware conditionally
+            app.UseWhen(context => !context.Request.Path.StartsWithSegments("/no-ip-filter"), appBuilder =>
+            {
+                appBuilder.UseIPFilter();
+            });
+
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -212,6 +229,9 @@ namespace AargonTools
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
+
+
+
             //this is for picking up the user nad send it to log.
             app.Use(async (httpContext, next) =>
             {
