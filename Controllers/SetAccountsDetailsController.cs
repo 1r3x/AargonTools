@@ -853,7 +853,39 @@ namespace AargonTools.Controllers
             return new JsonResult("Something went wrong") { StatusCode = 500 };
         }
 
+        /// Insert:
+        /// 
+        /// note_master->AI_call_results,note_text 
+        /// 
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+        [HttpPost("SetBlandResults")]
+        //[ProducesResponseType(typeof(SetUpdateAddressResponseModel
+        //), 200)]
+        public async Task<IActionResult> SetBlandResultsV2([FromBody] List<BlandResultsViewModel> request)
+        {
+            Serilog.Log.Information("SetBlandResults => POST from ->" + _userService.GetClientIpAddress());
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var data = await _setBlandsResults.SetBlandResults(request, "P");
 
+                    return Ok(data);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                throw;
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+        }
 
 
     }

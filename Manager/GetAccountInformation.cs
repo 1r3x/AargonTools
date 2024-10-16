@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using AargonTools.Data.ADO;
+﻿using AargonTools.Data.ADO;
 using AargonTools.Interfaces;
 using AargonTools.Manager.GenericManager;
 using AargonTools.Models;
 using AargonTools.ViewModel;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace AargonTools.Manager
 {
@@ -411,500 +409,711 @@ namespace AargonTools.Manager
         {
             try
             {
-                switch (environment)
+                if (!string.IsNullOrEmpty(request.debtorAcct) || !string.IsNullOrEmpty(request.phone) || !string.IsNullOrEmpty(request.ssn))
                 {
-                    case "PO":
-                        {
-                            if (request.debtorAcct != "" || request.phone != "" || request.ssn != "")
+
+                    switch (environment)
+                    {
+
+                        case "PO":
                             {
-                                string phoneAreaCode;
-                                string phoneNo;
-                                string debtorAccountCheckFromPhone = "";
-                                if (request.phone == "")
+                                if (request.debtorAcct != "" || request.phone != "" || request.ssn != "")
                                 {
-                                    phoneAreaCode = "";
-                                    phoneNo = "";
-                                }
-                                else
-                                {
-                                    phoneAreaCode = request.phone.Substring(0, 3);
-                                    phoneNo = request.phone.Substring(3, 7);
-                                }
-
-                                if (request.debtorAcct == "" && request.ssn == "")
-                                {
-                                    var phoneInfoDataFromHome = _contextProdOld.DebtorPhoneInfos
-                                       .Where(phn => phn.HomePhone == phoneNo && phn.HomeAreaCode == phoneAreaCode)
-                                       .Select(phn => new
-                                       {
-                                           phn.HomePhone,
-                                           phn.HomeAreaCode,
-                                           phn.CellPhone,
-                                           phn.CellAreaCode,
-                                           phn.RelativeAreaCode,
-                                           phn.RelativePhone,
-                                           phn.OtherAreaCode,
-                                           phn.OtherPhone,
-                                           phn.DebtorAcct,
-                                           phn.WorkAreaCode,
-                                           phn.WorkPhone
-                                       }).ToList();
-
-
-
-
-                                    var phoneInfoDataFromCell = _contextProdOld.DebtorPhoneInfos
-                                        .Where(phn => phn.CellPhone == phoneNo && phn.CellAreaCode == phoneAreaCode)
-                                        .Select(phn => new
-                                        {
-                                            phn.HomePhone,
-                                            phn.HomeAreaCode,
-                                            phn.CellPhone,
-                                            phn.CellAreaCode,
-                                            phn.RelativeAreaCode,
-                                            phn.RelativePhone,
-                                            phn.OtherAreaCode,
-                                            phn.OtherPhone,
-                                            phn.DebtorAcct,
-                                            phn.WorkAreaCode,
-                                            phn.WorkPhone
-                                        }).ToList();
-
-                                    var phoneInfoDataFromOther = _contextProdOld.DebtorPhoneInfos
-                                        .Where(phn => phn.OtherPhone == phoneNo && phn.OtherAreaCode == phoneAreaCode)
-                                        .Select(phn => new
-                                        {
-                                            phn.HomePhone,
-                                            phn.HomeAreaCode,
-                                            phn.CellPhone,
-                                            phn.CellAreaCode,
-                                            phn.RelativeAreaCode,
-                                            phn.RelativePhone,
-                                            phn.OtherAreaCode,
-                                            phn.OtherPhone,
-                                            phn.DebtorAcct,
-                                            phn.WorkAreaCode,
-                                            phn.WorkPhone
-                                        }).ToList();
-
-
-                                    if (phoneInfoDataFromHome.Any())
+                                    string phoneAreaCode;
+                                    string phoneNo;
+                                    string debtorAccountActiveOne = "";
+                                    if (request.phone == "")
                                     {
-                                        debtorAccountCheckFromPhone = phoneInfoDataFromHome.Select(a => a.DebtorAcct)
-                                            .FirstOrDefault();
-                                    }
-                                    else if (phoneInfoDataFromCell.Any())
-                                    {
-                                        debtorAccountCheckFromPhone = phoneInfoDataFromCell.Select(a => a.DebtorAcct)
-                                            .FirstOrDefault();
-                                    }
-                                    else if (phoneInfoDataFromOther.Any())
-                                    {
-                                        debtorAccountCheckFromPhone = phoneInfoDataFromOther.Select(a => a.DebtorAcct).FirstOrDefault();
-                                    }
-
-
-                                    if (debtorAccountCheckFromPhone != null && debtorAccountCheckFromPhone.Any())
-                                    {
-                                        return _response.Response(await GetInteractionsAcctDataHelper(debtorAccountCheckFromPhone, request.ssn, phoneNo, phoneAreaCode, environment));
+                                        phoneAreaCode = "";
+                                        phoneNo = "";
                                     }
                                     else
                                     {
-                                        var listOfItems = new List<GetInteractionAcctDataViewModel>();
-                                        for (var i = 0; i < phoneInfoDataFromHome.Count(); i++)
-                                        {
-                                            var itemData = new GetInteractionAcctDataViewModel
+                                        phoneAreaCode = request.phone.Substring(0, 3);
+                                        phoneNo = request.phone.Substring(3, 7);
+                                    }
+
+                                    if (request.debtorAcct == "" && request.ssn == "")
+                                    {
+                                        var phoneInfoDataFromHome = await _contextProdOld.DebtorPhoneInfos
+                                            .Where(phn => phn.HomePhone == phoneNo && phn.HomeAreaCode == phoneAreaCode)
+                                            .Select(phn => new
                                             {
-                                                debtorAcct = null,
-                                                promiseDate = null,
-                                                ssn = null,
-                                                balance = 0,
-                                                address1 = null,
-                                                address2 = null,
-                                                birthDate = null,
-                                                cellPhoneNumber = (phoneInfoDataFromHome.Select(a => a.CellAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.CellPhone)),
-                                                city = null,
-                                                clientName = null,
-                                                debtType = null,
-                                                emailAddress = null,
-                                                firstName = null,
-                                                homePhoneNumber = (phoneInfoDataFromHome.Select(a => a.HomeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.HomePhone)),
-                                                lastName = null,
-                                                otherPhoneNumer = (phoneInfoDataFromHome.Select(a => a.OtherAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.OtherPhone)),
-                                                relativePhoneNumber = (phoneInfoDataFromHome.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.RelativePhone)),
-                                                stateCode = null,
-                                                workPhoneNumber = (phoneInfoDataFromHome.Select(a => a.WorkAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.WorkPhone)),
-                                                zip = null
-                                            };
-                                            listOfItems.Add(itemData);
+                                                phn.HomePhone,
+                                                phn.HomeAreaCode,
+                                                phn.CellPhone,
+                                                phn.CellAreaCode,
+                                                phn.RelativeAreaCode,
+                                                phn.RelativePhone,
+                                                phn.OtherAreaCode,
+                                                phn.OtherPhone,
+                                                phn.DebtorAcct,
+                                                phn.WorkAreaCode,
+                                                phn.WorkPhone
+                                            }).ToListAsync();
+
+
+
+
+                                        var phoneInfoDataFromCell = await _contextProdOld.DebtorPhoneInfos
+                                            .Where(phn => phn.CellPhone == phoneNo && phn.CellAreaCode == phoneAreaCode)
+                                            .Select(phn => new
+                                            {
+                                                phn.HomePhone,
+                                                phn.HomeAreaCode,
+                                                phn.CellPhone,
+                                                phn.CellAreaCode,
+                                                phn.RelativeAreaCode,
+                                                phn.RelativePhone,
+                                                phn.OtherAreaCode,
+                                                phn.OtherPhone,
+                                                phn.DebtorAcct,
+                                                phn.WorkAreaCode,
+                                                phn.WorkPhone
+                                            }).ToListAsync();
+
+
+
+
+
+
+                                        var phoneInfoDataFromOther = await _contextProdOld.DebtorPhoneInfos
+                                            .Where(phn => phn.OtherPhone == phoneNo && phn.OtherAreaCode == phoneAreaCode)
+                                            .Select(phn => new
+                                            {
+                                                phn.HomePhone,
+                                                phn.HomeAreaCode,
+                                                phn.CellPhone,
+                                                phn.CellAreaCode,
+                                                phn.RelativeAreaCode,
+                                                phn.RelativePhone,
+                                                phn.OtherAreaCode,
+                                                phn.OtherPhone,
+                                                phn.DebtorAcct,
+                                                phn.WorkAreaCode,
+                                                phn.WorkPhone
+                                            }).ToListAsync();
+
+
+
+
+                                        if (phoneInfoDataFromHome.Any())
+                                        {
+
+                                            foreach (var item in phoneInfoDataFromHome)
+                                            {
+                                                var debtorInfoFlag = (await _companyFlag.GetFlagForDebtorAccount(item.DebtorAcct, environment))
+                                                    .Where(x => x.DebtorAcct == item.DebtorAcct);
+                                                if (debtorInfoFlag.Any(x => x.AcctStatus == "A"))
+                                                {
+                                                    debtorAccountActiveOne = await debtorInfoFlag.Select(x => x.DebtorAcct).FirstOrDefaultAsync();
+                                                    break;
+                                                }
+
+                                            }
+
                                         }
 
-                                        return _response.Response(listOfItems);
-                                    }
 
-                                }
-                                else if (request.debtorAcct == "" && request.phone == "")
-                                {
-                                    var debtorAccountNumberFromSsnAsync = await _companyFlag
-                                        .GetFlagForDebtorMasterBySsn(request.ssn, environment).Result
-                                        .Where(x => x.Ssn == request.ssn).Select(x => x.DebtorAcct)
-                                        .ToListAsync();
-
-
-                                    return _response.Response(await GetInteractionsAcctDataHelperWithoutDebtorAcct(debtorAccountNumberFromSsnAsync[0], request.ssn, phoneNo, phoneAreaCode, environment));
-
-                                }
-                                else if (request.debtorAcct == "")
-                                {
-                                    var debtorAccountNumberFromSsnAsync = await _companyFlag
-                                        .GetFlagForDebtorMasterBySsn(request.ssn, environment).Result
-                                        .Where(x => x.Ssn == request.ssn).Select(x => x.DebtorAcct)
-                                        .ToListAsync();
-
-
-                                    return _response.Response(await GetInteractionsAcctDataHelperWithoutDebtorAcct(debtorAccountNumberFromSsnAsync[0], request.ssn, phoneNo, phoneAreaCode, environment));
-                                }
-                                else
-                                {
-
-                                    return _response.Response(await GetInteractionsAcctDataHelper(request.debtorAcct, request.ssn, phoneNo, phoneAreaCode, environment));
-                                }
-
-
-
-
-                            }
-
-                            break;
-                        }
-                    case "P":
-                        {
-                            if (request.debtorAcct != "" || request.phone != "" || request.ssn != "")
-                            {
-                                string phoneAreaCode;
-                                string phoneNo;
-                                string debtorAccountCheckFromPhone = "";
-                                if (request.phone == "")
-                                {
-                                    phoneAreaCode = "";
-                                    phoneNo = "";
-                                }
-                                else
-                                {
-                                    phoneAreaCode = request.phone.Substring(0, 3);
-                                    phoneNo = request.phone.Substring(3, 7);
-                                }
-
-                                if (request.debtorAcct == "" && request.ssn == "")
-                                {
-                                    var phoneInfoDataFromHome = _context.DebtorPhoneInfos
-                                        .Where(phn => phn.HomePhone == phoneNo && phn.HomeAreaCode == phoneAreaCode)
-                                        .Select(phn => new
+                                        else if (phoneInfoDataFromCell.Any())
                                         {
-                                            phn.HomePhone,
-                                            phn.HomeAreaCode,
-                                            phn.CellPhone,
-                                            phn.CellAreaCode,
-                                            phn.RelativeAreaCode,
-                                            phn.RelativePhone,
-                                            phn.OtherAreaCode,
-                                            phn.OtherPhone,
-                                            phn.DebtorAcct,
-                                            phn.WorkAreaCode,
-                                            phn.WorkPhone
-                                        }).ToList();
+                                            foreach (var item in phoneInfoDataFromCell)
+                                            {
+                                                var debtorInfoFlag = (await _companyFlag.GetFlagForDebtorAccount(item.DebtorAcct, environment))
+                                                    .Where(x => x.DebtorAcct == item.DebtorAcct);
+                                                if (debtorInfoFlag.Any(x => x.AcctStatus == "A"))
+                                                {
+                                                    debtorAccountActiveOne = await debtorInfoFlag.Select(x => x.DebtorAcct).FirstOrDefaultAsync();
+                                                    break;
+                                                }
+
+                                            }
+
+                                        }
 
 
 
 
-                                    var phoneInfoDataFromCell = _context.DebtorPhoneInfos
-                                        .Where(phn => phn.CellPhone == phoneNo && phn.CellAreaCode == phoneAreaCode)
-                                        .Select(phn => new
+
+                                        else if (phoneInfoDataFromOther.Any())
                                         {
-                                            phn.HomePhone,
-                                            phn.HomeAreaCode,
-                                            phn.CellPhone,
-                                            phn.CellAreaCode,
-                                            phn.RelativeAreaCode,
-                                            phn.RelativePhone,
-                                            phn.OtherAreaCode,
-                                            phn.OtherPhone,
-                                            phn.DebtorAcct,
-                                            phn.WorkAreaCode,
-                                            phn.WorkPhone
-                                        }).ToList();
+                                            foreach (var item in phoneInfoDataFromOther)
+                                            {
+                                                var debtorInfoFlag = (await _companyFlag.GetFlagForDebtorAccount(item.DebtorAcct, environment))
+                                                    .Where(x => x.DebtorAcct == item.DebtorAcct);
+                                                if (debtorInfoFlag.Any(x => x.AcctStatus == "A"))
+                                                {
+                                                    debtorAccountActiveOne = await debtorInfoFlag.Select(x => x.DebtorAcct).FirstOrDefaultAsync();
+                                                    break;
+                                                }
 
-                                    var phoneInfoDataFromOther = _context.DebtorPhoneInfos
-                                        .Where(phn => phn.OtherPhone == phoneNo && phn.OtherAreaCode == phoneAreaCode)
-                                        .Select(phn => new
+                                            }
+                                        }
+
+
+                                        if (debtorAccountActiveOne != null && debtorAccountActiveOne.Any())
                                         {
-                                            phn.HomePhone,
-                                            phn.HomeAreaCode,
-                                            phn.CellPhone,
-                                            phn.CellAreaCode,
-                                            phn.RelativeAreaCode,
-                                            phn.RelativePhone,
-                                            phn.OtherAreaCode,
-                                            phn.OtherPhone,
-                                            phn.DebtorAcct,
-                                            phn.WorkAreaCode,
-                                            phn.WorkPhone
-                                        }).ToList();
+                                            return _response.Response(await GetInteractionsAcctDataHelper(debtorAccountActiveOne, request.ssn, phoneNo, phoneAreaCode, environment));
+                                        }
+                                        else
+                                        {
+                                            var listOfItems = new List<GetInteractionAcctDataViewModel>();
+                                            for (var i = 0; i < phoneInfoDataFromHome.Count(); i++)
+                                            {
+                                                var itemData = new GetInteractionAcctDataViewModel
+                                                {
+                                                    debtorAcct = null,
+                                                    promiseDate = null,
+                                                    ssn = null,
+                                                    balance = 0,
+                                                    address1 = null,
+                                                    address2 = null,
+                                                    birthDate = null,
+                                                    cellPhoneNumber = (phoneInfoDataFromHome.Select(a => a.CellAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.CellPhone)),
+                                                    city = null,
+                                                    clientName = null,
+                                                    debtType = null,
+                                                    emailAddress = null,
+                                                    firstName = null,
+                                                    homePhoneNumber = (phoneInfoDataFromHome.Select(a => a.HomeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.HomePhone)),
+                                                    lastName = null,
+                                                    otherPhoneNumer = (phoneInfoDataFromHome.Select(a => a.OtherAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.OtherPhone)),
+                                                    relativePhoneNumber = (phoneInfoDataFromHome.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.RelativePhone)),
+                                                    stateCode = null,
+                                                    workPhoneNumber = (phoneInfoDataFromHome.Select(a => a.WorkAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.WorkPhone)),
+                                                    zip = null
+                                                };
+                                                listOfItems.Add(itemData);
+                                            }
 
+                                            return _response.Response(listOfItems);
+                                        }
 
-                                    if (phoneInfoDataFromHome.Any())
-                                    {
-                                        debtorAccountCheckFromPhone = phoneInfoDataFromHome.Select(a => a.DebtorAcct)
-                                            .FirstOrDefault();
                                     }
-                                    else if (phoneInfoDataFromCell.Any())
+                                    else if (request.debtorAcct == "" && request.phone == "")
                                     {
-                                        debtorAccountCheckFromPhone = phoneInfoDataFromCell.Select(a => a.DebtorAcct)
-                                            .FirstOrDefault();
-                                    }
-                                    else if (phoneInfoDataFromOther.Any())
-                                    {
-                                        debtorAccountCheckFromPhone = phoneInfoDataFromOther.Select(a => a.DebtorAcct).FirstOrDefault();
-                                    }
+                                        var debtorAccountNumberFromSsnAsync = await _companyFlag
+                                            .GetFlagForDebtorMasterBySsn(request.ssn, environment).Result
+                                            .Where(x => x.Ssn == request.ssn).Select(x => x.DebtorAcct)
+                                            .ToListAsync();
 
+                                        foreach (var item in debtorAccountNumberFromSsnAsync)
+                                        {
+                                            var debtorInfoFlag = (await _companyFlag.GetFlagForDebtorAccount(item, environment))
+                                                .Where(x => x.DebtorAcct == item);
+                                            if (debtorInfoFlag.Any(x => x.AcctStatus == "A"))
+                                            {
+                                                debtorAccountActiveOne = await debtorInfoFlag.Select(x => x.DebtorAcct).FirstOrDefaultAsync();
+                                                break;
+                                            }
 
-                                    if (debtorAccountCheckFromPhone != null && debtorAccountCheckFromPhone.Any())
+                                        }
+                                        //changed to GetInteractionsAcctDataHelperWithoutDebtorAcct to GetInteractionsAcctDataHelper
+                                        return _response.Response(await GetInteractionsAcctDataHelper(debtorAccountActiveOne, request.ssn, phoneNo, phoneAreaCode, environment));
+
+                                    }
+                                    else if (request.debtorAcct == "")
                                     {
-                                        return _response.Response(await GetInteractionsAcctDataHelper(debtorAccountCheckFromPhone, request.ssn, phoneNo, phoneAreaCode, environment));
+                                        var debtorAccountNumberFromSsnAsync = await _companyFlag
+                                            .GetFlagForDebtorMasterBySsn(request.ssn, environment).Result
+                                            .Where(x => x.Ssn == request.ssn).Select(x => x.DebtorAcct)
+                                            .ToListAsync();
+
+                                        foreach (var item in debtorAccountNumberFromSsnAsync)
+                                        {
+                                            var debtorInfoFlag = (await _companyFlag.GetFlagForDebtorAccount(item, environment))
+                                                .Where(x => x.DebtorAcct == item);
+                                            if (debtorInfoFlag.Any(x => x.AcctStatus == "A"))
+                                            {
+                                                debtorAccountActiveOne = await debtorInfoFlag.Select(x => x.DebtorAcct).FirstOrDefaultAsync();
+                                                break;
+                                            }
+
+                                        }
+                                        //changed to GetInteractionsAcctDataHelperWithoutDebtorAcct to GetInteractionsAcctDataHelper
+                                        return _response.Response(await GetInteractionsAcctDataHelper(debtorAccountActiveOne, request.ssn, phoneNo, phoneAreaCode, environment));
                                     }
                                     else
                                     {
-                                        var listOfItems = new List<GetInteractionAcctDataViewModel>();
-                                        for (var i = 0; i < phoneInfoDataFromHome.Count(); i++)
-                                        {
-                                            var itemData = new GetInteractionAcctDataViewModel
-                                            {
-                                                debtorAcct = null,
-                                                promiseDate = null,
-                                                ssn = null,
-                                                balance = 0,
-                                                address1 = null,
-                                                address2 = null,
-                                                birthDate = null,
-                                                cellPhoneNumber = (phoneInfoDataFromHome.Select(a => a.CellAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.CellPhone)),
-                                                city = null,
-                                                clientName = null,
-                                                debtType = null,
-                                                emailAddress = null,
-                                                firstName = null,
-                                                homePhoneNumber = (phoneInfoDataFromHome.Select(a => a.HomeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.HomePhone)),
-                                                lastName = null,
-                                                otherPhoneNumer = (phoneInfoDataFromHome.Select(a => a.OtherAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.OtherPhone)),
-                                                relativePhoneNumber = (phoneInfoDataFromHome.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.RelativePhone)),
-                                                stateCode = null,
-                                                workPhoneNumber = (phoneInfoDataFromHome.Select(a => a.WorkAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.WorkPhone)),
-                                                zip = null
-                                            };
-                                            listOfItems.Add(itemData);
-                                        }
 
-                                        return _response.Response(listOfItems);
+                                        return _response.Response(await GetInteractionsAcctDataHelper(request.debtorAcct, request.ssn, phoneNo, phoneAreaCode, environment));
                                     }
 
-                                }
-                                else if (request.debtorAcct == "" && request.phone == "")
-                                {
-                                    var debtorAccountNumberFromSsnAsync = await _companyFlag
-                                        .GetFlagForDebtorMasterBySsn(request.ssn, environment).Result
-                                        .Where(x => x.Ssn == request.ssn).Select(x => x.DebtorAcct)
-                                        .ToListAsync();
 
 
-                                    return _response.Response(await GetInteractionsAcctDataHelperWithoutDebtorAcct(debtorAccountNumberFromSsnAsync[0], request.ssn, phoneNo, phoneAreaCode, environment));
 
                                 }
-                                else if (request.debtorAcct == "")
-                                {
-                                    var debtorAccountNumberFromSsnAsync = await _companyFlag
-                                        .GetFlagForDebtorMasterBySsn(request.ssn, environment).Result
-                                        .Where(x => x.Ssn == request.ssn).Select(x => x.DebtorAcct)
-                                        .ToListAsync();
 
-
-                                    return _response.Response(await GetInteractionsAcctDataHelperWithoutDebtorAcct(debtorAccountNumberFromSsnAsync[0], request.ssn, phoneNo, phoneAreaCode, environment));
-                                }
-                                else
-                                {
-
-                                    return _response.Response(await GetInteractionsAcctDataHelper(request.debtorAcct, request.ssn, phoneNo, phoneAreaCode, environment));
-                                }
-
-
-
-
+                                break;
                             }
-
-                            break;
-                        }
-                    default:
-                        {
-                            if (request.debtorAcct != "" || request.phone != "" || request.ssn != "")
+                        case "P":
                             {
-                                string phoneAreaCode;
-                                string phoneNo;
-                                string debtorAccountCheckFromPhone = "";
-                                if (request.phone == "")
+                                if (request.debtorAcct != "" || request.phone != "" || request.ssn != "")
                                 {
-                                    phoneAreaCode = "";
-                                    phoneNo = "";
-                                }
-                                else
-                                {
-                                    phoneAreaCode = request.phone.Substring(0, 3);
-                                    phoneNo = request.phone.Substring(3, 7);
-                                }
-
-                                if (request.debtorAcct == "" && request.ssn == "")
-                                {
-                                    var phoneInfoDataFromHome = _contextTest.DebtorPhoneInfos
-                                       .Where(phn => phn.HomePhone == phoneNo && phn.HomeAreaCode == phoneAreaCode)
-                                       .Select(phn => new
-                                       {
-                                           phn.HomePhone,
-                                           phn.HomeAreaCode,
-                                           phn.CellPhone,
-                                           phn.CellAreaCode,
-                                           phn.RelativeAreaCode,
-                                           phn.RelativePhone,
-                                           phn.OtherAreaCode,
-                                           phn.OtherPhone,
-                                           phn.DebtorAcct,
-                                           phn.WorkAreaCode,
-                                           phn.WorkPhone
-                                       }).ToList();
-
-
-
-
-                                    var phoneInfoDataFromCell = _contextTest.DebtorPhoneInfos
-                                        .Where(phn => phn.CellPhone == phoneNo && phn.CellAreaCode == phoneAreaCode)
-                                        .Select(phn => new
-                                        {
-                                            phn.HomePhone,
-                                            phn.HomeAreaCode,
-                                            phn.CellPhone,
-                                            phn.CellAreaCode,
-                                            phn.RelativeAreaCode,
-                                            phn.RelativePhone,
-                                            phn.OtherAreaCode,
-                                            phn.OtherPhone,
-                                            phn.DebtorAcct,
-                                            phn.WorkAreaCode,
-                                            phn.WorkPhone
-                                        }).ToList();
-
-                                    var phoneInfoDataFromOther = _contextTest.DebtorPhoneInfos
-                                        .Where(phn => phn.OtherPhone == phoneNo && phn.OtherAreaCode == phoneAreaCode)
-                                        .Select(phn => new
-                                        {
-                                            phn.HomePhone,
-                                            phn.HomeAreaCode,
-                                            phn.CellPhone,
-                                            phn.CellAreaCode,
-                                            phn.RelativeAreaCode,
-                                            phn.RelativePhone,
-                                            phn.OtherAreaCode,
-                                            phn.OtherPhone,
-                                            phn.DebtorAcct,
-                                            phn.WorkAreaCode,
-                                            phn.WorkPhone
-                                        }).ToList();
-
-
-                                    if (phoneInfoDataFromHome.Any())
+                                    string phoneAreaCode;
+                                    string phoneNo;
+                                    string debtorAccountActiveOne = "";
+                                    if (request.phone == "")
                                     {
-                                        debtorAccountCheckFromPhone = phoneInfoDataFromHome.Select(a => a.DebtorAcct)
-                                            .FirstOrDefault();
-                                    }
-                                    else if (phoneInfoDataFromCell.Any())
-                                    {
-                                        debtorAccountCheckFromPhone = phoneInfoDataFromCell.Select(a => a.DebtorAcct)
-                                            .FirstOrDefault();
-                                    }
-                                    else if (phoneInfoDataFromOther.Any())
-                                    {
-                                        debtorAccountCheckFromPhone = phoneInfoDataFromOther.Select(a => a.DebtorAcct).FirstOrDefault();
-                                    }
-
-
-                                    if (debtorAccountCheckFromPhone != null && debtorAccountCheckFromPhone.Any())
-                                    {
-                                        return _response.Response(await GetInteractionsAcctDataHelper(debtorAccountCheckFromPhone, request.ssn, phoneNo, phoneAreaCode, environment));
+                                        phoneAreaCode = "";
+                                        phoneNo = "";
                                     }
                                     else
                                     {
-                                        var listOfItems = new List<GetInteractionAcctDataViewModel>();
-                                        for (var i = 0; i < phoneInfoDataFromHome.Count(); i++)
-                                        {
-                                            var itemData = new GetInteractionAcctDataViewModel
-                                            {
-                                                debtorAcct = null,
-                                                promiseDate = null,
-                                                ssn = null,
-                                                balance = 0,
-                                                address1 = null,
-                                                address2 = null,
-                                                birthDate = null,
-                                                cellPhoneNumber = (phoneInfoDataFromHome.Select(a => a.CellAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.CellPhone)),
-                                                city = null,
-                                                clientName = null,
-                                                debtType = null,
-                                                emailAddress = null,
-                                                firstName = null,
-                                                homePhoneNumber = (phoneInfoDataFromHome.Select(a => a.HomeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.HomePhone)),
-                                                lastName = null,
-                                                otherPhoneNumer = (phoneInfoDataFromHome.Select(a => a.OtherAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.OtherPhone)),
-                                                relativePhoneNumber = (phoneInfoDataFromHome.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.RelativePhone)),
-                                                stateCode = null,
-                                                workPhoneNumber = (phoneInfoDataFromHome.Select(a => a.WorkAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.WorkPhone)),
-                                                zip = null
-                                            };
-                                            listOfItems.Add(itemData);
-                                        }
-
-                                        return _response.Response(listOfItems);
+                                        phoneAreaCode = request.phone.Substring(0, 3);
+                                        phoneNo = request.phone.Substring(3, 7);
                                     }
 
+                                    if (request.debtorAcct == "" && request.ssn == "")
+                                    {
+                                        var phoneInfoDataFromHome = await _context.DebtorPhoneInfos
+                                            .Where(phn => phn.HomePhone == phoneNo && phn.HomeAreaCode == phoneAreaCode)
+                                            .Select(phn => new
+                                            {
+                                                phn.HomePhone,
+                                                phn.HomeAreaCode,
+                                                phn.CellPhone,
+                                                phn.CellAreaCode,
+                                                phn.RelativeAreaCode,
+                                                phn.RelativePhone,
+                                                phn.OtherAreaCode,
+                                                phn.OtherPhone,
+                                                phn.DebtorAcct,
+                                                phn.WorkAreaCode,
+                                                phn.WorkPhone
+                                            }).ToListAsync();
+
+
+
+
+                                        var phoneInfoDataFromCell = await _context.DebtorPhoneInfos
+                                            .Where(phn => phn.CellPhone == phoneNo && phn.CellAreaCode == phoneAreaCode)
+                                            .Select(phn => new
+                                            {
+                                                phn.HomePhone,
+                                                phn.HomeAreaCode,
+                                                phn.CellPhone,
+                                                phn.CellAreaCode,
+                                                phn.RelativeAreaCode,
+                                                phn.RelativePhone,
+                                                phn.OtherAreaCode,
+                                                phn.OtherPhone,
+                                                phn.DebtorAcct,
+                                                phn.WorkAreaCode,
+                                                phn.WorkPhone
+                                            }).ToListAsync();
+
+
+
+
+
+
+                                        var phoneInfoDataFromOther = await _context.DebtorPhoneInfos
+                                            .Where(phn => phn.OtherPhone == phoneNo && phn.OtherAreaCode == phoneAreaCode)
+                                            .Select(phn => new
+                                            {
+                                                phn.HomePhone,
+                                                phn.HomeAreaCode,
+                                                phn.CellPhone,
+                                                phn.CellAreaCode,
+                                                phn.RelativeAreaCode,
+                                                phn.RelativePhone,
+                                                phn.OtherAreaCode,
+                                                phn.OtherPhone,
+                                                phn.DebtorAcct,
+                                                phn.WorkAreaCode,
+                                                phn.WorkPhone
+                                            }).ToListAsync();
+
+
+
+
+                                        if (phoneInfoDataFromHome.Any())
+                                        {
+
+                                            foreach (var item in phoneInfoDataFromHome)
+                                            {
+                                                var debtorInfoFlag = (await _companyFlag.GetFlagForDebtorAccount(item.DebtorAcct, environment))
+                                                    .Where(x => x.DebtorAcct == item.DebtorAcct);
+                                                if (debtorInfoFlag.Any(x => x.AcctStatus == "A"))
+                                                {
+                                                    debtorAccountActiveOne = await debtorInfoFlag.Select(x => x.DebtorAcct).FirstOrDefaultAsync();
+                                                    break;
+                                                }
+
+                                            }
+
+                                        }
+
+
+                                        else if (phoneInfoDataFromCell.Any())
+                                        {
+                                            foreach (var item in phoneInfoDataFromCell)
+                                            {
+                                                var debtorInfoFlag = (await _companyFlag.GetFlagForDebtorAccount(item.DebtorAcct, environment))
+                                                    .Where(x => x.DebtorAcct == item.DebtorAcct);
+                                                if (debtorInfoFlag.Any(x => x.AcctStatus == "A"))
+                                                {
+                                                    debtorAccountActiveOne = await debtorInfoFlag.Select(x => x.DebtorAcct).FirstOrDefaultAsync();
+                                                    break;
+                                                }
+
+                                            }
+
+                                        }
+
+
+
+
+
+                                        else if (phoneInfoDataFromOther.Any())
+                                        {
+                                            foreach (var item in phoneInfoDataFromOther)
+                                            {
+                                                var debtorInfoFlag = (await _companyFlag.GetFlagForDebtorAccount(item.DebtorAcct, environment))
+                                                    .Where(x => x.DebtorAcct == item.DebtorAcct);
+                                                if (debtorInfoFlag.Any(x => x.AcctStatus == "A"))
+                                                {
+                                                    debtorAccountActiveOne = await debtorInfoFlag.Select(x => x.DebtorAcct).FirstOrDefaultAsync();
+                                                    break;
+                                                }
+
+                                            }
+                                        }
+
+
+                                        if (debtorAccountActiveOne != null && debtorAccountActiveOne.Any())
+                                        {
+                                            return _response.Response(await GetInteractionsAcctDataHelper(debtorAccountActiveOne, request.ssn, phoneNo, phoneAreaCode, environment));
+                                        }
+                                        else
+                                        {
+                                            var listOfItems = new List<GetInteractionAcctDataViewModel>();
+                                            for (var i = 0; i < phoneInfoDataFromHome.Count(); i++)
+                                            {
+                                                var itemData = new GetInteractionAcctDataViewModel
+                                                {
+                                                    debtorAcct = null,
+                                                    promiseDate = null,
+                                                    ssn = null,
+                                                    balance = 0,
+                                                    address1 = null,
+                                                    address2 = null,
+                                                    birthDate = null,
+                                                    cellPhoneNumber = (phoneInfoDataFromHome.Select(a => a.CellAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.CellPhone)),
+                                                    city = null,
+                                                    clientName = null,
+                                                    debtType = null,
+                                                    emailAddress = null,
+                                                    firstName = null,
+                                                    homePhoneNumber = (phoneInfoDataFromHome.Select(a => a.HomeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.HomePhone)),
+                                                    lastName = null,
+                                                    otherPhoneNumer = (phoneInfoDataFromHome.Select(a => a.OtherAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.OtherPhone)),
+                                                    relativePhoneNumber = (phoneInfoDataFromHome.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.RelativePhone)),
+                                                    stateCode = null,
+                                                    workPhoneNumber = (phoneInfoDataFromHome.Select(a => a.WorkAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.WorkPhone)),
+                                                    zip = null
+                                                };
+                                                listOfItems.Add(itemData);
+                                            }
+
+                                            return _response.Response(listOfItems);
+                                        }
+
+                                    }
+                                    else if (request.debtorAcct == "" && request.phone == "")
+                                    {
+                                        var debtorAccountNumberFromSsnAsync = await _companyFlag
+                                            .GetFlagForDebtorMasterBySsn(request.ssn, environment).Result
+                                            .Where(x => x.Ssn == request.ssn).Select(x => x.DebtorAcct)
+                                            .ToListAsync();
+
+                                        foreach (var item in debtorAccountNumberFromSsnAsync)
+                                        {
+                                            var debtorInfoFlag = (await _companyFlag.GetFlagForDebtorAccount(item, environment))
+                                                .Where(x => x.DebtorAcct == item);
+                                            if (debtorInfoFlag.Any(x => x.AcctStatus == "A"))
+                                            {
+                                                debtorAccountActiveOne = await debtorInfoFlag.Select(x => x.DebtorAcct).FirstOrDefaultAsync();
+                                                break;
+                                            }
+
+                                        }
+                                        //changed to GetInteractionsAcctDataHelperWithoutDebtorAcct to GetInteractionsAcctDataHelper
+                                        return _response.Response(await GetInteractionsAcctDataHelper(debtorAccountActiveOne, request.ssn, phoneNo, phoneAreaCode, environment));
+
+                                    }
+                                    else if (request.debtorAcct == "")
+                                    {
+                                        var debtorAccountNumberFromSsnAsync = await _companyFlag
+                                            .GetFlagForDebtorMasterBySsn(request.ssn, environment).Result
+                                            .Where(x => x.Ssn == request.ssn).Select(x => x.DebtorAcct)
+                                            .ToListAsync();
+
+                                        foreach (var item in debtorAccountNumberFromSsnAsync)
+                                        {
+                                            var debtorInfoFlag = (await _companyFlag.GetFlagForDebtorAccount(item, environment))
+                                                .Where(x => x.DebtorAcct == item);
+                                            if (debtorInfoFlag.Any(x => x.AcctStatus == "A"))
+                                            {
+                                                debtorAccountActiveOne = await debtorInfoFlag.Select(x => x.DebtorAcct).FirstOrDefaultAsync();
+                                                break;
+                                            }
+
+                                        }
+                                        //changed to GetInteractionsAcctDataHelperWithoutDebtorAcct to GetInteractionsAcctDataHelper
+                                        return _response.Response(await GetInteractionsAcctDataHelper(debtorAccountActiveOne, request.ssn, phoneNo, phoneAreaCode, environment));
+                                    }
+                                    else
+                                    {
+
+                                        return _response.Response(await GetInteractionsAcctDataHelper(request.debtorAcct, request.ssn, phoneNo, phoneAreaCode, environment));
+                                    }
+
+
+
+
                                 }
-                                else if (request.debtorAcct == "" && request.phone == "")
-                                {
-                                    var debtorAccountNumberFromSsnAsync = await _companyFlag
-                                        .GetFlagForDebtorMasterBySsn(request.ssn, environment).Result
-                                        .Where(x => x.Ssn == request.ssn).Select(x => x.DebtorAcct)
-                                        .ToListAsync();
 
-
-                                    return _response.Response(await GetInteractionsAcctDataHelperWithoutDebtorAcct(debtorAccountNumberFromSsnAsync[0], request.ssn, phoneNo, phoneAreaCode, environment));
-
-                                }
-                                else if (request.debtorAcct == "")
-                                {
-                                    var debtorAccountNumberFromSsnAsync = await _companyFlag
-                                        .GetFlagForDebtorMasterBySsn(request.ssn, environment).Result
-                                        .Where(x => x.Ssn == request.ssn).Select(x => x.DebtorAcct)
-                                        .ToListAsync();
-
-
-                                    return _response.Response(await GetInteractionsAcctDataHelperWithoutDebtorAcct(debtorAccountNumberFromSsnAsync[0], request.ssn, phoneNo, phoneAreaCode, environment));
-                                }
-                                else
-                                {
-
-                                    return _response.Response(await GetInteractionsAcctDataHelper(request.debtorAcct, request.ssn, phoneNo, phoneAreaCode, environment));
-                                }
-
-
-
-
+                                break;
                             }
+                        default:
+                            {
+                                if (request.debtorAcct != "" || request.phone != "" || request.ssn != "")
+                                {
+                                    string phoneAreaCode;
+                                    string phoneNo;
+                                    string debtorAccountActiveOne = "";
+                                    if (request.phone == "")
+                                    {
+                                        phoneAreaCode = "";
+                                        phoneNo = "";
+                                    }
+                                    else
+                                    {
+                                        phoneAreaCode = request.phone.Substring(0, 3);
+                                        phoneNo = request.phone.Substring(3, 7);
+                                    }
 
-                            break;
-                        }
+                                    if (request.debtorAcct == "" && request.ssn == "")
+                                    {
+                                        var phoneInfoDataFromHome = await _contextTest.DebtorPhoneInfos
+                                            .Where(phn => phn.HomePhone == phoneNo && phn.HomeAreaCode == phoneAreaCode)
+                                            .Select(phn => new
+                                            {
+                                                phn.HomePhone,
+                                                phn.HomeAreaCode,
+                                                phn.CellPhone,
+                                                phn.CellAreaCode,
+                                                phn.RelativeAreaCode,
+                                                phn.RelativePhone,
+                                                phn.OtherAreaCode,
+                                                phn.OtherPhone,
+                                                phn.DebtorAcct,
+                                                phn.WorkAreaCode,
+                                                phn.WorkPhone
+                                            }).ToListAsync();
+
+
+
+
+                                        var phoneInfoDataFromCell = await _contextTest.DebtorPhoneInfos
+                                            .Where(phn => phn.CellPhone == phoneNo && phn.CellAreaCode == phoneAreaCode)
+                                            .Select(phn => new
+                                            {
+                                                phn.HomePhone,
+                                                phn.HomeAreaCode,
+                                                phn.CellPhone,
+                                                phn.CellAreaCode,
+                                                phn.RelativeAreaCode,
+                                                phn.RelativePhone,
+                                                phn.OtherAreaCode,
+                                                phn.OtherPhone,
+                                                phn.DebtorAcct,
+                                                phn.WorkAreaCode,
+                                                phn.WorkPhone
+                                            }).ToListAsync();
+
+
+
+
+
+
+                                        var phoneInfoDataFromOther = await _contextTest.DebtorPhoneInfos
+                                            .Where(phn => phn.OtherPhone == phoneNo && phn.OtherAreaCode == phoneAreaCode)
+                                            .Select(phn => new
+                                            {
+                                                phn.HomePhone,
+                                                phn.HomeAreaCode,
+                                                phn.CellPhone,
+                                                phn.CellAreaCode,
+                                                phn.RelativeAreaCode,
+                                                phn.RelativePhone,
+                                                phn.OtherAreaCode,
+                                                phn.OtherPhone,
+                                                phn.DebtorAcct,
+                                                phn.WorkAreaCode,
+                                                phn.WorkPhone
+                                            }).ToListAsync();
+
+
+
+
+                                        if (phoneInfoDataFromHome.Any())
+                                        {
+
+                                            foreach (var item in phoneInfoDataFromHome)
+                                            {
+                                                var debtorInfoFlag = (await _companyFlag.GetFlagForDebtorAccount(item.DebtorAcct, environment))
+                                                    .Where(x => x.DebtorAcct == item.DebtorAcct);
+                                                if (debtorInfoFlag.Any(x => x.AcctStatus == "A"))
+                                                {
+                                                    debtorAccountActiveOne = await debtorInfoFlag.Select(x => x.DebtorAcct).FirstOrDefaultAsync();
+                                                    break;
+                                                }
+
+                                            }
+
+                                        }
+
+
+                                        else if (phoneInfoDataFromCell.Any())
+                                        {
+                                            foreach (var item in phoneInfoDataFromCell)
+                                            {
+                                                var debtorInfoFlag = (await _companyFlag.GetFlagForDebtorAccount(item.DebtorAcct, environment))
+                                                    .Where(x => x.DebtorAcct == item.DebtorAcct);
+                                                if (debtorInfoFlag.Any(x => x.AcctStatus == "A"))
+                                                {
+                                                    debtorAccountActiveOne = await debtorInfoFlag.Select(x => x.DebtorAcct).FirstOrDefaultAsync();
+                                                    break;
+                                                }
+
+                                            }
+
+                                        }
+
+
+
+
+
+                                        else if (phoneInfoDataFromOther.Any())
+                                        {
+                                            foreach (var item in phoneInfoDataFromOther)
+                                            {
+                                                var debtorInfoFlag = (await _companyFlag.GetFlagForDebtorAccount(item.DebtorAcct, environment))
+                                                    .Where(x => x.DebtorAcct == item.DebtorAcct);
+                                                if (debtorInfoFlag.Any(x => x.AcctStatus == "A"))
+                                                {
+                                                    debtorAccountActiveOne = await debtorInfoFlag.Select(x => x.DebtorAcct).FirstOrDefaultAsync();
+                                                    break;
+                                                }
+
+                                            }
+                                        }
+
+
+                                        if (debtorAccountActiveOne != null && debtorAccountActiveOne.Any())
+                                        {
+                                            return _response.Response(await GetInteractionsAcctDataHelper(debtorAccountActiveOne, request.ssn, phoneNo, phoneAreaCode, environment));
+                                        }
+                                        else
+                                        {
+                                            var listOfItems = new List<GetInteractionAcctDataViewModel>();
+                                            for (var i = 0; i < phoneInfoDataFromHome.Count(); i++)
+                                            {
+                                                var itemData = new GetInteractionAcctDataViewModel
+                                                {
+                                                    debtorAcct = null,
+                                                    promiseDate = null,
+                                                    ssn = null,
+                                                    balance = 0,
+                                                    address1 = null,
+                                                    address2 = null,
+                                                    birthDate = null,
+                                                    cellPhoneNumber = (phoneInfoDataFromHome.Select(a => a.CellAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.CellPhone)),
+                                                    city = null,
+                                                    clientName = null,
+                                                    debtType = null,
+                                                    emailAddress = null,
+                                                    firstName = null,
+                                                    homePhoneNumber = (phoneInfoDataFromHome.Select(a => a.HomeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.HomePhone)),
+                                                    lastName = null,
+                                                    otherPhoneNumer = (phoneInfoDataFromHome.Select(a => a.OtherAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.OtherPhone)),
+                                                    relativePhoneNumber = (phoneInfoDataFromHome.Select(a => a.RelativeAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.RelativePhone)),
+                                                    stateCode = null,
+                                                    workPhoneNumber = (phoneInfoDataFromHome.Select(a => a.WorkAreaCode)) + "-" + (phoneInfoDataFromHome.Select(a => a.WorkPhone)),
+                                                    zip = null
+                                                };
+                                                listOfItems.Add(itemData);
+                                            }
+
+                                            return _response.Response(listOfItems);
+                                        }
+
+                                    }
+                                    else if (request.debtorAcct == "" && request.phone == "")
+                                    {
+                                        var debtorAccountNumberFromSsnAsync = await _companyFlag
+                                            .GetFlagForDebtorMasterBySsn(request.ssn, environment).Result
+                                            .Where(x => x.Ssn == request.ssn).Select(x => x.DebtorAcct)
+                                            .ToListAsync();
+
+                                        foreach (var item in debtorAccountNumberFromSsnAsync)
+                                        {
+                                            var debtorInfoFlag = (await _companyFlag.GetFlagForDebtorAccount(item, environment))
+                                                .Where(x => x.DebtorAcct == item);
+                                            if (debtorInfoFlag.Any(x => x.AcctStatus == "A"))
+                                            {
+                                                debtorAccountActiveOne = await debtorInfoFlag.Select(x => x.DebtorAcct).FirstOrDefaultAsync();
+                                                break;
+                                            }
+
+                                        }
+                                        //changed to GetInteractionsAcctDataHelperWithoutDebtorAcct to GetInteractionsAcctDataHelper
+                                        return _response.Response(await GetInteractionsAcctDataHelper(debtorAccountActiveOne, request.ssn, phoneNo, phoneAreaCode, environment));
+
+                                    }
+                                    else if (request.debtorAcct == "")
+                                    {
+                                        var debtorAccountNumberFromSsnAsync = await _companyFlag
+                                            .GetFlagForDebtorMasterBySsn(request.ssn, environment).Result
+                                            .Where(x => x.Ssn == request.ssn).Select(x => x.DebtorAcct)
+                                            .ToListAsync();
+
+                                        foreach (var item in debtorAccountNumberFromSsnAsync)
+                                        {
+                                            var debtorInfoFlag = (await _companyFlag.GetFlagForDebtorAccount(item, environment))
+                                                .Where(x => x.DebtorAcct == item);
+                                            if (debtorInfoFlag.Any(x => x.AcctStatus == "A"))
+                                            {
+                                                debtorAccountActiveOne = await debtorInfoFlag.Select(x => x.DebtorAcct).FirstOrDefaultAsync();
+                                                break;
+                                            }
+
+                                        }
+                                        //changed to GetInteractionsAcctDataHelperWithoutDebtorAcct to GetInteractionsAcctDataHelper
+                                        return _response.Response(await GetInteractionsAcctDataHelper(debtorAccountActiveOne, request.ssn, phoneNo, phoneAreaCode, environment));
+                                    }
+                                    else
+                                    {
+
+                                        return _response.Response(await GetInteractionsAcctDataHelper(request.debtorAcct, request.ssn, phoneNo, phoneAreaCode, environment));
+                                    }
+
+
+
+
+                                }
+
+                                break;
+                            }
+                    }
+                }
+                else
+                {
+                    // Handle the case when none of the variables are provided
+                    return _response.Response("You must provide one of the variables, otherwise the endpoint gets overwhelmed and loads unnecessary data. It's a waste of energy.");
                 }
             }
             catch (Exception e)
@@ -1457,17 +1666,17 @@ namespace AargonTools.Manager
 
 
 
-            var rowAdo = _adoConnection.GetData("DECLARE @acctNoVar NVARCHAR(15)='" + debtorAcct + "'" +
+            var rowAdo = await _adoConnection.GetDataAsync("DECLARE @acctNoVar NVARCHAR(15)='" + debtorAcct + "'" +
                                                 " IF(@acctNoVar='')" +
                                                 "SET @acctNoVar=NULL" +
-                                                " DECLARE @ssnVar NVARCHAR(15)='" + ssn + "'" +
-                                                " IF(@ssnVar='') " +
-                                                "SET @ssnVar=NULL " +
-                                                "DECLARE @areaCode NVARCHAR(15)='" + phoneAreaCode + "'" +
-                                                "IF(@areaCode='') " +
-                                                "SET @areaCode=NULL " +
-                                                "DECLARE @phoneNo NVARCHAR(15)='" + phoneNo + "' " +
-                                                "IF(@phoneNo='') SET @phoneNo=NULL" +
+                                                //" DECLARE @ssnVar NVARCHAR(15)='" + ssn + "'" +
+                                                //" IF(@ssnVar='') " +
+                                                //"SET @ssnVar=NULL " +
+                                                //"DECLARE @areaCode NVARCHAR(15)='" + phoneAreaCode + "'" +
+                                                //"IF(@areaCode='') " +
+                                                //"SET @areaCode=NULL " +
+                                                //"DECLARE @phoneNo NVARCHAR(15)='" + phoneNo + "' " +
+                                                //"IF(@phoneNo='') SET @phoneNo=NULL" +
                                                 " SELECT distinct dai.debtor_acct," +
                                                 "dai.balance," +
                                                 "dai.email_address," +
@@ -1501,9 +1710,10 @@ namespace AargonTools.Manager
                                                 "LEFT OUTER JOIN client_master" + flag + " cm on cm.client_acct=SUBSTRING(dai.debtor_acct, 1, 4) " +
                                                 "LEFT OUTER JOIN client_acct_info" + flag + " cai on cai.client_acct=SUBSTRING(dai.debtor_acct, 1, 4) " +
                                                 "WHERE dai.acct_status='A' AND (@acctNoVar IS NULL OR  dai.debtor_acct=@acctNoVar)" +
-                                                " AND(@ssnVar IS NULL OR dm.ssn=@ssnVar) " +
-                                                "AND (@areaCode IS NULL OR dpi.cell_area_code=@areaCode OR dpi.home_area_code=@areaCode) " +
-                                                "AND (@phoneNo IS NULL OR dpi.cell_phone=@phoneNo OR dpi.home_phone=@phoneNo)", environment);
+                                                //" AND(@ssnVar IS NULL OR dm.ssn=@ssnVar) " +
+                                                //"AND (@areaCode IS NULL OR dpi.cell_area_code=@areaCode OR dpi.home_area_code=@areaCode) " +
+                                                //"AND (@phoneNo IS NULL OR dpi.cell_phone=@phoneNo OR dpi.home_phone=@phoneNo)" +
+                                                "", environment);
 
 
             var listOfItems = new List<GetInteractionAcctDataViewModel>();
@@ -1576,7 +1786,7 @@ namespace AargonTools.Manager
 
 
 
-            var rowAdo = _adoConnection.GetData("DECLARE @acctNoVar NVARCHAR(15)=''" +
+            var rowAdo = await _adoConnection.GetDataAsync("DECLARE @acctNoVar NVARCHAR(15)='" + debtorAcct + "'" +
                                                 " IF(@acctNoVar='')" +
                                                 "SET @acctNoVar=NULL" +
                                                 " DECLARE @ssnVar NVARCHAR(15)='" + ssn + "'" +
