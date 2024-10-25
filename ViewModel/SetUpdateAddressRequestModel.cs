@@ -12,6 +12,7 @@ namespace AargonTools.ViewModel
         [Required]
         [Column("DebtorAcct")]
         [StringLength(15)]
+        [RegularExpression(@"^\d{4}-\d{6}$", ErrorMessage = "Invalid format. Expected format: 0001-000007.")]
         public string DebtorAcct { get; set; }
       
         [Required]

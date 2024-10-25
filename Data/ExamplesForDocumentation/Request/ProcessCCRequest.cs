@@ -13,7 +13,7 @@ namespace AargonTools.Data.ExamplesForDocumentation.Request
         {
             return new ProcessCcPaymentUniversalRequestModel()
             {
-                debtorAcc = "4950-000001",
+                debtorAcct = "4950-000001",
                 ccNumber = "378282246310005",
                 expiredDate = "12/24",
                 cvv = "1234",

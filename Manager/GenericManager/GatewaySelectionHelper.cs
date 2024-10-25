@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AargonTools.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace AargonTools.Manager.GenericManager
 {
@@ -27,8 +28,8 @@ namespace AargonTools.Manager.GenericManager
 
             if (environment == "P")
             {
-                var indexCount =
-                    _context.LarryCcIndices.Count(x => x.ClientAcct == debtorAcct.Substring(0, 4) && x.AcctStatus == "A");//bug length 0-4
+                var indexCount = await
+                    _context.LarryCcIndices.CountAsync(x => x.ClientAcct == debtorAcct.Substring(0, 4) && x.AcctStatus == "A");//bug length 0-4
                 var gatewayName = "";
                 if (indexCount == 0)
                 {
@@ -42,8 +43,8 @@ namespace AargonTools.Manager.GenericManager
                     gatewayName = "GVALLEYH";
                 if (debtorAcct[..4] == "4756")
                     gatewayName = "TMCBONHAMELAVON";
-                gatewayName =
-                    _context.LarryCcIndices.Where(x => x.ClientAcct == debtorAcct.Substring(0, 4) && x.AcctStatus == "A").Select(s => s.Gateway).SingleOrDefault();
+                gatewayName = await
+                    _context.LarryCcIndices.Where(x => x.ClientAcct == debtorAcct.Substring(0, 4) && x.AcctStatus == "A").Select(s => s.Gateway).SingleOrDefaultAsync();
                 return gatewayName == "UHSSECURE" ? "ELAVON" : gatewayName;
 
 
@@ -54,8 +55,8 @@ namespace AargonTools.Manager.GenericManager
             }
             else if (environment == "PO")
             {
-                var indexCount =
-                    _contextProdOld.LarryCcIndices.Count(x => x.ClientAcct == debtorAcct.Substring(0, 4) && x.AcctStatus == "A");
+                var indexCount = await
+                    _contextProdOld.LarryCcIndices.CountAsync(x => x.ClientAcct == debtorAcct.Substring(0, 4) && x.AcctStatus == "A");
                 var gatewayName = "";
                 if (indexCount == 0)
                 {
@@ -69,8 +70,8 @@ namespace AargonTools.Manager.GenericManager
                     gatewayName = "GVALLEYH";
                 if (debtorAcct[..4] == "4756")
                     gatewayName = "TMCBONHAMELAVON";
-                gatewayName =
-                    _contextProdOld.LarryCcIndices.Where(x => x.ClientAcct == debtorAcct.Substring(0, 4) && x.AcctStatus == "A").Select(s => s.Gateway).SingleOrDefault();
+                gatewayName = await
+                    _contextProdOld.LarryCcIndices.Where(x => x.ClientAcct == debtorAcct.Substring(0, 4) && x.AcctStatus == "A").Select(s => s.Gateway).SingleOrDefaultAsync();
                 return gatewayName == "UHSSECURE" ? "ELAVON" : gatewayName;
             }
 
@@ -78,8 +79,8 @@ namespace AargonTools.Manager.GenericManager
             {
                 var clientAccout = debtorAcct.Trim()[..4];
 
-                var indexCount =
-                    _currentTestEnvironment.LarryCcIndices.Count(x => x.ClientAcct == clientAccout && x.AcctStatus == "A");
+                var indexCount = await
+                    _currentTestEnvironment.LarryCcIndices.CountAsync(x => x.ClientAcct == clientAccout && x.AcctStatus == "A");
                 var gatewayName = "";
                 if (indexCount == 0)
                 {
@@ -93,8 +94,8 @@ namespace AargonTools.Manager.GenericManager
                     gatewayName = "GVALLEYH";
                 if (debtorAcct[..4] == "4756")
                     gatewayName = "TMCBONHAMELAVON";
-                gatewayName =
-                    _currentTestEnvironment.LarryCcIndices.Where(x => x.ClientAcct == clientAccout && x.AcctStatus == "A").Select(s => s.Gateway).SingleOrDefault();
+                gatewayName = await
+                    _currentTestEnvironment.LarryCcIndices.Where(x => x.ClientAcct == clientAccout && x.AcctStatus == "A").Select(s => s.Gateway).SingleOrDefaultAsync();
                 return gatewayName == "UHSSECURE" ? "ELAVON" : gatewayName;
             }
             else
@@ -116,12 +117,122 @@ namespace AargonTools.Manager.GenericManager
                     gatewayName = "GVALLEYH";
                 if (debtorAcct[..4] == "4756")
                     gatewayName = "TMCBONHAMELAVON";
-                gatewayName =
-                    _contextTest.LarryCcIndices.Where(x => x.ClientAcct == debtorAcct.Substring(0, 4) && x.AcctStatus == "A").Select(s => s.Gateway).SingleOrDefault();
+                gatewayName = await
+                    _contextTest.LarryCcIndices.Where(x => x.ClientAcct == debtorAcct.Substring(0, 4) && x.AcctStatus == "A").Select(s => s.Gateway).SingleOrDefaultAsync();
                 return gatewayName == "UHSSECURE" ? "ELAVON" : gatewayName;
             }
         }
 
+        //according to suffix employee no 
+        public async Task<int> CcProcessEmployeeNumberAccordingToFlag(string debtorAcct, string environment)
+        {
+            var account = debtorAcct.Substring(0, 4);
+            if (environment == "P")
+            {
+                if (await _context.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 1950;//National (no suffix): 1950
+                }
+                else if (await _context.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 71950;//Utilities (_D): 71950
+                }
+                else if (await _context.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 41950;//Hawaii (_H): 41950
+                }
+                else if (await _context.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 61950;//Local (_L): 61950
+                }
+                else if (await _context.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 31950;//TCR (_T): 31950
+                }
+                else if (await _context.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 51950;//Wamu (_W): 51950
+                }
+                else if (await _context.ClientMasterPs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 81950;//Purchased Debt (_P): 81950
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+            else if (environment == "PO")
+            {
+                if (await _contextProdOld.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 1950;//National (no suffix): 1950
+                }
+                else if (await _contextProdOld.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 71950;//Utilities (_D): 71950
+                }
+                else if (await _contextProdOld.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 41950;//Hawaii (_H): 41950
+                }
+                else if (await _contextProdOld.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 61950;//Local (_L): 61950
+                }
+                else if (await _contextProdOld.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 31950;//TCR (_T): 31950
+                }
+                else if (await _contextProdOld.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 51950;//Wamu (_W): 51950
+                }
+                else if (await _contextProdOld.ClientMasterPs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 81950;//Purchased Debt (_P): 81950
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+            else
+            {
+                if (await _contextTest.ClientMasters.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 1950;//National (no suffix): 1950
+                }
+                else if (await _contextTest.ClientMasterDs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 71950;//Utilities (_D): 71950
+                }
+                else if (await _contextTest.ClientMasterHs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 41950;//Hawaii (_H): 41950
+                }
+                else if (await _contextTest.ClientMasterLs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 61950;//Local (_L): 61950
+                }
+                else if (await _contextTest.ClientMasterTs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 31950;//TCR (_T): 31950
+                }
+                else if (await _contextTest.ClientMasterWs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 51950;//Wamu (_W): 51950
+                }
+                else if (await _contextTest.ClientMasterPs.Where(x => x.ClientAcct == account).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    return 81950;//Purchased Debt (_P): 81950
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
 
 
 

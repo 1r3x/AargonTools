@@ -217,15 +217,15 @@ namespace AargonTools.Controllers.TestEnvironment
                 if (ModelState.IsValid)
                 {
 
-                    if (requestCcPayment.debtorAcc != null)
+                    if (requestCcPayment.debtorAcct != null)
                     {
 
                         var scheduleDateTime = DateTime.Now;//todo 
-                        var acctLimitTemp = requestCcPayment.debtorAcc.Split('-');
+                        var acctLimitTemp = requestCcPayment.debtorAcct.Split('-');
                         var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
 
-                        var patientBalanceCheck = await _getTheCompanyFlag.GetFlagForDebtorAccount(requestCcPayment.debtorAcc, "T")
-                            .Result.Where(x => x.DebtorAcct == requestCcPayment.debtorAcc).Select(i =>
+                        var patientBalanceCheck = await _getTheCompanyFlag.GetFlagForDebtorAccount(requestCcPayment.debtorAcct, "T")
+                            .Result.Where(x => x.DebtorAcct == requestCcPayment.debtorAcct).Select(i =>
                                    new DebtorAcctInfoT()
                                    {
                                        SuppliedAcct = i.SuppliedAcct,
@@ -291,7 +291,7 @@ namespace AargonTools.Controllers.TestEnvironment
 
                         else
                         {
-                            var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(requestCcPayment.debtorAcc, "T");
+                            var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(requestCcPayment.debtorAcct, "T");
 
                             if (gatewaySelect.Result == "ELAVON" || acctLimitCheck >= 1902000001 && acctLimitCheck < 1902999999)//for staging 
                             {
@@ -333,7 +333,7 @@ namespace AargonTools.Controllers.TestEnvironment
                                     ccNumber = requestCcPayment.ccNumber,
                                     amount = requestCcPayment.amount,
                                     cvv = requestCcPayment.cvv,
-                                    debtorAcc = requestCcPayment.debtorAcc,
+                                    debtorAcc = requestCcPayment.debtorAcct,
                                     expiredDate = requestCcPayment.expiredDate,
                                     hsa = requestCcPayment.hsa,
                                     numberOfPayments = requestCcPayment.numberOfPayments
@@ -452,7 +452,7 @@ namespace AargonTools.Controllers.TestEnvironment
                                 //cc payment insert 
                                 await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
                                 {
-                                    debtorAcc = requestCcPayment.debtorAcc,
+                                    debtorAcc = requestCcPayment.debtorAcct,
                                     approvalCode = "",
                                     approvalStatus = "APPROVED",
                                     chargeTotal = (decimal)requestCcPayment.amount,
@@ -524,7 +524,7 @@ namespace AargonTools.Controllers.TestEnvironment
             {
                 if (ModelState.IsValid)
                 {
-                    var gateway = _gatewayFactory.GetPaymentGateway(requestCcPayment.debtorAcc, "T");
+                    var gateway = _gatewayFactory.GetPaymentGateway(requestCcPayment.debtorAcct, "T");
                     var response = await gateway.ProcessPayment(requestCcPayment, "T");
                     //if transaction is successful
                     if (response is ResponseWithTransaction responseWithTransaction)
@@ -579,11 +579,11 @@ namespace AargonTools.Controllers.TestEnvironment
                 if (ModelState.IsValid)
                 {
 
-                    if (requestCcPayment.debtorAcc != null)
+                    if (requestCcPayment.debtorAcct != null)
                     {
 
                         var scheduleDateTime = DateTime.Now;//todo 
-                        var acctLimitTemp = requestCcPayment.debtorAcc.Split('-');
+                        var acctLimitTemp = requestCcPayment.debtorAcct.Split('-');
                         var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
                         if (acctLimitCheck >= 4950000001 && acctLimitCheck < 4950999999 || acctLimitCheck >= 4984000001 && acctLimitCheck < 4984999999)
                         {
@@ -636,7 +636,7 @@ namespace AargonTools.Controllers.TestEnvironment
 
                         else
                         {
-                            var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(requestCcPayment.debtorAcc, "CBT");
+                            var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(requestCcPayment.debtorAcct, "CBT");
 
                             if (gatewaySelect.Result == "ELAVON")
                             {
@@ -662,7 +662,7 @@ namespace AargonTools.Controllers.TestEnvironment
                                     ccNumber = requestCcPayment.ccNumber,
                                     amount = requestCcPayment.amount,
                                     cvv = requestCcPayment.cvv,
-                                    debtorAcc = requestCcPayment.debtorAcc,
+                                    debtorAcc = requestCcPayment.debtorAcct,
                                     expiredDate = requestCcPayment.expiredDate,
                                     hsa = requestCcPayment.hsa,
                                     numberOfPayments = requestCcPayment.numberOfPayments,
@@ -770,7 +770,7 @@ namespace AargonTools.Controllers.TestEnvironment
                                     //cc payment insert 
                                     await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
                                     {
-                                        debtorAcc = requestCcPayment.debtorAcc,
+                                        debtorAcc = requestCcPayment.debtorAcct,
                                         approvalCode = "",
                                         approvalStatus = "APPROVED",
                                         chargeTotal = (decimal)requestCcPayment.amount,

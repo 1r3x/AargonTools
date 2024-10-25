@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AargonTools.Interfaces;
 using AargonTools.Manager.GenericManager;
@@ -13,68 +14,93 @@ namespace AargonTools.Manager
         private static TestEnvironmentDbContext _contextTest;
         private static ProdOldDbContext _contextProdOld;
         private static ResponseModel _response;
+        private static IAddNotes _addNotes;
 
-        public AddBadNumbers(ExistingDataDbContext context, ResponseModel response, TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld)
+        public AddBadNumbers(ExistingDataDbContext context, ResponseModel response, TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld,
+            IAddNotes addNotes)
         {
             _context = context;
             _response = response;
             _contextTest = contextTest;
             _contextProdOld = contextProdOld;
+            _addNotes = addNotes;
         }
-        async Task<ResponseModel> IAddBadNumbers.AddBadNumbers(string accountNo, string phoneNo,string environment)
+        async Task<ResponseModel> IAddBadNumbers.AddBadNumbers(string accountNo, string phoneNo, string environment)
         {
-            if (environment=="P")
+            var rxCellPhoneUs = new Regex(@"(?<!\d)\d{10}(?!\d)");
+
+
+            if (environment == "P")
             {
-                var debtorPhoneData = await _context.DebtorPhoneInfos.FirstOrDefaultAsync(x => x.DebtorAcct == accountNo);
-
-
-                if (debtorPhoneData != null)
+                if (rxCellPhoneUs.IsMatch(phoneNo))
                 {
-                    var badNumbers = new DebtorBadNumber
+                    var phoneNoWithOutAreaCode = phoneNo.Substring(3, 7);
+                    var phoneAreaCode = phoneNo.Substring(0, 3);
+
+                    var debtorPhoneData = await _context.DebtorPhoneInfos.FirstOrDefaultAsync(x => x.DebtorAcct == accountNo);
+
+                    if (debtorPhoneData != null)
                     {
-                        DebtorAcct = accountNo,
-                        HomeAreaCode = debtorPhoneData.HomeAreaCode,
-                        HomePhone = phoneNo,
-                        TimeAttempted = DateTime.Now,
-                        Reason = "REMOVED FROM ACCOUNT"
-                    };
+                        var badNumbers = new DebtorBadNumber
+                        {
+                            DebtorAcct = accountNo,
+                            HomeAreaCode = phoneAreaCode,
+                            HomePhone = phoneNoWithOutAreaCode,
+                            TimeAttempted = DateTime.Now,
+                            Reason = "REMOVED FROM ACCOUNT"
+                        };
 
-                    await _context.DebtorBadNumbers.AddAsync(badNumbers);
+                        await _context.DebtorBadNumbers.AddAsync(badNumbers);
 
-                }
-                if (debtorPhoneData != null && debtorPhoneData.HomePhone == phoneNo)
-                {
-                    debtorPhoneData.HomePhone = null;
-                    _context.DebtorPhoneInfos.Update(debtorPhoneData);
-                }
+                        
 
-                else if (debtorPhoneData != null && debtorPhoneData.WorkPhone == phoneNo)
-                {
-                    debtorPhoneData.WorkPhone = null;
-                    _context.DebtorPhoneInfos.Update(debtorPhoneData);
-                }
-                else if (debtorPhoneData != null && debtorPhoneData.CellPhone == phoneNo)
-                {
-                    debtorPhoneData.CellPhone = null;
-                    _context.DebtorPhoneInfos.Update(debtorPhoneData);
-                }
-                else if (debtorPhoneData != null && debtorPhoneData.OtherPhone == phoneNo)
-                {
-                    debtorPhoneData.OtherPhone = null;
-                    _context.DebtorPhoneInfos.Update(debtorPhoneData);
-                }
+                        if (debtorPhoneData.HomePhone == phoneNoWithOutAreaCode)
+                        {
+                            debtorPhoneData.HomePhone = null;
+                            debtorPhoneData.HomeAreaCode = null;
+                        }
+                        else if (debtorPhoneData.WorkPhone == phoneNoWithOutAreaCode)
+                        {
+                            debtorPhoneData.WorkPhone = null;
+                            debtorPhoneData.WorkAreaCode = null;
+                        }
+                        else if (debtorPhoneData.CellPhone == phoneNoWithOutAreaCode)
+                        {
+                            debtorPhoneData.CellPhone = null;
+                            debtorPhoneData.CellAreaCode = null;
+                        }
+                        else if (debtorPhoneData.OtherPhone == phoneNoWithOutAreaCode)
+                        {
+                            debtorPhoneData.OtherPhone = null;
+                            debtorPhoneData.OtherAreaCode = null;
+                        }
 
-                try
-                {
-                    await _context.SaveChangesAsync();
-                    return _response.Response(true, true, "Successfully enlisted a bad number.");
+                        _context.DebtorPhoneInfos.Update(debtorPhoneData);
+
+
+                        await _addNotes.CreateNotes(accountNo, $"PHONE NUMBER REMOVED (API): {phoneAreaCode}-{phoneNoWithOutAreaCode}", environment);
+
+                        try
+                        {
+                            await _context.SaveChangesAsync();
+                            return _response.Response(true, true, "Successfully enlisted a bad number.");
+                        }
+                        catch (Exception e)
+                        {
+                            return _response.Response(true, false, e.Message);
+                        }
+                    }
+                    else
+                    {
+                        return _response.Response(false, false, "Debtor account not found.");
+                    }
                 }
-                catch (Exception e)
+                else
                 {
-                    return _response.Response(true, false, e);
+                    return _response.Response(false, false, "Phone no. not valid.");
                 }
             }
-            else if (environment=="PO")
+            else if (environment == "PO")
             {
                 var debtorPhoneData = await _contextProdOld.DebtorPhoneInfos.FirstOrDefaultAsync(x => x.DebtorAcct == accountNo);
 
@@ -127,59 +153,74 @@ namespace AargonTools.Manager
             }
             else
             {
-                var debtorPhoneData = await _contextTest.DebtorPhoneInfos.FirstOrDefaultAsync(x => x.DebtorAcct == accountNo);
-
-
-                if (debtorPhoneData != null)
+                if (rxCellPhoneUs.IsMatch(phoneNo))
                 {
-                    var badNumbers = new DebtorBadNumber
+                    var phoneNoWithOutAreaCode = phoneNo.Substring(3, 7);
+                    var phoneAreaCode = phoneNo.Substring(0, 3);
+
+                    var debtorPhoneData = await _contextTest.DebtorPhoneInfos.FirstOrDefaultAsync(x => x.DebtorAcct == accountNo);
+
+                    if (debtorPhoneData != null)
                     {
-                        DebtorAcct = accountNo,
-                        HomeAreaCode = debtorPhoneData.HomeAreaCode,
-                        HomePhone = phoneNo,
-                        TimeAttempted = DateTime.Now,
-                        Reason = "REMOVED FROM ACCOUNT"
-                    };
+                        var badNumbers = new DebtorBadNumber
+                        {
+                            DebtorAcct = accountNo,
+                            HomeAreaCode = phoneAreaCode,
+                            HomePhone = phoneNoWithOutAreaCode,
+                            TimeAttempted = DateTime.Now,
+                            Reason = "REMOVED FROM ACCOUNT"
+                        };
 
-                    await _contextTest.DebtorBadNumbers.AddAsync(badNumbers);
+                        await _contextTest.DebtorBadNumbers.AddAsync(badNumbers);
 
-                }
-                if (debtorPhoneData != null && debtorPhoneData.HomePhone == phoneNo)
-                {
-                    debtorPhoneData.HomePhone = null;
-                    _contextTest.DebtorPhoneInfos.Update(debtorPhoneData);
-                }
 
-                else if (debtorPhoneData != null && debtorPhoneData.WorkPhone == phoneNo)
-                {
-                    debtorPhoneData.WorkPhone = null;
-                    _contextTest.DebtorPhoneInfos.Update(debtorPhoneData);
-                }
-                else if (debtorPhoneData != null && debtorPhoneData.CellPhone == phoneNo)
-                {
-                    debtorPhoneData.CellPhone = null;
-                    _contextTest.DebtorPhoneInfos.Update(debtorPhoneData);
-                }
-                else if (debtorPhoneData != null && debtorPhoneData.OtherPhone == phoneNo)
-                {
-                    debtorPhoneData.OtherPhone = null;
-                    _contextTest.DebtorPhoneInfos.Update(debtorPhoneData);
-                }
 
-                try
-                {
-                    await _contextTest.SaveChangesAsync();
-                    return _response.Response(true,true,"Successfully enlisted a bad number.");
+                        if (debtorPhoneData.HomePhone == phoneNoWithOutAreaCode)
+                        {
+                            debtorPhoneData.HomePhone = null;
+                            debtorPhoneData.HomeAreaCode = null;
+                        }
+                        else if (debtorPhoneData.WorkPhone == phoneNoWithOutAreaCode)
+                        {
+                            debtorPhoneData.WorkPhone = null;
+                            debtorPhoneData.WorkAreaCode = null;
+                        }
+                        else if (debtorPhoneData.CellPhone == phoneNoWithOutAreaCode)
+                        {
+                            debtorPhoneData.CellPhone = null;
+                            debtorPhoneData.CellAreaCode = null;
+                        }
+                        else if (debtorPhoneData.OtherPhone == phoneNoWithOutAreaCode)
+                        {
+                            debtorPhoneData.OtherPhone = null;
+                            debtorPhoneData.OtherAreaCode = null;
+                        }
+
+                        _contextTest.DebtorPhoneInfos.Update(debtorPhoneData);
+
+
+                        await _addNotes.CreateNotes(accountNo, $"PHONE NUMBER REMOVED (API): {phoneAreaCode}-{phoneNoWithOutAreaCode}", environment);
+
+                        try
+                        {
+                            await _contextTest.SaveChangesAsync();
+                            return _response.Response(true, true, "Successfully enlisted a bad number.");
+                        }
+                        catch (Exception e)
+                        {
+                            return _response.Response(true, false, e.Message);
+                        }
+                    }
+                    else
+                    {
+                        return _response.Response(false, false, "Debtor account not found.");
+                    }
                 }
-                catch (Exception e)
+                else
                 {
-                    return _response.Response(true, false, e);
-                    throw;
+                    return _response.Response(false, false, "Phone no. not valid.");
                 }
             }
-           
-
-           
         }
     }
 }

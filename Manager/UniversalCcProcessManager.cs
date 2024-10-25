@@ -79,7 +79,7 @@ namespace AargonTools.Manager
 
         public async Task<ResponseModel> ForTcr(ProcessCcPaymentUniversalRequestModel request, string environment)
         {
-            var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(request.debtorAcc, "T");
+            var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(request.debtorAcct, "T");
             if (gatewaySelect.Result == "ELAVON")
             {
                 ResponseModel response;

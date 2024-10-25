@@ -17,10 +17,12 @@ namespace AargonTools.Controllers
     public class AccountInformationController : ControllerBase
     {
         private readonly IGetAccountInformation _context;
+        private readonly IGetInteractionsAcctData _contextGetInteractionsAcctData;
 
-        public AccountInformationController(IGetAccountInformation context)
+        public AccountInformationController(IGetAccountInformation context, IGetInteractionsAcctData contextGetInteractionsAcctData)
         {
             _context = context;
+            _contextGetInteractionsAcctData = contextGetInteractionsAcctData;
         }
 
 
@@ -410,6 +412,82 @@ namespace AargonTools.Controllers
         /// <response code="200">Execution Successful</response>
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
         /// 
+        //[ProducesResponseType(typeof(GetInteractionAcctDataExample), 200)]
+        //[HttpPost("GetInteractionsAcctData")]
+        //public async Task<IActionResult> GetInteractionsAcctData([FromBody] GetInteractionAcctDateRequestModel request)
+        //{
+        //    Serilog.Log.Information("GetInteractionsAcctData => GET");
+        //    try
+        //    {
+        //        //P for prod.
+
+        //        //original
+        //        var item = await _contextGetInteractionsAcctData.GetInteractionsAcctData(request, "P");
+
+        //        return Ok(item);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Serilog.Log.Error(e.InnerException, e.Message);
+        //        throw;
+        //    }
+
+        //}
+
+
+        /// <summary>
+        ///  Returns Interactions Account Data.(Prod.)
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// Gets the  interactions account data by passing JSON body like the request example. All parameters are not required
+        /// but one
+        /// for this endpoint . You can call with an API client like  https://g14.aargontools.com/api/AccountInformation/GetInteractionsAcctData
+        /// and it's POST request for getting the data.
+        ///
+        /// **Details**:
+        /// Regular expression for debtorAcct [@"\d{4}-\d{6}"] ex. 0001-000001, for phone [@"\d{10}"] ex. 2123037334,
+        /// please don't forget about valid token.
+        ///  **GET Table/Fields Details**
+        ///  debtor_phone_info,
+        ///  
+        ///  check_detail,
+        ///  
+        ///  larry_cc_payments,
+        ///  
+        ///  debtor_pp_info,
+        ///  
+        ///  debtor_acct_info(flag),
+        ///  
+        ///  debtor_master(flag),
+        ///  
+        ///  client_master(flag),
+        ///  
+        ///  client_acct_info(flag)
+        ///  
+        /// 
+        /// Pull--> 
+        /// debtor_phone_info->home_area_code,home_phone,work_area_code,work_phone,cell_area_code,cell_phone,other_area_code,other_phone,
+        /// relative_area_code,relative_phone,debtor_acct
+        /// 
+        /// check_detail->check_date
+        /// 
+        /// larry_cc_payments->date_process
+        /// 
+        /// debtor_pp_info->pp_date1
+        /// 
+        /// debtor_acct_info(flag)->debtor_acct,balance,email_address,acct_status
+        /// 
+        /// debtor_master(flag)->ssn,address1,address2,city,state_code,zip,birth_date,first_name,last_name,
+        /// 
+        /// client_master(flag)->client_name
+        /// 
+        /// client_acct_info(flag)->acct_type
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        /// 
         [ProducesResponseType(typeof(GetInteractionAcctDataExample), 200)]
         [HttpPost("GetInteractionsAcctData")]
         public async Task<IActionResult> GetInteractionsAcctData([FromBody] GetInteractionAcctDateRequestModel request)
@@ -418,7 +496,9 @@ namespace AargonTools.Controllers
             try
             {
                 //P for prod.
-                var item = await _context.GetInteractionsAcctData(request, "P");
+
+                var item = await _contextGetInteractionsAcctData.GetInteractionsAcctDataSpeedRun(request, "P");//test 
+
 
                 return Ok(item);
             }
@@ -429,6 +509,7 @@ namespace AargonTools.Controllers
             }
 
         }
+
 
         /// <summary>
         ///  Returns client invoice header.(Prod.)

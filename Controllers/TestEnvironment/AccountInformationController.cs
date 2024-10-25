@@ -17,10 +17,12 @@ namespace AargonTools.Controllers.TestEnvironment
     public class AccountInformationController : ControllerBase
     {
         private readonly IGetAccountInformation _context;
+        private readonly IGetInteractionsAcctData _contextGetInteractionsAcctData;
 
-        public AccountInformationController(IGetAccountInformation context)
+        public AccountInformationController(IGetAccountInformation context, IGetInteractionsAcctData contextGetInteractionsAcctData)
         {
             _context = context;
+            _contextGetInteractionsAcctData = contextGetInteractionsAcctData;
         }
         /// <summary>
         ///  Returns the balance of a debtor account (Test.)
@@ -416,7 +418,7 @@ namespace AargonTools.Controllers.TestEnvironment
             try
             {
                 //P for prod.
-                var item = await _context.GetInteractionsAcctData(request, "T");
+                var item = await _contextGetInteractionsAcctData.GetInteractionsAcctDataSpeedRun(request, "T");
 
                 return Ok(item);
             }

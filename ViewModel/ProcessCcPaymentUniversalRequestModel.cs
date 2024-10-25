@@ -5,7 +5,7 @@ namespace AargonTools.ViewModel
     public class ProcessCcPaymentUniversalRequestModel
     {
         [Required]
-        public string? debtorAcc { get; set; }
+        public string? debtorAcct { get; set; }
         [Required]
         public string? ccNumber { get; set; }
         [Required]

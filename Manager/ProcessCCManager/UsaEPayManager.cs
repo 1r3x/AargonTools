@@ -21,17 +21,22 @@ namespace AargonTools.Manager.ProcessCCManager
         private readonly IOptions<CentralizeVariablesModel> _centralizeVariablesModel;
         private static ResponseModel _response;
         private static ICardTokenizationDataHelper _cardTokenizationHelper;
-       
+
         private static IProcessCcPayment _usaEPay;
         private static PostPaymentA _postPaymentAHelper;
         private readonly ISetCCPayment _setCcPayment;
 
+        //
+        private static IAddNotesV3 _addNotes;
+        private static GatewaySelectionHelper _gatewaySelectionHelper;
+
         public UsaEPayManager(HttpClient clientForInstaMed,
             IOptions<CentralizeVariablesModel> centralizeVariablesModel,
             ICardTokenizationDataHelper cardTokenizationHelper, ResponseModel response,
-             PostPaymentA postPaymentAHelper, IProcessCcPayment usaEPay, ISetCCPayment setCcPayment)
+             PostPaymentA postPaymentAHelper, IProcessCcPayment usaEPay, ISetCCPayment setCcPayment, IAddNotesV3 addNotes,
+             GatewaySelectionHelper gatewaySelectionHelper)
         {
-            
+
             _cardTokenizationHelper = cardTokenizationHelper;
             _response = response;
             _centralizeVariablesModel = centralizeVariablesModel;
@@ -40,6 +45,8 @@ namespace AargonTools.Manager.ProcessCCManager
             _postPaymentAHelper = postPaymentAHelper;
             _usaEPay = usaEPay;
             _setCcPayment = setCcPayment;
+            _gatewaySelectionHelper = gatewaySelectionHelper;
+            _addNotes = addNotes;
         }
 
 
@@ -52,7 +59,7 @@ namespace AargonTools.Manager.ProcessCCManager
                 ccNumber = request.ccNumber,
                 amount = request.amount,
                 cvv = request.cvv,
-                debtorAcc = request.debtorAcc,
+                debtorAcc = request.debtorAcct,
                 expiredDate = request.expiredDate,
                 hsa = request.hsa,
                 numberOfPayments = request.numberOfPayments
@@ -93,7 +100,32 @@ namespace AargonTools.Manager.ProcessCCManager
                 ResponseMessage = obj.result,
                 TransactionId = obj.refnum
             };
+            var noteText = "";
+            if (res.ResponseCode != null)
+            {
+                noteText = "USAEPAY CC APPROVED FOR $" + request.amount + " " +
+                          res.ResponseMessage.ToUpper() +
+                          " AUTH #:" + res.AuthorizationNumber;
+            }
+            else
+            {
+                noteText = "USAEPAY CC DECLINED FOR $" + request.amount + " " +
+                                   res.ResponseMessage.ToUpper() +
+                                   " AUTH #:" + res.AuthorizationNumber;
+            }
 
+            var noteObj = new NoteMaster()
+            {
+                DebtorAcct = request.debtorAcct,
+                Employee = await _gatewaySelectionHelper.CcProcessEmployeeNumberAccordingToFlag(request.debtorAcct, environment),
+                ActivityCode = "RA",
+                NoteText = noteText,
+                Important = "N",
+                ActionCode = null
+
+            };
+
+            await _addNotes.CreateNotes(noteObj, environment); //PO for prod_old & T is for test_db
             //updated 
 
             var ccNUmber = requestForUsaEPay.ccNumber;
@@ -171,7 +203,7 @@ namespace AargonTools.Manager.ProcessCCManager
             //cc payment insert 
             await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
             {
-                debtorAcc = request.debtorAcc,
+                debtorAcc = request.debtorAcct,
                 approvalCode = "",
                 approvalStatus = "APPROVED",
                 chargeTotal = (decimal)request.amount,
@@ -199,7 +231,7 @@ namespace AargonTools.Manager.ProcessCCManager
                 ccNumber = request.ccNumber,
                 amount = request.amount,
                 cvv = request.cvv,
-                debtorAcc = request.debtorAcc,
+                debtorAcc = request.debtorAcct,
                 expiredDate = request.expiredDate,
                 hsa = request.hsa,
                 numberOfPayments = request.numberOfPayments

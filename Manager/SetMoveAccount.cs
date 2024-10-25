@@ -27,34 +27,53 @@ namespace AargonTools.Manager
             _contextProdOld = contextProdOld;
         }
 
-        async Task<ResponseModel> ISetMoveAccount.SetMoveAccount(string debtorAcct, int toQueue,string environment)
+        async Task<ResponseModel> ISetMoveAccount.SetMoveAccount(string debtorAcct, int toQueue, string environment)
         {
-            if (environment=="P")
+            if (environment == "P")
             {
-                var oldQueue = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
-                if (oldQueue.Employee == null)
-                {
-                    return _response.Response(true, false, "Invalid Request[This account is inactive].");
-                }
-                //new implementtaions check account for collectors queue 
+                var oldQueue = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result
+                          .FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
 
-                var collectorsQueue = await _context.EmployeeInfos.FirstOrDefaultAsync(x => x.Employee == oldQueue.Employee);
-                if (collectorsQueue.EmployeeType == "B" || collectorsQueue.EmployeeType == "C")
+                if (oldQueue?.Employee == null)
                 {
+                    // Account is inactive
+                    return _response.Response(true, false, "Invalid Request [This account is inactive].");
+                }
+
+                // New implementations check account for collectors queue
+                var collectorsQueue = await _context.EmployeeInfos
+                                    .FirstOrDefaultAsync(x => x.Employee == oldQueue.Employee);
+
+                if (collectorsQueue?.EmployeeType == "B" || collectorsQueue?.EmployeeType == "C")
+                {
+                    // Account is in an employee queue
                     return _response.Response(true, false, "Invalid Request [This account is in an employee queue].");
                 }
 
-                //if it's only transfer into same company then check for it
-                var toQueueResult = await _context.EmployeeInfos.FirstOrDefaultAsync(x => x.Employee == toQueue && x.EmployeeType == "Q" && x.AcctStatus == "A");
+                // If it's only transfer into same company then check for it
+                var toQueueResult = await _context.EmployeeInfos
+                                    .FirstOrDefaultAsync(x => x.Employee == toQueue
+                                                                && x.EmployeeType == "Q"
+                                                                && x.AcctStatus == "A");
+
                 if (toQueueResult == null)
                 {
-                    return _response.Response(true, false, "Invalid Request[Request queue not available].");
+                    // Request queue not available
+                    return _response.Response(true, false, "Invalid Request [Request queue not available].");
                 }
+
                 var targetQueue = await _companyFlag.GetFlagForQueueMaster(debtorAcct, environment).Result
-                    .FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
-                if (targetQueue.Employee == null) return _response.Response(true, false, "Invalid Request.[By any how data corrupted for" + debtorAcct + " its not in the any queue master tables].");
+                                    .FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
+
+                if (targetQueue?.Employee == null)
+                {
+                    // Data corrupted, account not in any queue master tables
+                    return _response.Response(true, false, "Invalid Request. [By any how data corrupted for " + debtorAcct + ", not in any queue master tables].");
+                }
+
+                // Create and save note
                 var datetimeNow = DateTime.Now;
-                var note = new NoteMaster()
+                var note = new NoteMaster
                 {
                     DebtorAcct = debtorAcct,
                     NoteDate = datetimeNow.AddSeconds(-datetimeNow.Second).AddMilliseconds(-datetimeNow.Millisecond),
@@ -64,23 +83,18 @@ namespace AargonTools.Manager
                 };
                 await _context.NoteMasters.AddAsync(note);
 
-                //for getting the user
-
-
-                //datetime for remove seconds
-
-                var log = new MoveAccountApiLogs()
+                // Create and save log
+                var log = new MoveAccountApiLogs
                 {
                     DebtorAcct = debtorAcct,
                     FromQueue = (int)oldQueue.Employee,
                     ToQueue = toQueue,
                     MoveDate = datetimeNow.AddSeconds(-datetimeNow.Second),
-                    //todo get the current user
                     Requestor = _userService.GetLoginUserName()
                 };
                 await _context.MoveAccountApiLogs.AddAsync(log);
 
-
+                // Update queues
                 oldQueue.Employee = toQueue;
                 targetQueue.Employee = toQueue;
                 _context.Update(oldQueue);
@@ -89,10 +103,12 @@ namespace AargonTools.Manager
                 await _context.SaveChangesAsync();
 
                 return _response.Response(true, true, "Account moved successfully.");
+
+
             }
-            else if (environment=="PO")
+            else if (environment == "PO")
             {
-                 var oldQueue = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
+                var oldQueue = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
                 if (oldQueue.Employee == null)
                 {
                     return _response.Response(true, false, "Invalid Request[This account is inactive].");
@@ -150,34 +166,53 @@ namespace AargonTools.Manager
 
                 await _contextProdOld.SaveChangesAsync();
 
-                return _response.Response(true,true,"Account moved successfully.");
+                return _response.Response(true, true, "Account moved successfully.");
             }
             else
             {
-                var oldQueue = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
-                if (oldQueue.Employee == null)
-                {
-                    return _response.Response(true, false, "Invalid Request[This account is inactive].");
-                }
-                //new implementtaions check account for collectors queue 
+                var oldQueue = await _companyFlag.GetFlagForDebtorAccount(debtorAcct, environment).Result
+                           .FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
 
-                var collectorsQueue = await _contextTest.EmployeeInfos.FirstOrDefaultAsync(x => x.Employee == oldQueue.Employee);
-                if (collectorsQueue.EmployeeType == "B" || collectorsQueue.EmployeeType=="C")
+                if (oldQueue?.Employee == null)
                 {
+                    // Account is inactive
+                    return _response.Response(true, false, "Invalid Request [This account is inactive].");
+                }
+
+                // New implementations check account for collectors queue
+                var collectorsQueue = await _contextTest.EmployeeInfos
+                                    .FirstOrDefaultAsync(x => x.Employee == oldQueue.Employee);
+
+                if (collectorsQueue?.EmployeeType == "B" || collectorsQueue?.EmployeeType == "C")
+                {
+                    // Account is in an employee queue
                     return _response.Response(true, false, "Invalid Request [This account is in an employee queue].");
                 }
 
-                //if it's only transfer into same company then check for it
-                var toQueueResult = await _contextTest.EmployeeInfos.FirstOrDefaultAsync(x => x.Employee == toQueue && x.EmployeeType == "Q" && x.AcctStatus == "A");
+                // If it's only transfer into same company then check for it
+                var toQueueResult = await _contextTest.EmployeeInfos
+                                    .FirstOrDefaultAsync(x => x.Employee == toQueue
+                                                                && x.EmployeeType == "Q"
+                                                                && x.AcctStatus == "A");
+
                 if (toQueueResult == null)
                 {
-                    return _response.Response(true, false, "Invalid Request[Request queue not available].");
+                    // Request queue not available
+                    return _response.Response(true, false, "Invalid Request [Request queue not available].");
                 }
+
                 var targetQueue = await _companyFlag.GetFlagForQueueMaster(debtorAcct, environment).Result
-                    .FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
-                if (targetQueue.Employee == null) return _response.Response(true, false, "Invalid Request.[By any how data  corrupted for" + debtorAcct + " its not in the any queue master tables].");
+                                    .FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
+
+                if (targetQueue?.Employee == null)
+                {
+                    // Data corrupted, account not in any queue master tables
+                    return _response.Response(true, false, "Invalid Request. [By any how data corrupted for " + debtorAcct + ", not in any queue master tables].");
+                }
+
+                // Create and save note
                 var datetimeNow = DateTime.Now;
-                var note = new NoteMaster()
+                var note = new NoteMaster
                 {
                     DebtorAcct = debtorAcct,
                     NoteDate = datetimeNow.AddSeconds(-datetimeNow.Second).AddMilliseconds(-datetimeNow.Millisecond),
@@ -187,23 +222,18 @@ namespace AargonTools.Manager
                 };
                 await _contextTest.NoteMasters.AddAsync(note);
 
-                //for getting the user
-
-
-                //datetime for remove seconds
-
-                var log = new MoveAccountApiLogs()
+                // Create and save log
+                var log = new MoveAccountApiLogs
                 {
                     DebtorAcct = debtorAcct,
                     FromQueue = (int)oldQueue.Employee,
                     ToQueue = toQueue,
                     MoveDate = datetimeNow.AddSeconds(-datetimeNow.Second),
-                    //todo get the current user
                     Requestor = _userService.GetLoginUserName()
                 };
                 await _contextTest.MoveAccountApiLogs.AddAsync(log);
 
-
+                // Update queues
                 oldQueue.Employee = toQueue;
                 targetQueue.Employee = toQueue;
                 _contextTest.Update(oldQueue);
@@ -211,10 +241,10 @@ namespace AargonTools.Manager
 
                 await _contextTest.SaveChangesAsync();
 
-                return _response.Response(true,true,"Account moved successfully.");
+                return _response.Response(true, true, "Account moved successfully.");
             }
 
-          
+
         }
     }
 }

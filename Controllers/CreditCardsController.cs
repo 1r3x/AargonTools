@@ -214,15 +214,15 @@ namespace AargonTools.Controllers
                 if (ModelState.IsValid)
                 {
 
-                    if (requestCcPayment.debtorAcc != null)
+                    if (requestCcPayment.debtorAcct != null)
                     {
 
                         var scheduleDateTime = DateTime.Now;//todo 
-                        var acctLimitTemp = requestCcPayment.debtorAcc.Split('-');
+                        var acctLimitTemp = requestCcPayment.debtorAcct.Split('-');
                         var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
 
-                        var patientBalanceCheck = await _getTheCompanyFlag.GetFlagForDebtorAccount(requestCcPayment.debtorAcc, "P")
-                            .Result.Where(x => x.DebtorAcct == requestCcPayment.debtorAcc).Select(i =>
+                        var patientBalanceCheck = await _getTheCompanyFlag.GetFlagForDebtorAccount(requestCcPayment.debtorAcct, "P")
+                            .Result.Where(x => x.DebtorAcct == requestCcPayment.debtorAcct).Select(i =>
                                    new DebtorAcctInfoT()
                                    {
                                        SuppliedAcct = i.SuppliedAcct,
@@ -288,7 +288,7 @@ namespace AargonTools.Controllers
 
                             else
                             {
-                                var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(requestCcPayment.debtorAcc, "P");
+                                var gatewaySelect = _gatewaySelectionHelper.UniversalCcProcessGatewaySelectionHelper(requestCcPayment.debtorAcct, "P");
 
                                 if (gatewaySelect.Result == "ELAVON" || acctLimitCheck >= 1902000001 && acctLimitCheck < 1902999999)//for staging 
                                 {
@@ -330,7 +330,7 @@ namespace AargonTools.Controllers
                                         ccNumber = requestCcPayment.ccNumber,
                                         amount = requestCcPayment.amount,
                                         cvv = requestCcPayment.cvv,
-                                        debtorAcc = requestCcPayment.debtorAcc,
+                                        debtorAcc = requestCcPayment.debtorAcct,
                                         expiredDate = requestCcPayment.expiredDate,
                                         hsa = requestCcPayment.hsa,
                                         numberOfPayments = requestCcPayment.numberOfPayments
@@ -449,7 +449,7 @@ namespace AargonTools.Controllers
                                     //cc payment insert 
                                     await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
                                     {
-                                        debtorAcc = requestCcPayment.debtorAcc,
+                                        debtorAcc = requestCcPayment.debtorAcct,
                                         approvalCode = "",
                                         approvalStatus = "APPROVED",
                                         chargeTotal = (decimal)requestCcPayment.amount,
@@ -518,7 +518,7 @@ namespace AargonTools.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    var gateway = _gatewayFactory.GetPaymentGateway(requestCcPayment.debtorAcc, "P");
+                    var gateway = _gatewayFactory.GetPaymentGateway(requestCcPayment.debtorAcct, "P");
                     var response = await gateway.ProcessPayment(requestCcPayment, "P");
                     //if transaction is successful
                     if (response is ResponseWithTransaction responseWithTransaction)

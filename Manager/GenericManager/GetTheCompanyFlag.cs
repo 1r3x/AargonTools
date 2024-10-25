@@ -8,9 +8,9 @@ namespace AargonTools.Manager.GenericManager
 {
     public class GetTheCompanyFlag
     {
-        private static ExistingDataDbContext _context;
-        private static TestEnvironmentDbContext _contextTest;
-        private static ProdOldDbContext _contextProdOld;
+        private readonly ExistingDataDbContext _context;
+        private readonly TestEnvironmentDbContext _contextTest;
+        private readonly ProdOldDbContext _contextProdOld;
         public GetTheCompanyFlag(ExistingDataDbContext context, TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld)
         {
             _context = context;
@@ -548,7 +548,7 @@ namespace AargonTools.Manager.GenericManager
 
 
         }
-
+        //for sake of performance 
         public async Task<IQueryable<IDebtorMaster>> GetFlagForDebtorMasterBySsn(string ssn, string environment)
         {
 
@@ -660,7 +660,6 @@ namespace AargonTools.Manager.GenericManager
 
 
         }
-
 
         public async Task<IQueryable<IDebtorMaster>> GetFlagForDebtorMaster(string debtorAcct, string environment)
         {

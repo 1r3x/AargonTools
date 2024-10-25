@@ -92,7 +92,7 @@ namespace AargonTools.Controllers
             });
         }
 
-       
+
         /// <summary>
         ///  Can generate a token and a refresh token.
         /// </summary>
@@ -112,57 +112,39 @@ namespace AargonTools.Controllers
         [ProducesResponseType(typeof(LoginErrorResponse), 400)]
         public async Task<IActionResult> Login([FromBody] UserLoginRequest user)
         {
-            Serilog.Log.Information("Login => POST["+ _userService.GetClientIpAddress() + "]--> " + user.Email);
+            Serilog.Log.Information("Login => POST[" + _userService.GetClientIpAddress() + "]--> " + user.Email);
 
-            try
+            if (!ModelState.IsValid)
             {
-                if (ModelState.IsValid)
+                return BadRequest(new RegistrationResponse
                 {
-                    var existingUser = await _userManager.FindByEmailAsync(user.Email);
-
-                    if (existingUser == null)
-                    {
-                        return BadRequest(new RegistrationResponse()
-                        {
-                            Errors = new List<string>() {
-                                "User not exists"
-                            },
-                            Success = false
-                        });
-                    }
-
-                    var isCorrect = await _userManager.CheckPasswordAsync(existingUser, user.Password);
-
-                    if (!isCorrect)
-                    {
-                        return BadRequest(new RegistrationResponse()
-                        {
-                            Errors = new List<string>() {
-                                "Invalid login request, password or user doesn't match"
-                            },
-                            Success = false
-                        });
-                    }
-
-                    var jwtToken = await GenerateJwtToken(existingUser);
-
-                    return Ok(jwtToken);
-                }
-
-                return BadRequest(new RegistrationResponse()
-                {
-                    Errors = new List<string>() {
-                        "Invalid payload"
-                    },
+                    Errors = new List<string> { "Invalid payload" },
                     Success = false
                 });
             }
+
+            try
+            {
+                var existingUser = await _userManager.FindByEmailAsync(user.Email);
+                if (existingUser == null || !await _userManager.CheckPasswordAsync(existingUser, user.Password))
+                {
+                    return BadRequest(new RegistrationResponse
+                    {
+                        Errors = new List<string> { "Invalid login request, password or user doesn't match" },
+                        Success = false
+                    });
+                }
+
+                var jwtToken = await GenerateJwtToken(existingUser);
+                return Ok(jwtToken);
+            }
             catch (Exception e)
             {
-                Serilog.Log.Error(e.InnerException,e.Message);
+                Serilog.Log.Error(e, e.Message);
                 throw;
             }
-           
+
+
         }
 
 
@@ -214,7 +196,7 @@ namespace AargonTools.Controllers
         }
 
 
-        private async Task<AuthResult> GenerateJwtToken(IdentityUser user)
+        private async Task<AuthResult> GenerateJwtTokenOld(IdentityUser user)
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();
 
@@ -257,6 +239,52 @@ namespace AargonTools.Controllers
                 RefreshToken = refreshToken.Token
             };
         }
+
+        private async Task<AuthResult> GenerateJwtToken(IdentityUser user)
+        {
+            var key = Encoding.ASCII.GetBytes(_jwtConfig.Secret);
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            var claims = new[]
+            {
+        new Claim("Id", user.Id),
+        new Claim(JwtRegisteredClaimNames.Email, user.Email),
+        new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+    };
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddMinutes(50), //todo  Use a configuration value
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var jwtToken = tokenHandler.WriteToken(token);
+
+            var refreshToken = new RefreshToken
+            {
+                JwtId = token.Id,
+                IsUsed = false,
+                IsRevorked = false,
+                UserId = user.Id,
+                AddedDate = DateTime.UtcNow,
+                ExpiryDate = DateTime.UtcNow.AddMonths(6), // todo Use a configuration value
+                Token = $"{RandomString(35)}{Guid.NewGuid()}"
+            };
+
+            await _apiDbContext.RefreshTokens.AddAsync(refreshToken);
+            await _apiDbContext.SaveChangesAsync();
+
+            return new AuthResult
+            {
+                Token = jwtToken,
+                Success = true,
+                RefreshToken = refreshToken.Token
+            };
+        }
+
 
         private async Task<AuthResult> VerifyAndGenerateToken(TokenRequest tokenRequest)
         {

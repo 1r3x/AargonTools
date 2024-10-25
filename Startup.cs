@@ -52,22 +52,20 @@ namespace AargonTools
             //for centralize data 
             services.Configure<CentralizeVariablesModel>(Configuration.GetSection("CentralizeVariables"));
 
-            services.AddDbContext<ApiDbContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")
-                ));
+            services.AddDbContext<ApiDbContext>(
+                options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Scoped);
 
             services.AddDbContext<ExistingDataDbContext>(
-                options => options.UseSqlServer("name=ConnectionStrings:DefaultConnection"));
+                options => options.UseSqlServer("name=ConnectionStrings:DefaultConnection"), ServiceLifetime.Scoped);
 
             services.AddDbContext<TestEnvironmentDbContext>(
-                options => options.UseSqlServer("name=ConnectionStrings:TestEnvironmentConnection"));
+                options => options.UseSqlServer("name=ConnectionStrings:TestEnvironmentConnection"), ServiceLifetime.Scoped);
 
             services.AddDbContext<ProdOldDbContext>(
-                options => options.UseSqlServer("name=ConnectionStrings:ProdOldConnection"));
+                options => options.UseSqlServer("name=ConnectionStrings:ProdOldConnection"), ServiceLifetime.Scoped);
 
             services.AddDbContext<CurrentBackupTestEnvironmentDbContext>(
-                options => options.UseSqlServer("name=ConnectionStrings:CurrentBackupTestConnection"));
+                options => options.UseSqlServer("name=ConnectionStrings:CurrentBackupTestConnection"), ServiceLifetime.Scoped);
 
             var key = Encoding.ASCII.GetBytes(Configuration["JwtConfig:Secret"]);
 
@@ -101,7 +99,7 @@ namespace AargonTools
 
             services.AddControllers();
             //IHttpContextAccessor register
-            
+
 
 
             services.AddSwaggerGen(c =>
@@ -151,6 +149,10 @@ namespace AargonTools
 
             //injected getAccountInformation v1.0
             services.AddScoped<IGetAccountInformation, GetAccountInformation>();
+            //injected getAccountInformation v2.0
+            services.AddScoped<IGetInteractionsAcctData, GetInteractionsAcctDataManager>();
+
+
             //injected setAccountInformation v1.0
             services.AddScoped<ISetMoveAccount, SetMoveAccount>();
             services.AddScoped<IAddNotes, AddNotes>();
@@ -195,9 +197,9 @@ namespace AargonTools
             services.AddTransient<ISetInteractResults, InteractResultsManager>();
 
 
-            
-            
-            
+
+
+
 
         }
 

@@ -29,16 +29,18 @@ namespace AargonTools.Manager
                 if (environment == "P")
                 {
                     var datetimeNow = DateTime.Now;
-                    var note = new NoteMaster()
+                    var note = new NoteMaster
                     {
                         DebtorAcct = request.DebtorAcct,
-                        NoteDate = datetimeNow.AddSeconds(-datetimeNow.Second).AddMilliseconds(-datetimeNow.Millisecond),
+                        NoteDate = new DateTime(datetimeNow.Year, datetimeNow.Month, datetimeNow.Day, datetimeNow.Hour, datetimeNow.Minute, 0),
                         Employee = request.Employee,
                         ActivityCode = request.ActivityCode,
                         NoteText = request.NoteText.ToUpper()
                     };
+
                     await _context.NoteMasters.AddAsync(note);
                     await _context.SaveChangesAsync();
+
                 }
                 else if (environment == "PO")
                 {
@@ -46,7 +48,7 @@ namespace AargonTools.Manager
                     var note = new NoteMaster()
                     {
                         DebtorAcct = request.DebtorAcct,
-                        NoteDate = datetimeNow.AddSeconds(-datetimeNow.Second).AddMilliseconds(-datetimeNow.Millisecond),
+                        NoteDate = new DateTime(datetimeNow.Year, datetimeNow.Month, datetimeNow.Day, datetimeNow.Hour, datetimeNow.Minute, 0),
                         Employee = request.Employee,
                         ActivityCode = request.ActivityCode,
                         NoteText = request.NoteText.ToUpper()
@@ -60,7 +62,7 @@ namespace AargonTools.Manager
                     var note = new NoteMaster()
                     {
                         DebtorAcct = request.DebtorAcct,
-                        NoteDate = datetimeNow.AddSeconds(-datetimeNow.Second).AddMilliseconds(-datetimeNow.Millisecond),
+                        NoteDate = new DateTime(datetimeNow.Year, datetimeNow.Month, datetimeNow.Day, datetimeNow.Hour, datetimeNow.Minute, 0),
                         Employee = request.Employee,
                         ActivityCode = request.ActivityCode,
                         NoteText = request.NoteText.ToUpper()

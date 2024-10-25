@@ -33,45 +33,65 @@ namespace AargonTools.Manager
                 if (environment == "P")
                 {
                     var rxCellPhoneUs = new Regex(@"(?<!\d)\d{10}(?!\d)");
+
                     if (rxCellPhoneUs.IsMatch(cellPhoneNo))
                     {
-                        var areaCode = cellPhoneNo.Substring(0, 3);
-                        var cellNo = cellPhoneNo.Substring(3, 7);
+                        var onlyAreaCode = cellPhoneNo.Substring(0, 3);
+                        var onlyCellNo = cellPhoneNo.Substring(3, 7);
 
                         var targetData = await _context.DebtorPhoneInfos.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
-                        if (targetData.CellPhone != null)
+
+                        if (targetData != null)
                         {
-                            //todo 
-                            var newPhoneNumber = new NewPhoneNumber()
+                            if (targetData.CellPhone != null)
                             {
-                                DebtorAcct = debtorAcct,
-                                AreaCode = areaCode,
-                                PhoneNum = cellNo,
-                                DateAcquired = DateTime.Now,
-                                EnteredBy = 1994,
-                                NumberType = "CELL",
-                                Source = "API"
-                            };
-                            await _context.NewPhoneNumbers.AddAsync(newPhoneNumber);
+                                // Add new phone number to NewPhoneNumbers table
+                                var newPhoneNumber = new NewPhoneNumber
+                                {
+                                    DebtorAcct = debtorAcct,
+                                    AreaCode = onlyAreaCode,
+                                    PhoneNum = onlyCellNo,
+                                    DateAcquired = DateTime.Now,
+                                    EnteredBy = 1994,
+                                    NumberType = "CELL",
+                                    Source = "API"
+                                };
+
+                                await _context.NewPhoneNumbers.AddAsync(newPhoneNumber);
+
+
+                                // Update existing phone number
+                                targetData.CellPhone = onlyCellNo;
+                                targetData.CellAreaCode = onlyAreaCode;
+                                _context.Update(targetData);
+
+
+                                await _context.SaveChangesAsync();
+
+                                await _addNotes.CreateNotes(debtorAcct, $"NEW PHONE NUMBER (API): {onlyAreaCode}-{onlyCellNo}", environment);
+
+                                return _response.Response(true, true, $"Successfully set a new number on new phone number directory for debtor account {debtorAcct}.");
+                            }
+
+                            // Update existing phone number
+                            targetData.CellPhone = onlyCellNo;
+                            targetData.CellAreaCode = onlyAreaCode;
+                            _context.Update(targetData);
+
+                            await _addNotes.CreateNotes(debtorAcct, $"NEW PHONE NUMBER (API): {onlyAreaCode}-{onlyCellNo}", environment);
+
                             await _context.SaveChangesAsync();
-                            await _addNotes.CreateNotes(debtorAcct, "NEW PHONE NUMBER (API): " +
-                                                                    " {" + areaCode + "-" + cellNo + "}",
-                                environment);
-                            return _response.Response(true, true, "Successfully set a new number on new phone number directory " +
-                                                                  "for debtor account " + debtorAcct + ".");
+
+                            return _response.Response(true, true, $"Successfully set the number for debtor account {debtorAcct}.");
                         }
 
-                        targetData.CellPhone = cellPhoneNo;
-                        targetData.CellAreaCode = areaCode;
-                        _context.Update(targetData);
-                        await _addNotes.CreateNotes(debtorAcct, "NEW PHONE NUMBER (API): " +
-                                                                " {" + areaCode + "-" + cellNo + "}",
-                             environment);
-                        return _response.Response(true, true, "Successfully set the number for debtor account " + debtorAcct + ".");
+                        return _response.Response(false, false, "Debtor account not found.");
                     }
-                    return _response.Response(true, false, "This is not a valid US cell number.");
+
+                    return _response.Response(false, false, "This is not a valid US cell number.");
+
                 }
-                else if (environment=="PO")
+                else if (environment == "PO")
                 {
                     var rxCellPhoneUs = new Regex(@"(?<!\d)\d{10}(?!\d)");
                     if (rxCellPhoneUs.IsMatch(cellPhoneNo))
@@ -115,44 +135,63 @@ namespace AargonTools.Manager
                 else
                 {
                     var rxCellPhoneUs = new Regex(@"(?<!\d)\d{10}(?!\d)");
+
                     if (rxCellPhoneUs.IsMatch(cellPhoneNo))
                     {
-                        var areaCode = cellPhoneNo.Substring(0, 3);
-                        var cellNo = cellPhoneNo.Substring(3, 7);
+                        var onlyAreaCode = cellPhoneNo.Substring(0, 3);
+                        var onlyCellNo = cellPhoneNo.Substring(3, 7);
 
                         var targetData = await _contextTest.DebtorPhoneInfos.FirstOrDefaultAsync(x => x.DebtorAcct == debtorAcct);
-                        if (targetData.CellPhone != null)
+
+                        if (targetData != null)
                         {
-                            //todo 
-                            var newPhoneNumber = new NewPhoneNumber()
+                            if (targetData.CellPhone != null)
                             {
-                                DebtorAcct = debtorAcct,
-                                AreaCode = areaCode,
-                                PhoneNum = cellNo,
-                                DateAcquired = DateTime.Now,
-                                EnteredBy = 1994,
-                                NumberType = "CELL",
-                                Source = "API"
-                            };
-                            await _contextTest.NewPhoneNumbers.AddAsync(newPhoneNumber);
+                                // Add new phone number to NewPhoneNumbers table
+                                var newPhoneNumber = new NewPhoneNumber
+                                {
+                                    DebtorAcct = debtorAcct,
+                                    AreaCode = onlyAreaCode,
+                                    PhoneNum = onlyCellNo,
+                                    DateAcquired = DateTime.Now,
+                                    EnteredBy = 1994,
+                                    NumberType = "CELL",
+                                    Source = "API"
+                                };
+
+                                await _contextTest.NewPhoneNumbers.AddAsync(newPhoneNumber);
+
+
+                                // Update existing phone number
+                                targetData.CellPhone = onlyCellNo;
+                                targetData.CellAreaCode = onlyAreaCode;
+                                _contextTest.Update(targetData);
+
+
+                                await _contextTest.SaveChangesAsync();
+
+                                await _addNotes.CreateNotes(debtorAcct, $"NEW PHONE NUMBER (API): {onlyAreaCode}-{onlyCellNo}", environment);
+
+                                return _response.Response(true, true, $"Successfully set a new number on new phone number directory for debtor account {debtorAcct}.");
+                            }
+
+                            // Update existing phone number
+                            targetData.CellPhone = onlyCellNo;
+                            targetData.CellAreaCode = onlyAreaCode;
+                            _contextTest.Update(targetData);
+
+                            await _addNotes.CreateNotes(debtorAcct, $"NEW PHONE NUMBER (API): {onlyAreaCode}-{onlyCellNo}", environment);
+
                             await _contextTest.SaveChangesAsync();
-                            await _addNotes.CreateNotes(debtorAcct, "NEW PHONE NUMBER (API): " +
-                                                                    " {" + areaCode + "-" + cellNo + "}",
-                                environment);
-                            return _response.Response(true, true, "Successfully set a new number on new phone number directory " +
-                                                                  "for debtor account " + debtorAcct + ".");
+
+                            return _response.Response(true, true, $"Successfully set the number for debtor account {debtorAcct}.");
                         }
 
-                        targetData.CellPhone = cellPhoneNo;
-                        targetData.CellAreaCode = areaCode;
-                        _contextTest.Update(targetData);
-                        await _addNotes.CreateNotes(debtorAcct, "NEW PHONE NUMBER (API): " +
-                                                                " {" + areaCode + "-" + cellNo + "}",
-                            environment);
-                        return _response.Response(true, true, "Successfully set the number for debtor account " + debtorAcct + ".");
+                        return _response.Response(false, false, "Debtor account not found.");
                     }
 
-                    return _response.Response(true, false, "This is not a valid US cell number.");
+                    return _response.Response(false, false, "This is not a valid US cell number.");
+
                 }
 
             }

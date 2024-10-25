@@ -37,13 +37,15 @@ namespace AargonTools.Manager.ProcessCCManager
         private static CurrentBackupTestEnvironmentDbContext _currentTestEnvironment;
 
         private static PostPaymentA _postPaymentAHelper;
+        //
+        private static GatewaySelectionHelper _gatewaySelectionHelper;
 
         public InstaMedManager(HttpClient clientForInstaMed,
             IOptions<CentralizeVariablesModel> centralizeVariablesModel, IAddNotesV3 addNotes,
             IAddCcPaymentV2 addCcPayment,
             ICardTokenizationDataHelper cardTokenizationHelper, ICryptoGraphy crypto, ResponseModel response,
             AdoDotNetConnection adoConnection, GetTheCompanyFlag getTheCompanyFlag, ExistingDataDbContext context, TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld,
-            CurrentBackupTestEnvironmentDbContext currentTestEnvironment, PostPaymentA postPaymentAHelper)
+            CurrentBackupTestEnvironmentDbContext currentTestEnvironment, PostPaymentA postPaymentAHelper, GatewaySelectionHelper gatewaySelectionHelper)
         {
             _addCcPayment = addCcPayment;
             _addNotes = addNotes;
@@ -63,6 +65,7 @@ namespace AargonTools.Manager.ProcessCCManager
             _clientForInstaMed.BaseAddress = new Uri(_centralizeVariablesModel.Value.InstaMedCredentials.BaseAddress);
 
             _postPaymentAHelper = postPaymentAHelper;
+            _gatewaySelectionHelper = gatewaySelectionHelper;
 
         }
 
@@ -129,11 +132,11 @@ namespace AargonTools.Manager.ProcessCCManager
         public async Task<ResponseModel> ProcessPayment(ProcessCcPaymentUniversalRequestModel request, string environment)
         {
             var scheduleDateTime = DateTime.Now;//todo 
-            var acctLimitTemp = request.debtorAcc.Split('-');
+            var acctLimitTemp = request.debtorAcct.Split('-');
             var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
 
-            var patientBalanceCheck = await _getTheCompanyFlag.GetFlagForDebtorAccount(request.debtorAcc, "P")
-                .Result.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+            var patientBalanceCheck = await _getTheCompanyFlag.GetFlagForDebtorAccount(request.debtorAcct, "P")
+                .Result.Where(x => x.DebtorAcct == request.debtorAcct).Select(i =>
                        new DebtorAcctInfoT()
                        {
                            SuppliedAcct = i.SuppliedAcct,
@@ -169,7 +172,7 @@ namespace AargonTools.Manager.ProcessCCManager
                     terminalId = _centralizeVariablesModel.Value.InstaMedOutlet.TerminalID;
                 }
                 //patient info
-                var patientAccountInfo = await _getTheCompanyFlag.GetFlagForDebtorAccount(request.debtorAcc, environment).Result.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+                var patientAccountInfo = await _getTheCompanyFlag.GetFlagForDebtorAccount(request.debtorAcct, environment).Result.Where(x => x.DebtorAcct == request.debtorAcct).Select(i =>
                       new DebtorAcctInfoT()
                       {
                           SuppliedAcct = i.SuppliedAcct,
@@ -178,7 +181,7 @@ namespace AargonTools.Manager.ProcessCCManager
 
 
 
-                var patientInfo = await _context.PatientMasters.Where(x => x.DebtorAcct == request.debtorAcc).Select(i =>
+                var patientInfo = await _context.PatientMasters.Where(x => x.DebtorAcct == request.debtorAcct).Select(i =>
                  new PatientMaster()
                  {
                      FirstName = i.FirstName,
@@ -256,7 +259,7 @@ namespace AargonTools.Manager.ProcessCCManager
 
                     var ccPaymentObj = new CcPayment()
                     {
-                        DebtorAcct = request.debtorAcc,
+                        DebtorAcct = request.debtorAcct,
                         Company = "TOTAL CREDIT RECOVERY",
                         //UserId = username,
                         UserId = "_username", //todo   
@@ -286,7 +289,7 @@ namespace AargonTools.Manager.ProcessCCManager
                     {
                         var ccPaymentObj = new CcPayment()
                         {
-                            DebtorAcct = request.debtorAcc,
+                            DebtorAcct = request.debtorAcct,
                             Company = "TOTAL CREDIT RECOVERY",
                             UserId = "_username", //todo   
                                                   //UserName = username + " -LCG",
@@ -308,8 +311,8 @@ namespace AargonTools.Manager.ProcessCCManager
 
                 var noteObj = new NoteMaster()
                 {
-                    DebtorAcct = request.debtorAcc,
-                    Employee = 31950,
+                    DebtorAcct = request.debtorAcct,
+                    Employee = await _gatewaySelectionHelper.CcProcessEmployeeNumberAccordingToFlag(request.debtorAcct, environment),
                     ActivityCode = "RA",
                     NoteText = noteText,
                     Important = "N",
@@ -340,7 +343,7 @@ namespace AargonTools.Manager.ProcessCCManager
                 merchantId = _centralizeVariablesModel.Value.InstaMedOutlet.MerchantIDPro;
 
                 storeId = _centralizeVariablesModel.Value.InstaMedOutlet.StoreID;
-                var acctLimitTemp = request.debtorAcc.Split('-');
+                var acctLimitTemp = request.debtorAcct.Split('-');
                 var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
                 if (acctLimitCheck >= 4950000001 && acctLimitCheck < 4950999999 || acctLimitCheck >= 4984000001 && acctLimitCheck < 4984999999)
                 {
@@ -404,7 +407,7 @@ namespace AargonTools.Manager.ProcessCCManager
                     LastFour = cardInfoData.CardInfo.LastFour,
                     PaymentMethodId = cardInfoData.CardInfo.PaymentMethodId,
                     Type = cardInfoData.CardInfo.Type,
-                    AssociateDebtorAcct = request.debtorAcc,
+                    AssociateDebtorAcct = request.debtorAcct,
                     CardHolderName = ""
                 };
 
@@ -462,7 +465,7 @@ namespace AargonTools.Manager.ProcessCCManager
                     await _cardTokenizationHelper.InactivePaymentSchedule(_lcgPaymentScheduleId, environment);
                     var ccPaymentObj = new CcPayment()
                     {
-                        DebtorAcct = request.debtorAcc,
+                        DebtorAcct = request.debtorAcct,
                         Company = "TOTAL CREDIT RECOVERY",
                         UserId = "_username", //todo user name
                         UserName = "_username" + " -LCG", //todo user name
@@ -481,13 +484,13 @@ namespace AargonTools.Manager.ProcessCCManager
 
 
                 //new implementation 
-                var companyFlag = await _getTheCompanyFlag.GetStringFlagForAdoQuery(request.debtorAcc, environment);
+                var companyFlag = await _getTheCompanyFlag.GetStringFlagForAdoQuery(request.debtorAcct, environment);
 
-                var balance = _adoConnection.GetData("SELECT CAST(balance as float) as balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment); ;
+                var balance = _adoConnection.GetData("SELECT CAST(balance as float) as balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcct + "'", environment); ;
 
-                var interestAmount = _adoConnection.GetData("SELECT interest_amt_life FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment); ;
+                var interestAmount = _adoConnection.GetData("SELECT interest_amt_life FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcct + "'", environment); ;
 
-                var placements = _adoConnection.GetData("SELECT ISNULL(placement,0) as placement FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
+                var placements = _adoConnection.GetData("SELECT ISNULL(placement,0) as placement FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcct + "'", environment);
                 DataTable feePct = null;
                 decimal feePctSimplified = 0;
 
@@ -497,11 +500,11 @@ namespace AargonTools.Manager.ProcessCCManager
                     switch ((int)placements.Rows[0]["placement"])
                     {
                         case 1:
-                            feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcct, 4) + "'", environment);
                             feePctSimplified = (decimal)feePct.Rows[0]["commission_pct1"];
                             break;
                         case 2:
-                            feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcct, 4) + "'", environment);
                             feePctSimplified = (decimal)feePct.Rows[0]["commission_pct2"];
                             break;
                     }
@@ -510,20 +513,20 @@ namespace AargonTools.Manager.ProcessCCManager
                     switch ((int)placements.Rows[0]["placement"])
                     {
                         case 1:
-                            feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            feePct = _adoConnection.GetData("SELECT commission_pct1 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcct, 4) + "'", environment);
                             break;
                         case 2:
-                            feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
+                            feePct = _adoConnection.GetData("SELECT commission_pct2 FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcct, 4) + "'", environment);
                             break;
                     }
 
 
-                    var qFrom = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
+                    var qFrom = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcct + "'", environment);
                     //for now
-                    var qTo = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
+                    var qTo = _adoConnection.GetData("SELECT ISNULL(employee,0) as employee FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcct + "'", environment);
 
-                    var remit = _adoConnection.GetData("SELECT remit_full_pmt FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcc, 4) + "'", environment);
-                    var adminAmount = _adoConnection.GetData("SELECT CAST(total_fees_balance as float) as total_fees_balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcc + "'", environment);
+                    var remit = _adoConnection.GetData("SELECT remit_full_pmt FROM client_acct_info" + companyFlag + " WHERE client_acct='" + Strings.Left(request.debtorAcct, 4) + "'", environment);
+                    var adminAmount = _adoConnection.GetData("SELECT CAST(total_fees_balance as float) as total_fees_balance FROM debtor_acct_info" + companyFlag + " WHERE debtor_acct='" + request.debtorAcct + "'", environment);
 
                     string paymentType;
                     if (companyFlag == "_t")
@@ -539,7 +542,7 @@ namespace AargonTools.Manager.ProcessCCManager
 
 
                     // debugger
-                    var a = request.debtorAcc;
+                    var a = request.debtorAcct;
                     var b = request.amount;
                     var balanceT = balance.Rows[0]["balance"];
                     var interestAmountT = interestAmount.Rows[0]["interest_amt_life"];
@@ -550,7 +553,7 @@ namespace AargonTools.Manager.ProcessCCManager
                     var m = paymentType;
                     var j = companyFlag;
                     var adminAmountT = adminAmount.Rows[0]["total_fees_balance"];
-                    var l = request.debtorAcc;
+                    var l = request.debtorAcct;
                     //
                     var balanceC = Convert.ToSingle(balanceT);
                     var interestAmountC = Convert.ToDecimal(interestAmountT);
@@ -562,10 +565,10 @@ namespace AargonTools.Manager.ProcessCCManager
 
 
 
-                    await _postPaymentAHelper.Post(request.debtorAcc, request.amount, balanceC,
+                    await _postPaymentAHelper.Post(request.debtorAcct, request.amount, balanceC,
                         interestAmountC, feePctSimplified, request.sif,
                         qFromC, qToC, remitC,
-                        paymentType, companyFlag, adminAmountC, request.debtorAcc, environment);
+                        paymentType, companyFlag, adminAmountC, request.debtorAcct, environment);
                     return _response.Response(false, false, "dasdasd");
                 }
 
