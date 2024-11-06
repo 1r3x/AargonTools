@@ -9,9 +9,9 @@ namespace AargonTools.Manager
 {
     public class SetMoveToDisputeManager : ISetMoveToDispute
     {
-        private static ExistingDataDbContext _context;
-        private static TestEnvironmentDbContext _contextTest;
-        private static ProdOldDbContext _contextProdOld;
+        private readonly ExistingDataDbContext _context;
+        private readonly TestEnvironmentDbContext _contextTest;
+        private readonly ProdOldDbContext _contextProdOld;
         private static ResponseModel _response;
         private static GetTheCompanyFlag _companyFlag;
 

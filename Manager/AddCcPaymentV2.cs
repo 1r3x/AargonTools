@@ -11,13 +11,13 @@ namespace AargonTools.Manager
 {
     public class AddCcPaymentV2 : IAddCcPaymentV2
     {
-        private static ExistingDataDbContext _context;
-        private static TestEnvironmentDbContext _contextTest;
-        private static ProdOldDbContext _contextProdOld;
-        private static CurrentBackupTestEnvironmentDbContext _contextCurrentBackupTest;
+        private readonly ExistingDataDbContext _context;
+        private readonly TestEnvironmentDbContext _contextTest;
+        private readonly ProdOldDbContext _contextProdOld;
+        private readonly CurrentBackupTestEnvironmentDbContext _contextCurrentBackupTest;
         private static ResponseModel _response;
         private readonly AdoDotNetConnection _adoConnection;
-        private readonly IUserService _userService;
+        private static IUserService _userService;
 
         public AddCcPaymentV2(ExistingDataDbContext context, ResponseModel response,
             TestEnvironmentDbContext contextTest, IAddNotes addNotes, AdoDotNetConnection adoConnection, IUserService userService,
@@ -51,7 +51,8 @@ namespace AargonTools.Manager
                         ApprovalCode = request.ApprovalCode,
                         OrderNumber = request.OrderNumber,
                         RefNumber = request.RefNumber,
-                        Sif = request.Sif
+                        Sif = request.Sif,
+                        VoidSale=request.VoidSale
                     };
                     await _context.CcPayments.AddAsync(ccPayment);
                     await _context.SaveChangesAsync();
@@ -72,7 +73,8 @@ namespace AargonTools.Manager
                         ApprovalCode = request.ApprovalCode,
                         OrderNumber = request.OrderNumber,
                         RefNumber = request.RefNumber,
-                        Sif = request.Sif
+                        Sif = request.Sif,
+                        VoidSale = request.VoidSale
                     };
                     await _contextProdOld.CcPayments.AddAsync(ccPayment);
                     await _contextProdOld.SaveChangesAsync();
@@ -93,7 +95,8 @@ namespace AargonTools.Manager
                         ApprovalCode = request.ApprovalCode,
                         OrderNumber = request.OrderNumber,
                         RefNumber = request.RefNumber,
-                        Sif = request.Sif
+                        Sif = request.Sif,
+                        VoidSale = request.VoidSale
                     };
                     await _contextCurrentBackupTest.CcPayments.AddAsync(ccPayment);
                     await _contextCurrentBackupTest.SaveChangesAsync();
@@ -114,7 +117,8 @@ namespace AargonTools.Manager
                         ApprovalCode = request.ApprovalCode,
                         OrderNumber = request.OrderNumber,
                         RefNumber = request.RefNumber,
-                        Sif = request.Sif
+                        Sif = request.Sif,
+                        VoidSale = request.VoidSale
                     };
                     await _contextTest.CcPayments.AddAsync(ccPayment);
                     await _contextTest.SaveChangesAsync();

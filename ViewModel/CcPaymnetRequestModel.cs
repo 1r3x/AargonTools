@@ -14,6 +14,7 @@ namespace AargonTools.ViewModel
         public string orderNumber { get; set; }
         public string refNo { get; set; }
         public string sif { get; set; }
+        public string void_sale{ get; set;}
 
     }
 }

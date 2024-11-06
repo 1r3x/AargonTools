@@ -10,10 +10,10 @@ namespace AargonTools.Manager
 {
     public class AddNotesV3:IAddNotesV3
     {
-        private static ExistingDataDbContext _context;
-        private static TestEnvironmentDbContext _contextTest;
-        private static ProdOldDbContext _contextProdOld;
-        private static CurrentBackupTestEnvironmentDbContext _contextCurrentBackupTest;
+        private readonly ExistingDataDbContext _context;
+        private readonly TestEnvironmentDbContext _contextTest;
+        private readonly ProdOldDbContext _contextProdOld;
+        private readonly CurrentBackupTestEnvironmentDbContext _contextCurrentBackupTest;
         private static ResponseModel _response;
 
         public AddNotesV3(ExistingDataDbContext context, ResponseModel response, TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld,

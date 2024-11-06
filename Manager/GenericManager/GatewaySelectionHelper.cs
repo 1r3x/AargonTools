@@ -9,10 +9,10 @@ namespace AargonTools.Manager.GenericManager
 {
     public class GatewaySelectionHelper
     {
-        private static ExistingDataDbContext _context;
-        private static TestEnvironmentDbContext _contextTest;
-        private static ProdOldDbContext _contextProdOld;
-        private static CurrentBackupTestEnvironmentDbContext _currentTestEnvironment;
+        private readonly ExistingDataDbContext _context;
+        private readonly TestEnvironmentDbContext _contextTest;
+        private readonly ProdOldDbContext _contextProdOld;
+        private readonly CurrentBackupTestEnvironmentDbContext _currentTestEnvironment;
         public GatewaySelectionHelper(ExistingDataDbContext context, TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld,
             CurrentBackupTestEnvironmentDbContext currentTestEnvironment)
         {

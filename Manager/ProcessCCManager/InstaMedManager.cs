@@ -21,7 +21,7 @@ namespace AargonTools.Manager.ProcessCCManager
     public class InstaMedManager : IPaymentGateway
     {
         private static HttpClient _clientForInstaMed = new();
-        private readonly IOptions<CentralizeVariablesModel> _centralizeVariablesModel;
+        private static IOptions<CentralizeVariablesModel> _centralizeVariablesModel;
         private static ResponseModel _response;
         private static IAddNotesV3 _addNotes;
         private static IAddCcPaymentV2 _addCcPayment;
@@ -31,10 +31,10 @@ namespace AargonTools.Manager.ProcessCCManager
 
         private readonly AdoDotNetConnection _adoConnection;
         //
-        private static ExistingDataDbContext _context;
-        private static TestEnvironmentDbContext _contextTest;
-        private static ProdOldDbContext _contextProdOld;
-        private static CurrentBackupTestEnvironmentDbContext _currentTestEnvironment;
+        private readonly ExistingDataDbContext _context;
+        private readonly TestEnvironmentDbContext _contextTest;
+        private readonly ProdOldDbContext _contextProdOld;
+        private readonly CurrentBackupTestEnvironmentDbContext _currentTestEnvironment;
 
         private static PostPaymentA _postPaymentAHelper;
         //
@@ -273,7 +273,7 @@ namespace AargonTools.Manager.ProcessCCManager
                         ApprovalCode = _responseModelForInstamed.ResponseCode,
                         OrderNumber = _responseModelForInstamed.TransactionId,
                         RefNumber = "INSTAMEDLH",
-                        Sif = "N",
+                        Sif = request.sif,
                         VoidSale = "N"
                     };
                     await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db

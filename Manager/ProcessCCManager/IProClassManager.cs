@@ -38,10 +38,10 @@ namespace AargonTools.Manager.ProcessCCManager
 
         private readonly AdoDotNetConnection _adoConnection;
         //
-        private static ExistingDataDbContext _context;
-        private static TestEnvironmentDbContext _contextTest;
-        private static ProdOldDbContext _contextProdOld;
-        private static CurrentBackupTestEnvironmentDbContext _currentTestEnvironment;
+        private readonly ExistingDataDbContext _context;
+        private readonly TestEnvironmentDbContext _contextTest;
+        private readonly ProdOldDbContext _contextProdOld;
+        private readonly CurrentBackupTestEnvironmentDbContext _currentTestEnvironment;
 
         private static PostPaymentA _postPaymentAHelper;
 
@@ -271,7 +271,7 @@ namespace AargonTools.Manager.ProcessCCManager
                         ApprovalCode = _responseModelForIProGateway.response_code,
                         OrderNumber = _responseModelForIProGateway.transactionid,
                         RefNumber = "ICLASSPRO",
-                        Sif = "N",
+                        Sif = request.sif,
                         VoidSale = "N"
                     };
                     await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db

@@ -11,10 +11,10 @@ namespace AargonTools.Manager
 {
     public class CardTokenizationDataHelper : ICardTokenizationDataHelper
     {
-        private static ExistingDataDbContext _context;
-        private static TestEnvironmentDbContext _contextTest;
-        private static ProdOldDbContext _contextProdOld;
-        private static CurrentBackupTestEnvironmentDbContext _contextCurrentBackupTest;
+        private readonly ExistingDataDbContext _context;
+        private readonly TestEnvironmentDbContext _contextTest;
+        private readonly ProdOldDbContext _contextProdOld;
+        private readonly CurrentBackupTestEnvironmentDbContext _contextCurrentBackupTest;
 
         public CardTokenizationDataHelper(ExistingDataDbContext context, TestEnvironmentDbContext contextTest,
             ProdOldDbContext contextProdOld, CurrentBackupTestEnvironmentDbContext contextCurrentBackupTest)

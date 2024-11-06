@@ -47,7 +47,7 @@ namespace AargonTools.Middleware
                     .Equals(ipAddress));
             if (!isInWhiteListIpList)
             {
-                Serilog.Log.Information("Forbidden IP [" + _userService.GetClientIpAddress() + "]");
+                Serilog.Log.Warning("Forbidden IP [" + _userService.GetClientIpAddress() + "]");
                 context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                 return;
             }

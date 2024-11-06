@@ -14,13 +14,13 @@ namespace AargonTools.Manager
 {
     public class SetUpdateAddressManager : ISetUpdateAddress
     {
-        private static ExistingDataDbContext _context;
-        private static TestEnvironmentDbContext _contextTest;
-        private static ProdOldDbContext _contextProdOld;
+        private readonly ExistingDataDbContext _context;
+        private readonly TestEnvironmentDbContext _contextTest;
+        private readonly ProdOldDbContext _contextProdOld;
         private static ResponseModel _response;
         private static GetTheCompanyFlag _companyFlag;
         private readonly AdoDotNetConnection _adoConnection;
-        private readonly IAddNotesV2 _addNotesV2;
+        private static IAddNotesV2 _addNotesV2;
         public SetUpdateAddressManager(ExistingDataDbContext context, ResponseModel response, GetTheCompanyFlag companyFlag,
             TestEnvironmentDbContext contextText, AdoDotNetConnection adoConnection, ProdOldDbContext contextProdOld, IAddNotesV2 addNotesV2)
         {

@@ -12,11 +12,11 @@ namespace AargonTools.Manager
 {
     public class SetBlandResultsManager : ISetBlandResults
     {
-        private static ExistingDataDbContext _context;
-        private static TestEnvironmentDbContext _contextTest;
-        private static ProdOldDbContext _contextProdOld;
+        private readonly ExistingDataDbContext _context;
+        private readonly TestEnvironmentDbContext _contextTest;
+        private readonly ProdOldDbContext _contextProdOld;
         private static ResponseModel _response;
-        private readonly IAddNotesV2 _addNotesV2;
+        private static IAddNotesV2 _addNotesV2;
 
         public SetBlandResultsManager(ExistingDataDbContext context, ResponseModel response, TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld, IAddNotesV2 addNotesV2)
         {
@@ -33,6 +33,7 @@ namespace AargonTools.Manager
             {
                 try
                 {
+                    Serilog.Log.Debug("Processing item: {@Item}", item);//debug log
                     var supportText = "";
                     int maxLength = 255;
 
@@ -44,6 +45,8 @@ namespace AargonTools.Manager
                     {
                         supportText = item.summary;
                     }
+                    Serilog.Log.Debug("Support text generated: {SupportText}", supportText);//debug log
+
 
                     //// Initialize an empty string to hold the support text
                     //var supportText = "";
@@ -84,8 +87,8 @@ namespace AargonTools.Manager
                             CallPaymentAmt = Convert.ToDecimal(item.variables.amount99),
                             CallStatus = item.status,
                             CallDisposition = item.disposition_tag,
-                            CallrecordingUrl=item.recording_url,
-                            CallrecordingFile=null
+                            CallrecordingUrl = item.recording_url,
+                            CallrecordingFile = null
                         };
                         await _context.AiCallResults.AddAsync(aiCallResult);
                         await _context.SaveChangesAsync();
@@ -156,7 +159,7 @@ namespace AargonTools.Manager
                     return _response.Response(true, false, e);
                 }
             }
-           
+
 
             return _response.Response(true, true, "Successfully added interact results");
         }

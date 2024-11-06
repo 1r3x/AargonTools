@@ -44,7 +44,7 @@ namespace AargonTools.Controllers
         public CreditCardsController(IProcessCcPayment processCcPayment, ISetCCPayment setCcPayment,
             IUniversalCcProcessApiService processCcUniversal, GatewaySelectionHelper gatewaySelectionHelper, IPreSchedulePaymentProcessing preSchedulePaymentProcessing,
             ResponseModel response, AdoDotNetConnection adoConnection, ICryptoGraphy crypto, ICardTokenizationDataHelper cardTokenizationHelper,
-            IProcessCcPayment usaEPayIMlementtaions, GetTheCompanyFlag getTheCompanyFlag, IViewingSchedulePayments viewingSchedulePaymnets,PaymentGatewayFactory gatewayFactory)
+            IProcessCcPayment usaEPayIMlementtaions, GetTheCompanyFlag getTheCompanyFlag, IViewingSchedulePayments viewingSchedulePaymnets, PaymentGatewayFactory gatewayFactory)
         {
             _processCcPayment = processCcPayment;
             _setCcPayment = setCcPayment;
@@ -513,7 +513,7 @@ namespace AargonTools.Controllers
         [HttpPost("ProcessCcV2")]
         public async Task<IActionResult> ProcessCcV2([FromBody] ProcessCcPaymentUniversalRequestModel requestCcPayment)
         {
-            Serilog.Log.Information("ProcessCcV2 => POST");
+            Serilog.Log.Information("ProcessCcV2 => POST request received with Debtor Account: {@debtorAcct}", requestCcPayment.debtorAcct);
             try
             {
                 if (ModelState.IsValid)
@@ -525,17 +525,19 @@ namespace AargonTools.Controllers
                     {
                         if (responseWithTransaction.TransactionStatus == true)
                         {
+                            Serilog.Log.Information("Transaction successful. Saving card info...");
                             var status = await gateway.SaveCardInfo(requestCcPayment, "P");
+                            Serilog.Log.Information("Card info saved");
                         }
                     }
-
+                    Serilog.Log.Information("Returning response: {@Response}", response);
                     return Ok(response);
                 }
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
-                return Ok(e);
+                Serilog.Log.Error(e, "An error occurred while processing ProcessCcV2 request with Debtor Account: {@debtorAcct}", requestCcPayment.debtorAcct);
+                return Ok("Oops, something went wrong. For more details, see the log.");
             }
 
 

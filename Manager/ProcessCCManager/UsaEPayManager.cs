@@ -86,32 +86,32 @@ namespace AargonTools.Manager.ProcessCCManager
 
             var processTransactionJsonResult = _usaEPay.ProcessingTransactionV2(tokenizeCObj.Key,
                 (decimal)requestForUsaEPay.amount, requestForUsaEPay.hsa != null && (bool)requestForUsaEPay.hsa,
-                 requestForUsaEPay.debtorAcc, request.cardHolderName, "P").Result.Data;
+                 requestForUsaEPay.debtorAcc, request.cardHolderName, environment).Result.Data;
 
             //
 
             var json = JsonConvert.SerializeObject(processTransactionJsonResult, Formatting.Indented);
 
             var obj = JsonConvert.DeserializeObject<SetProcessCCResponse.TransactionDetails>(json);
-            var res = new CommonResponseModelForCCProcess()
+            var response = new CommonResponseModelForCCProcess()
             {
-                AuthorizationNumber = obj.result_code,
-                ResponseCode = obj.authcode,
+                AuthorizationNumber = obj.authcode,
+                ResponseCode = obj.result_code,
                 ResponseMessage = obj.result,
                 TransactionId = obj.refnum
             };
             var noteText = "";
-            if (res.ResponseCode != null)
+            if (response.ResponseCode != null)
             {
                 noteText = "USAEPAY CC APPROVED FOR $" + request.amount + " " +
-                          res.ResponseMessage.ToUpper() +
-                          " AUTH #:" + res.AuthorizationNumber;
+                          response.ResponseMessage.ToUpper() +
+                          " AUTH #:" + response.AuthorizationNumber;
             }
             else
             {
                 noteText = "USAEPAY CC DECLINED FOR $" + request.amount + " " +
-                                   res.ResponseMessage.ToUpper() +
-                                   " AUTH #:" + res.AuthorizationNumber;
+                                   response.ResponseMessage.ToUpper() +
+                                   " AUTH #:" + response.AuthorizationNumber;
             }
 
             var noteObj = new NoteMaster()
@@ -188,12 +188,12 @@ namespace AargonTools.Manager.ProcessCCManager
 
             var paymentScheduleHistoryObj = new LcgPaymentScheduleHistory()
             {
-                ResponseCode = res.ResponseCode,
-                AuthorizationNumber = res.AuthorizationNumber,
+                ResponseCode = response.ResponseCode,
+                AuthorizationNumber = response.AuthorizationNumber,
                 AuthorizationText = "_username", //todo user name 
-                ResponseMessage = res.ResponseMessage,
+                ResponseMessage = response.ResponseMessage,
                 PaymentScheduleId = _USAePayPaymentScheduleId,
-                TransactionId = res.TransactionId,
+                TransactionId = response.TransactionId,
                 TimeLog = DateTime.Now
             };
 
@@ -204,21 +204,18 @@ namespace AargonTools.Manager.ProcessCCManager
             await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
             {
                 debtorAcc = request.debtorAcct,
-                approvalCode = "",
+                approvalCode = response.AuthorizationNumber,
                 approvalStatus = "APPROVED",
                 chargeTotal = (decimal)request.amount,
                 company = "AARGON AGENCY",
-                sif = "Y",
+                sif = request.sif,
                 paymentDate = DateTime.Now,
                 refNo = "USAEPAY2",
-                orderNumber = res.TransactionId,
+                orderNumber = response.TransactionId,
                 userId = "WEB",
-            }, "T");
+                void_sale = "N"
+            }, environment);
 
-
-            //
-
-            var response = _response.Response(true, true, res);
 
             return _response.Response(true, true, response);
         }

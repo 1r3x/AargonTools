@@ -354,7 +354,7 @@ namespace AargonTools.Manager.ProcessCCManager
                     ApprovalCode = _deserializeObjForElavon.ssl_approval_code,
                     OrderNumber = _deserializeObjForElavon.ssl_txn_id,
                     RefNumber = "ELAVON",
-                    Sif = "N",
+                    Sif = request.sif,
                     VoidSale = "N"
                 };
                 await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db

@@ -7,6 +7,7 @@ using AargonTools.Interfaces;
 using AargonTools.ViewModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using System.Text.RegularExpressions;
 
 namespace AargonTools.Controllers
 {
@@ -68,23 +69,32 @@ namespace AargonTools.Controllers
         [ProducesResponseType(typeof(GetAccountBalanceResponseModel), 200)]
         public async Task<IActionResult> GetAccountBalance(string debtorAcct)
         {
-            Serilog.Log.Information("GetAccountBalance => GET");
+            Serilog.Log.Information("Entering GetAccountBalance => GET with debtorAcct: {DebtorAcct}", debtorAcct);
+            // Validate debtor account format
+            var regex = new Regex(@"^\d{4}-\d{6}$");
+            if (!regex.IsMatch(debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
             try
             {
                 var item = await _context.GetAccountBalanceByDebtorAccount(debtorAcct, "P");
 
+                Serilog.Log.Information("Successfully retrieved account balance for debtorAcct: {DebtorAcct}", debtorAcct);
                 return Ok(item);
             }
             catch (Exception e)
             {
-                Serilog.Log.Error(e.InnerException, e.Message);
+                Serilog.Log.Error(e, "Error retrieving account balance for debtorAcct: {DebtorAcct}", debtorAcct);
                 throw;
             }
+            finally
+            {
+                Serilog.Log.Information("Exiting GetAccountBalance => GET with debtorAcct: {DebtorAcct}", debtorAcct);
 
+            }
         }
-
-
-
 
 
         /// <summary>
@@ -108,18 +118,31 @@ namespace AargonTools.Controllers
         [HttpGet("GetAccountValidity/{debtorAcct}")]
         public IActionResult GetAccountValidity(string debtorAcct)
         {
-            Serilog.Log.Information(" GetAccountValidity => GET");
+
+            Serilog.Log.Information("Entering GetAccountValidity => GET with debtorAcct: {DebtorAcct}", debtorAcct);
+            // Validate debtor account format
+            var regex = new Regex(@"^\d{4}-\d{6}$");
+            if (!regex.IsMatch(debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+
             try
             {
                 //P for prod.
                 var item = _context.CheckAccountValidityByDebtorAccount(debtorAcct, "P");
-
+                Serilog.Log.Information("Successfully checked account validity for debtorAcct: {DebtorAcct}", debtorAcct);
                 return Ok(item);
             }
             catch (Exception e)
             {
-                Serilog.Log.Error(e.InnerException, e.Message);
+                Serilog.Log.Error(e, "Error checking account validity for debtorAcct: {DebtorAcct}", debtorAcct);
                 throw;
+            }
+            finally
+            {
+                Serilog.Log.Information("Exiting GetAccountValidity => GET with debtorAcct: {DebtorAcct}", debtorAcct);
             }
 
         }
@@ -162,18 +185,30 @@ namespace AargonTools.Controllers
         [ProducesResponseType(typeof(GetAccountExistenceResponseModel), 200)]
         public async Task<IActionResult> GetAccountExistences(string debtorAcct)
         {
-            Serilog.Log.Information(" GetAccountExistences => GET");
+            Serilog.Log.Information("Entering GetAccountExistences => GET with debtorAcct: {DebtorAcct}", debtorAcct);
+
+            // Validate debtor account format
+            var regex = new Regex(@"^\d{4}-\d{6}$");
+            if (!regex.IsMatch(debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
             try
             {
                 //P for prod.
                 var item = await _context.CheckAccountExistenceByDebtorAccount(debtorAcct, "P");
-
+                Serilog.Log.Information("Successfully checked account existence for debtorAcct: {DebtorAcct}", debtorAcct);
                 return Ok(item);
             }
             catch (Exception e)
             {
-                Serilog.Log.Error(e.InnerException, e.Message);
+                Serilog.Log.Error(e, "Error checking account existence for debtorAcct: {DebtorAcct}", debtorAcct);
                 throw;
+            }
+            finally
+            {
+                Serilog.Log.Information("Exiting GetAccountExistences => GET with debtorAcct: {DebtorAcct}", debtorAcct);
             }
 
         }
@@ -206,18 +241,33 @@ namespace AargonTools.Controllers
         [HttpGet("GetRecentApproval/{debtorAcct}")]
         public async Task<IActionResult> GetRecentApproval(string debtorAcct)
         {
-            Serilog.Log.Information(" GetRecentApproval => GET");
+
+            Serilog.Log.Information("Entering GetRecentApproval => GET with debtorAcct: {DebtorAcct}", debtorAcct);
+
+            // Validate debtor account format
+            var regex = new Regex(@"^\d{4}-\d{6}$");
+            if (!regex.IsMatch(debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+
+
             try
             {
                 //P for prod.
                 var item = await _context.GetRecentApprovalByDebtorAccount(debtorAcct, "P");
-
+                Serilog.Log.Information("Successfully retrieved recent approval for debtorAcct: {DebtorAcct}", debtorAcct);
                 return Ok(item);
             }
             catch (Exception e)
             {
-                Serilog.Log.Error(e.InnerException, e.Message);
+                Serilog.Log.Error(e, "Error retrieving recent approval for debtorAcct: {DebtorAcct}", debtorAcct);
                 throw;
+            }
+            finally
+            {
+                Serilog.Log.Information("Exiting GetRecentApproval => GET with debtorAcct: {DebtorAcct}", debtorAcct);
             }
 
         }
@@ -249,18 +299,32 @@ namespace AargonTools.Controllers
         [HttpGet("GetMultiples/{debtorAcct}")]
         public async Task<IActionResult> GetMultiples(string debtorAcct)
         {
-            Serilog.Log.Information(" GetMultiples => GET");
+
+            Serilog.Log.Information("Entering GetMultiples => GET with debtorAcct: {DebtorAcct}", debtorAcct);
+
+            // Validate debtor account format
+            var regex = new Regex(@"^\d{4}-\d{6}$");
+            if (!regex.IsMatch(debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+
             try
             {
                 //P for prod.
                 var item = await _context.GetMultiples(debtorAcct, "P");
-
+                Serilog.Log.Information("Successfully retrieved multiples for debtorAcct: {DebtorAcct}", debtorAcct);
                 return Ok(item);
             }
             catch (Exception e)
             {
-                Serilog.Log.Error(e.InnerException, e.Message);
+                Serilog.Log.Error(e, "Error retrieving multiples for debtorAcct: {DebtorAcct}", debtorAcct);
                 throw;
+            }
+            finally
+            {
+                Serilog.Log.Information("Exiting GetMultiples => GET with debtorAcct: {DebtorAcct}", debtorAcct);
             }
 
         }
@@ -300,18 +364,29 @@ namespace AargonTools.Controllers
         [HttpGet("GetAccountInfo/{debtorAcct}")]
         public async Task<IActionResult> GetAccountInfo(string debtorAcct)
         {
-            Serilog.Log.Information(" GetAccountInfo => GET");
+            Serilog.Log.Information("Entering GetAccountInfo => GET with debtorAcct: {DebtorAcct}", debtorAcct);
+            // Validate debtor account format
+            var regex = new Regex(@"^\d{4}-\d{6}$");
+            if (!regex.IsMatch(debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
             try
             {
                 //P for prod.
                 var item = await _context.GetAccountInfo(debtorAcct, "P");
-
+                Serilog.Log.Information("Successfully retrieved account info for debtorAcct: {DebtorAcct}", debtorAcct);
                 return Ok(item);
             }
             catch (Exception e)
             {
-                Serilog.Log.Error(e.InnerException, e.Message);
+                Serilog.Log.Error(e, "Error retrieving account info for debtorAcct: {DebtorAcct}", debtorAcct);
                 throw;
+            }
+            finally
+            {
+                Serilog.Log.Information("Exiting GetAccountInfo => GET with debtorAcct: {DebtorAcct}", debtorAcct);
             }
 
         }
@@ -341,18 +416,32 @@ namespace AargonTools.Controllers
         [HttpGet("GetSIF/{debtorAcct}")]
         public async Task<IActionResult> GetSIF(string debtorAcct)
         {
-            Serilog.Log.Information("GetSIF => GET");
+            Serilog.Log.Information("Entering GetSIF => GET with debtorAcct: {DebtorAcct}", debtorAcct);
+
+            // Validate debtor account format
+            var regex = new Regex(@"^\d{4}-\d{6}$");
+            if (!regex.IsMatch(debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+
+
             try
             {
                 //P for prod.
                 var item = await _context.GetSIF(debtorAcct, "P");
-
+                Serilog.Log.Information("Successfully retrieved SIF for debtorAcct: {DebtorAcct}", debtorAcct);
                 return Ok(item);
             }
             catch (Exception e)
             {
-                Serilog.Log.Error(e.InnerException, e.Message);
+                Serilog.Log.Error(e, "Error retrieving SIF for debtorAcct: {DebtorAcct}", debtorAcct);
                 throw;
+            }
+            finally
+            {
+                Serilog.Log.Information("Exiting GetSIF => GET with debtorAcct: {DebtorAcct}", debtorAcct);
             }
 
         }
@@ -492,20 +581,28 @@ namespace AargonTools.Controllers
         [HttpPost("GetInteractionsAcctData")]
         public async Task<IActionResult> GetInteractionsAcctData([FromBody] GetInteractionAcctDateRequestModel request)
         {
-            Serilog.Log.Information("GetInteractionsAcctData => GET");
+
+
+            Serilog.Log.Information("Entering GetInteractionsAcctData => POST with request: {@Request}", request);
+
             try
             {
                 //P for prod.
 
-                var item = await _contextGetInteractionsAcctData.GetInteractionsAcctDataSpeedRun(request, "P");//test 
+                var item = await _contextGetInteractionsAcctData.GetInteractionsAcctDataSpeedRun(request, "P");
 
+                Serilog.Log.Information("Successfully retrieved interactions account data for request: {@Request} ", request);
 
                 return Ok(item);
             }
             catch (Exception e)
             {
-                Serilog.Log.Error(e.InnerException, e.Message);
+                Serilog.Log.Error(e, "Error retrieving interactions account data for request: {@Request}", request);
                 throw;
+            }
+            finally
+            {
+                Serilog.Log.Information("Exiting GetInteractionsAcctData => POST with request: {@Request}", request);
             }
 
         }
@@ -540,20 +637,23 @@ namespace AargonTools.Controllers
         [HttpGet("GetClientInvoiceHeader/{clientAcct}&{company}")]
         public async Task<IActionResult> GetClientInvoiceHeader(string clientAcct, string company)
         {
-            Serilog.Log.Information("GetClientInvoiceHeader => GET");
+            Serilog.Log.Information("Entering GetClientInvoiceHeader => GET with clientAcct: {ClientAcct}, company: {Company}", clientAcct, company);
             try
             {
                 //P for prod.
                 var item = await _context.GetClientInvoiceHeader(clientAcct, company, "P");
-
+                Serilog.Log.Information("Successfully retrieved client invoice header for clientAcct: {ClientAcct}, company: {Company}", clientAcct, company);
                 return Ok(item);
             }
             catch (Exception e)
             {
-                Serilog.Log.Error(e.InnerException, e.Message);
+                Serilog.Log.Error(e, "Error retrieving client invoice header for clientAcct: {ClientAcct}, company: {Company}", clientAcct, company);
                 throw;
             }
-
+            finally
+            {
+                Serilog.Log.Information("Exiting GetClientInvoiceHeader => GET with clientAcct: {ClientAcct}, company: {Company}", clientAcct, company);
+            }
         }
 
 
@@ -583,18 +683,32 @@ namespace AargonTools.Controllers
         [HttpGet("GetClientPrimaryContact/{clientAcct}&{company}")]
         public async Task<IActionResult> GetClientPrimaryContact(string clientAcct, string company)
         {
-            Serilog.Log.Information("GetClientPrimaryContact => GET");
+
+            Serilog.Log.Information("Entering GetClientPrimaryContact => GET with clientAcct: {ClientAcct}, company: {Company}", clientAcct, company);
+
+            // Validate debtor account format
+            var regex = new Regex(@"^\d{4}-\d{6}$");
+            if (!regex.IsMatch(clientAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", clientAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+
             try
             {
                 //P for prod.
                 var item = await _context.GetClientPrimaryContact(clientAcct, company, "P");
-
+                Serilog.Log.Information("Successfully retrieved client primary contact for clientAcct: {ClientAcct}, company: {Company}", clientAcct, company);
                 return Ok(item);
             }
             catch (Exception e)
             {
-                Serilog.Log.Error(e.InnerException, e.Message);
+                Serilog.Log.Error(e, "Error retrieving client primary contact for clientAcct: {ClientAcct}, company: {Company}", clientAcct, company);
                 throw;
+            }
+            finally
+            {
+                Serilog.Log.Information("Exiting GetClientPrimaryContact => GET with clientAcct: {ClientAcct}, company: {Company}", clientAcct, company);
             }
 
         }
@@ -630,20 +744,23 @@ namespace AargonTools.Controllers
         [HttpPost("GetClientInvoicePayments")]
         public async Task<IActionResult> GetClientInvoicePayments([FromBody] GetClientInvoiceRequestModel request)
         {
-            Serilog.Log.Information("GetClientInvoicePayments  => GET");
+            Serilog.Log.Information("Entering GetClientInvoicePayments => POST with request: {@Request}", request);
             try
             {
                 //P for prod.
                 var item = await _context.GetClientInvoicePayments(request, "P");
-
+                Serilog.Log.Information("Successfully retrieved client invoice payments for request: {@Request}", request);
                 return Ok(item);
             }
             catch (Exception e)
             {
-                Serilog.Log.Error(e.InnerException, e.Message);
+                Serilog.Log.Error(e, "Error retrieving client invoice payments for request: {@Request}", request);
                 throw;
             }
-
+            finally
+            {
+                Serilog.Log.Information("Exiting GetClientInvoicePayments => POST with request: {@Request}", request);
+            }
         }
 
 
@@ -703,18 +820,31 @@ namespace AargonTools.Controllers
         [HttpGet("GetNextPaymentInfo/{clientAcct}")]
         public async Task<IActionResult> GetNextPaymentInfo(string clientAcct)
         {
-            Serilog.Log.Information("GetNextPaymentInfo => GET");
+            Serilog.Log.Information("Entering GetNextPaymentInfo => GET with clientAcct: {ClientAcct}", clientAcct);
+
+            // Validate debtor account format
+            var regex = new Regex(@"^\d{4}-\d{6}$");
+            if (!regex.IsMatch(clientAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", clientAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+
             try
             {
                 //P for prod.
                 var item = await _context.GetNextPaymentInfo(clientAcct, "P");
-
+                Serilog.Log.Information("Successfully retrieved next payment info for clientAcct: {ClientAcct}", clientAcct);
                 return Ok(item);
             }
             catch (Exception e)
             {
-                Serilog.Log.Error(e.InnerException, e.Message);
+                Serilog.Log.Error(e, "Error retrieving next payment info for clientAcct: {ClientAcct}", clientAcct);
                 throw;
+            }
+            finally
+            {
+                Serilog.Log.Information("Exiting GetNextPaymentInfo => GET with clientAcct: {ClientAcct}", clientAcct);
             }
 
         }

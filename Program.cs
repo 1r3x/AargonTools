@@ -10,7 +10,6 @@ using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
 using Serilog.Sinks.MSSqlServer.Sinks.MSSqlServer.Options;
 
-// This is a test
 namespace AargonTools
 {
     public class Program
@@ -38,13 +37,27 @@ namespace AargonTools
 
 
             //this is the log controller
+            //Log.Logger = new LoggerConfiguration()
+            //    .Enrich.FromLogContext()
+            //    .WriteTo.MSSqlServer(connectionString,
+            //        sinkOptions: new SinkOptions { TableName = "WebApiLogs" }
+            //        , null, null, LogEventLevel.Information, null, columnOptions: columnOptions, null, null)
+            //    .WriteTo.Seq("http://localhost:5341") // Add this line to configure Seq
+            //    .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
+            //    .CreateLogger();
+
             Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug() // Set global minimum log level
                 .Enrich.FromLogContext()
                 .WriteTo.MSSqlServer(connectionString,
-                    sinkOptions: new SinkOptions { TableName = "WebApiLogs" }
-                    , null, null, LogEventLevel.Information, null, columnOptions: columnOptions, null, null)
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
+                    sinkOptions: new SinkOptions { TableName = "WebApiLogs" },
+                    restrictedToMinimumLevel: LogEventLevel.Information, // Minimum level for SQL Server sink
+                    columnOptions: columnOptions)
+                .WriteTo.Seq("http://localhost:5341", restrictedToMinimumLevel: LogEventLevel.Debug) // Minimum level for Seq
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Error) // Override for Microsoft logs
                 .CreateLogger();
+
+
 
             //build the api after everything
 

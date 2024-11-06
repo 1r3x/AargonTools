@@ -10,8 +10,8 @@ namespace AargonTools.Manager
 {
     public class SetPostDateChecksManager : ISetPostDateChecks
     {
-        private static ExistingDataDbContext _context;
-        private static TestEnvironmentDbContext _contextTest;
+        private readonly ExistingDataDbContext _context;
+        private readonly TestEnvironmentDbContext _contextTest;
         private static ResponseModel _response;
         private readonly AdoDotNetConnection _adoConnection;
 

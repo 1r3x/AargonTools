@@ -93,6 +93,56 @@ namespace AargonTools.Controllers
         }
 
 
+
+        //[HttpPost]
+        //[Route("Login")]
+        //[ApiExplorerSettings(IgnoreApi = true)]
+        //[ProducesResponseType(typeof(RegistrationResponse), 200)]
+        //[ProducesResponseType(typeof(LoginErrorResponse), 400)]
+        //public async Task<IActionResult> Login([FromBody] UserLoginRequest user)
+        //{
+        //    Serilog.Log.Information("Login => POST[" + _userService.GetClientIpAddress() + "]--> " + user.Email);
+
+        //    if (!ModelState.IsValid)
+        //    {
+        //        Serilog.Log.Warning("Invalid payload for user: " + user.Email);
+        //        return BadRequest(new RegistrationResponse
+        //        {
+        //            Errors = new List<string> { "Invalid payload" },
+        //            Success = false
+        //        });
+        //    }
+
+        //    try
+        //    {
+        //        var existingUser = await _userManager.FindByEmailAsync(user.Email);
+        //        if (existingUser == null || !await _userManager.CheckPasswordAsync(existingUser, user.Password))
+        //        {
+
+        //            Serilog.Log.Warning("Invalid password for user: " + user.Email);
+        //            return BadRequest(new RegistrationResponse
+        //            {
+        //                Errors = new List<string> { "Invalid login request, password or user doesn't match" },
+        //                Success = false
+        //            });
+        //        }
+
+        //        var jwtToken = await GenerateJwtToken(existingUser);
+        //        return Ok(jwtToken);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Serilog.Log.Error(e, e.Message);
+        //        throw;
+        //    }
+
+
+        //}
+
+
+
+
+
         /// <summary>
         ///  Can generate a token and a refresh token.
         /// </summary>
@@ -116,6 +166,7 @@ namespace AargonTools.Controllers
 
             if (!ModelState.IsValid)
             {
+                Serilog.Log.Warning("Invalid payload for user: " + user.Email);
                 return BadRequest(new RegistrationResponse
                 {
                     Errors = new List<string> { "Invalid payload" },
@@ -126,8 +177,19 @@ namespace AargonTools.Controllers
             try
             {
                 var existingUser = await _userManager.FindByEmailAsync(user.Email);
-                if (existingUser == null || !await _userManager.CheckPasswordAsync(existingUser, user.Password))
+                if (existingUser == null)
                 {
+                    Serilog.Log.Warning("User not found: " + user.Email);
+                    return BadRequest(new RegistrationResponse
+                    {
+                        Errors = new List<string> { "Invalid login request, password or user doesn't match" },
+                        Success = false
+                    });
+                }
+
+                if (!await _userManager.CheckPasswordAsync(existingUser, user.Password))
+                {
+                    Serilog.Log.Warning("Invalid password for user: " + user.Email);
                     return BadRequest(new RegistrationResponse
                     {
                         Errors = new List<string> { "Invalid login request, password or user doesn't match" },
@@ -136,16 +198,16 @@ namespace AargonTools.Controllers
                 }
 
                 var jwtToken = await GenerateJwtToken(existingUser);
+                Serilog.Log.Information("User logged in successfully: " + user.Email);
                 return Ok(jwtToken);
             }
             catch (Exception e)
             {
-                Serilog.Log.Error(e, e.Message);
+                Serilog.Log.Error(e, "An error occurred while logging in user: " + user.Email);
                 throw;
             }
-
-
         }
+
 
 
 

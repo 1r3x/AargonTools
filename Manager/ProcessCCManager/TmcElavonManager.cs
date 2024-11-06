@@ -33,10 +33,10 @@ namespace AargonTools.Manager.ProcessCCManager
 
         private readonly AdoDotNetConnection _adoConnection;
         //
-        private static ExistingDataDbContext _context;
-        private static TestEnvironmentDbContext _contextTest;
-        private static ProdOldDbContext _contextProdOld;
-        private static CurrentBackupTestEnvironmentDbContext _currentTestEnvironment;
+        private readonly ExistingDataDbContext _context;
+        private readonly TestEnvironmentDbContext _contextTest;
+        private readonly ProdOldDbContext _contextProdOld;
+        private readonly CurrentBackupTestEnvironmentDbContext _currentTestEnvironment;
 
         private static PostPaymentA _postPaymentAHelper;
         private static GatewaySelectionHelper _gatewaySelectionHelper;
@@ -343,7 +343,7 @@ namespace AargonTools.Manager.ProcessCCManager
                     ApprovalCode = _deserializeObjForElavon.ssl_approval_code,
                     OrderNumber = _deserializeObjForElavon.ssl_txn_id,
                     RefNumber = "ELAVON",
-                    Sif = "N",
+                    Sif = request.sif,
                     VoidSale = "N"
                 };
                 await _addCcPayment.AddCcPayment(ccPaymentObj, environment); //PO for prod_old & T is for test_db

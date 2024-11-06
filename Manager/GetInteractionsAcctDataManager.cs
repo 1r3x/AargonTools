@@ -16,9 +16,9 @@ namespace AargonTools.Manager
         private readonly ExistingDataDbContext _context;
         private readonly TestEnvironmentDbContext _contextTest;
         private readonly ProdOldDbContext _contextProdOld;
-        private readonly ResponseModel _response;
-        private readonly GetTheCompanyFlag _companyFlag;
-        private readonly AdoDotNetConnection _adoConnection;
+        private static ResponseModel _response;
+        private static GetTheCompanyFlag _companyFlag;
+        private static AdoDotNetConnection _adoConnection;
 
 
         public GetInteractionsAcctDataManager(ExistingDataDbContext context, ResponseModel response, GetTheCompanyFlag companyFlag,
@@ -229,8 +229,10 @@ namespace AargonTools.Manager
                     companyFlag = CompanyflagString
 
                 };
+                Serilog.Log.Debug("Successfully retrieved interactions account: {debtorAcct} company flag: {companyFlag}", itemData.debtorAcct, itemData.companyFlag); //debug log
                 listOfItems.Add(itemData);
             }
+
             return listOfItems;
         }
 
@@ -502,7 +504,7 @@ namespace AargonTools.Manager
                                                 };
                                                 listOfItems.Add(itemData);
                                             }
-
+                                            Serilog.Log.Debug("Successfully retrieved interactions account but with default data"); //debug log
                                             return _response.Response(listOfItems);
                                         }
 

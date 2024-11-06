@@ -18,14 +18,14 @@ namespace AargonTools.Manager
     public class ProcessCcPaymentManager : IProcessCcPayment
     {
 
-        private static ExistingDataDbContext _context;
-        private static TestEnvironmentDbContext _contextTest;
+        private readonly ExistingDataDbContext _context;
+        private readonly TestEnvironmentDbContext _contextTest;
         private static ResponseModel _response;
         private readonly AdoDotNetConnection _adoConnection;
-        private readonly IUserService _userService;
-        private readonly ISetCCPayment _setCcPayment;//fro ccPayment Insert
-        private readonly IAddNotes _addNotes;//fro notes Insert
-        private readonly IOptions<CentralizeVariablesModel> _centralizeVariablesModel;
+        private static IUserService _userService;
+        private static ISetCCPayment _setCcPayment;//fro ccPayment Insert
+        private static IAddNotes _addNotes;//fro notes Insert
+        private static IOptions<CentralizeVariablesModel> _centralizeVariablesModel;
         private static GetTheCompanyFlag _companyFlag;
 
         public ProcessCcPaymentManager(ExistingDataDbContext context, ResponseModel response,

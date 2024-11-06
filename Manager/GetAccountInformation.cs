@@ -19,8 +19,8 @@ namespace AargonTools.Manager
         private readonly ExistingDataDbContext _context;
         private readonly TestEnvironmentDbContext _contextTest;
         private readonly ProdOldDbContext _contextProdOld;
-        private readonly ResponseModel _response;
-        private readonly GetTheCompanyFlag _companyFlag;
+        private static ResponseModel _response;
+        private static GetTheCompanyFlag _companyFlag;
         private readonly AdoDotNetConnection _adoConnection;
 
 

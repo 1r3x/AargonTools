@@ -14,6 +14,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using AargonTools.Manager.GenericManager;
+using System.Text.RegularExpressions;
 
 namespace AargonTools.Controllers
 {
@@ -97,24 +98,41 @@ namespace AargonTools.Controllers
         [HttpPost("SetBadNumbers/{debtorAcct}&{phoneNo}")]
         public async Task<IActionResult> SetBadNumbers(string debtorAcct, string phoneNo)
         {
-            Serilog.Log.Information("  SetBadNumbers => POST");
+            Serilog.Log.Information("SetBadNumbers => POST request received for debtorAcct: {DebtorAcct}, phoneNo: {PhoneNo}", debtorAcct, phoneNo);
+
+            // Validate debtor account format
+            var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
+            if (!debtorAcctRegex.IsMatch(debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+
+            // Validate phone number format
+            var phoneNoRegex = new Regex(@"^\d{10}$");
+            if (!phoneNoRegex.IsMatch(phoneNo))
+            {
+                Serilog.Log.Warning("Invalid phone number format for phoneNo: {PhoneNo}", phoneNo);
+                return BadRequest("Invalid phone number format. It must be a 10-digit number.");
+            }
+
             try
             {
                 if (ModelState.IsValid)
                 {
                     var data = await _contextBadNumbers.AddBadNumbers(debtorAcct, phoneNo, "P");
-
+                    Serilog.Log.Information("Bad number added successfully for debtorAcct: {DebtorAcct}, phoneNo: {PhoneNo}", debtorAcct, phoneNo);
                     return Ok(data);
 
                 }
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                Serilog.Log.Error(e, "An error occurred while adding bad number for debtorAcct: {DebtorAcct}, phoneNo: {PhoneNo}", debtorAcct, phoneNo);
                 throw;
             }
 
-
+            Serilog.Log.Error("Something went wrong for debtorAcct: {DebtorAcct}, phoneNo: {PhoneNo}", debtorAcct, phoneNo);
             return new JsonResult("Something went wrong") { StatusCode = 500 };
         }
 
@@ -157,15 +175,32 @@ namespace AargonTools.Controllers
         [HttpPost("SetMoveAccount/{debtorAcct}&{toQueue}")]
         public async Task<IActionResult> SetMoveAccount(string debtorAcct, int toQueue)
         {
-            Serilog.Log.Information("  SetMoveAccount => POST");
+            Serilog.Log.Information("SetMoveAccount => POST request received for debtorAcct: {DebtorAcct}, toQueue: {ToQueue}", debtorAcct, toQueue);
+
+            // Validate debtor account format
+            var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
+            if (!debtorAcctRegex.IsMatch(debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+
+            // Validate phone number format
+            if (toQueue < 0)
+            {
+                Serilog.Log.Warning("Invalid queue format for: {toQueue}", toQueue);
+                return BadRequest("Invalid queue format. It must be a non-negative integer.");
+            }
+
             try
             {
                 var data = await _contextSetMoveAccount.SetMoveAccount(debtorAcct, toQueue, "P");
+                Serilog.Log.Information("Account moved successfully for debtorAcct: {DebtorAcct}, toQueue: {ToQueue}", debtorAcct, toQueue);
                 return Ok(data);
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                Serilog.Log.Error(e, "An error occurred while moving account for debtorAcct: {DebtorAcct}, toQueue: {ToQueue}", debtorAcct, toQueue);
                 throw;
             }
 
@@ -194,20 +229,28 @@ namespace AargonTools.Controllers
         [HttpPost("SetNotes/{debtorAcct}&{notes}")]
         public async Task<IActionResult> SetNotes(string debtorAcct, string notes)
         {
-            Serilog.Log.Information("  SetNotes => POST");
+            Serilog.Log.Information("SetNotes => POST request received for debtorAcct: {DebtorAcct}, notes: {Notes}", debtorAcct, notes);
+            // Validate debtor account format
+            var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
+            if (!debtorAcctRegex.IsMatch(debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+
             try
             {
                 if (ModelState.IsValid)
                 {
                     var data = await _contextAddNotes.CreateNotes(debtorAcct, notes, "P");
-
+                    Serilog.Log.Information("Notes added successfully for debtorAcct: {DebtorAcct}", debtorAcct);
                     return Ok(data);
 
                 }
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                Serilog.Log.Error(e, "An error occurred while adding notes for debtorAcct: {DebtorAcct}", debtorAcct);
                 throw;
             }
 
@@ -247,20 +290,36 @@ namespace AargonTools.Controllers
         [HttpPost("SetDoNotCall/{debtorAcct}&{cellPhoneNo}")]
         public async Task<IActionResult> SetDoNotCall(string debtorAcct, string cellPhoneNo)
         {
-            Serilog.Log.Information("  SetDoNotCall => POST");
+            Serilog.Log.Information("SetDoNotCall => POST request received with debtorAcct: {DebtorAcct}, cellPhoneNo: {CellPhoneNo}", debtorAcct, cellPhoneNo);
+
+            // Validate debtor account format
+            var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
+            if (!debtorAcctRegex.IsMatch(debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+            // Validate phone number format
+            var phoneNoRegex = new Regex(@"^\d{10}$");
+            if (!phoneNoRegex.IsMatch(cellPhoneNo))
+            {
+                Serilog.Log.Warning("Invalid phone number format for phoneNo: {PhoneNo}", cellPhoneNo);
+                return BadRequest("Invalid phone number format. It must be a 10-digit number.");
+            }
+
             try
             {
                 if (ModelState.IsValid)
                 {
                     var data = await _setDoNotCall.SetDoNotCallManager(debtorAcct, cellPhoneNo, "P");
-
+                    Serilog.Log.Information("SetDoNotCallManager executed successfully.Returning data: {@Data}", data);
                     return Ok(data);
 
                 }
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                Serilog.Log.Error(e, "An error occurred while processing SetDoNotCall request for debtorAcct: {DebtorAcct}, cellPhoneNo: {CellPhoneNo}", debtorAcct, cellPhoneNo);
                 throw;
             }
 
@@ -304,21 +363,36 @@ namespace AargonTools.Controllers
         [HttpPost("SetNumber/{debtorAcct}&{cellPhoneNo}")]
         public async Task<IActionResult> SetNumber(string debtorAcct, string cellPhoneNo)
         {
-            Serilog.Log.Information("  SetNumber => POST");
+            Serilog.Log.Information("SetNumber => POST request received with debtorAcct: {DebtorAcct}, cellPhoneNo: {CellPhoneNo}", debtorAcct, cellPhoneNo);
+            // Validate debtor account format
+            var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
+            if (!debtorAcctRegex.IsMatch(debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+            // Validate phone number format
+            var phoneNoRegex = new Regex(@"^\d{10}$");
+            if (!phoneNoRegex.IsMatch(cellPhoneNo))
+            {
+                Serilog.Log.Warning("Invalid phone number format for phoneNo: {PhoneNo}", cellPhoneNo);
+                return BadRequest("Invalid phone number format. It must be a 10-digit number.");
+            }
             try
             {
                 if (ModelState.IsValid)
                 {
                     var data = await _setNumber.SetNumber(debtorAcct, cellPhoneNo, "P");
-
+                    Serilog.Log.Information("SetNumber executed successfully. Returning data: {@Data}", data);
                     return Ok(data);
 
                 }
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                Serilog.Log.Error(e, "An error occurred while processing SetNumber request for debtorAcct: {DebtorAcct}, cellPhoneNo: {CellPhoneNo}", debtorAcct, cellPhoneNo);
                 throw;
+
             }
 
 
@@ -366,20 +440,30 @@ namespace AargonTools.Controllers
         [HttpPost("SetMoveToHouse/{debtorAcct}")]
         public async Task<IActionResult> SetMoveToHouse(string debtorAcct)
         {
-            Serilog.Log.Information("  SetMoveToHouse => POST");
+            Serilog.Log.Information("SetMoveToHouse => POST request received with debtorAcct: {DebtorAcct}", debtorAcct);
+
+            // Validate debtor account format
+            var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
+            if (!debtorAcctRegex.IsMatch(debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+
+
             try
             {
                 if (ModelState.IsValid)
                 {
                     var data = await _setMoveToHouse.SetMoveToHouse(debtorAcct, "P");
-
+                    Serilog.Log.Information("SetMoveToHouse executed successfully. Returning data: {@Data}", data);
                     return Ok(data);
 
                 }
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                Serilog.Log.Error(e, "An error occurred while processing SetMoveToHouse request for debtorAcct: {DebtorAcct}", debtorAcct);
                 throw;
             }
 
@@ -421,20 +505,29 @@ namespace AargonTools.Controllers
         [HttpPost("SetMoveToDispute/{debtorAcct}")]
         public async Task<IActionResult> SetMoveToDispute(string debtorAcct)
         {
-            Serilog.Log.Information("SetMoveToDispute => POST");
+            Serilog.Log.Information("SetMoveToDispute => POST request received with debtorAcct: {DebtorAcct}", debtorAcct);
+            // Validate debtor account format
+            var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
+            if (!debtorAcctRegex.IsMatch(debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+
+
             try
             {
                 if (ModelState.IsValid)
                 {
                     var data = await _setMoveToDispute.SetMoveToDispute(debtorAcct, "P");
-
+                    Serilog.Log.Information("SetMoveToDispute executed successfully. Returning data: {@Data}", data);
                     return Ok(data);
 
                 }
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                Serilog.Log.Error(e, "An error occurred while processing SetMoveToDispute request for debtorAcct: {DebtorAcct}", debtorAcct);
                 throw;
             }
 
@@ -483,20 +576,30 @@ namespace AargonTools.Controllers
         [HttpPost("SetPostDateChecks")]
         public async Task<IActionResult> SetPostDateChecks([FromBody] SetPostDateChecksRequestModel requestModel)
         {
-            Serilog.Log.Information("SetPostDateChecks => POST");
+           
+            Serilog.Log.Information("SetPostDateChecks => POST request received with requestModel: {@RequestModel}", requestModel);
+
+            // Validate debtor account format
+            var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
+            if (!debtorAcctRegex.IsMatch(requestModel.debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", requestModel.debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+            
             try
             {
                 if (ModelState.IsValid)
                 {
                     var data = await _setPostDateChecks.SetPostDateChecks(requestModel, "P");
-
+                    Serilog.Log.Information("SetPostDateChecks executed successfully. Returning data: {@Data}", data);
                     return Ok(data);
 
                 }
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                Serilog.Log.Error(e, "An error occurred while processing SetPostDateChecks request with requestModel: {@RequestModel}", requestModel);
                 throw;
             }
 
@@ -544,20 +647,28 @@ namespace AargonTools.Controllers
         [HttpPost("SetMoveToQueue/{debtorAcct}&{type}")]
         public async Task<IActionResult> SetMoveToQueue(string debtorAcct, string type)
         {
-            Serilog.Log.Information("SetMoveToQueue => POST");
+            Serilog.Log.Information("SetMoveToQueue => POST request received with debtorAcct: {DebtorAcct}, type: {Type}", debtorAcct, type);
+
+            // Validate debtor account format
+            var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
+            if (!debtorAcctRegex.IsMatch(debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}",debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
             try
             {
                 if (ModelState.IsValid)
                 {
                     var data = await _setMoveToQueue.SetMoveToQueue(debtorAcct, type, "P");
-
+                    Serilog.Log.Information("SetMoveToQueue executed successfully. Returning data: {@Data}", data);
                     return Ok(data);
 
                 }
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                Serilog.Log.Error(e, "An error occurred while processing SetMoveToQueue request for debtorAcct: {DebtorAcct}, type: {Type}", debtorAcct, type);
                 throw;
             }
 
@@ -593,20 +704,27 @@ namespace AargonTools.Controllers
         [Route("SetInteractionResults")]
         public async Task<IActionResult> SetInteractionResults([FromBody] InteractResult interactResultModel)
         {
-            Serilog.Log.Information("SetInteractionResults => POST");
+            Serilog.Log.Information("SetInteractionResults => POST request received with interactResultModel: {@InteractResultModel}", interactResultModel);
+            // Validate debtor account format
+            var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
+            if (!debtorAcctRegex.IsMatch(interactResultModel.DebtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", interactResultModel.DebtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
             try
             {
                 if (ModelState.IsValid)
                 {
                     var data = await _setInteractionResults.SetInteractResults(interactResultModel, "P");
-
+                    Serilog.Log.Information("SetInteractionResults executed successfully. Returning data: {@Data}", data);
                     return Ok(data);
 
                 }
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                Serilog.Log.Error(e, "An error occurred while processing SetInteractionResults request with interactResultModel: {@InteractResultModel}", interactResultModel);
                 throw;
             }
 
@@ -639,20 +757,29 @@ namespace AargonTools.Controllers
         [HttpPost("SetNotesV2")]
         public async Task<IActionResult> SetNotesV2([FromBody] AddNotesRequestModel request)
         {
-            Serilog.Log.Information("  SetNotesV2 => POST");
+            Serilog.Log.Information("SetNotesV2 => POST request received with request: {@Request}", request);
+
+            // Validate debtor account format
+            var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
+            if (!debtorAcctRegex.IsMatch(request.DebtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", request.DebtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+
             try
             {
                 if (ModelState.IsValid)
                 {
                     var data = await _contextAddNotesV2.CreateNotes(request, "P");
-
+                    Serilog.Log.Information("SetNotesV2 executed successfully. Returning data: {@Data}", data);
                     return Ok(data);
 
                 }
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                Serilog.Log.Error(e, "An error occurred while processing SetNotesV2 request with request: {@Request}", request);
                 throw;
             }
 
@@ -689,20 +816,28 @@ namespace AargonTools.Controllers
         ), 200)]
         public async Task<IActionResult> SetDialing([FromBody] SetDialingRequestModel request)
         {
-            Serilog.Log.Information("  SetDialing => POST");
+            Serilog.Log.Information("SetDialing => POST request received with request: {@Request}", request);
+            
+            // Validate debtor account format
+            var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
+            if (!debtorAcctRegex.IsMatch(request.DebtorAccount))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", request.DebtorAccount);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
             try
             {
                 if (ModelState.IsValid)
                 {
                     var data = await _contextSetDialing.SetDialing(request, "P");
-
+                    Serilog.Log.Information("SetDialing executed successfully. Returning data: {@Data}", data);
                     return Ok(data);
 
                 }
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                Serilog.Log.Error(e, "An error occurred while processing SetDialing request with request: {@Request}", request);
                 throw;
             }
 
@@ -749,20 +884,27 @@ namespace AargonTools.Controllers
         ), 200)]
         public async Task<IActionResult> SetUpdateAddress([FromBody] SetUpdateAddressRequestModel request)
         {
-            Serilog.Log.Information("  SetUpdateAddress => POST");
+            Serilog.Log.Information("SetUpdateAddress => POST request received with request: {@Request}", request);
+            // Validate debtor account format
+            var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
+            if (!debtorAcctRegex.IsMatch(request.DebtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", request.DebtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
             try
             {
                 if (ModelState.IsValid)
                 {
                     var data = await _contextSetUpdateAddress.SetUpdateAddress(request, "P");
-
+                    Serilog.Log.Information("SetUpdateAddress executed successfully. Returning data: {@Data}", data);
                     return Ok(data);
 
                 }
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                Serilog.Log.Error(e, "An error occurred while processing SetUpdateAddress request with request: {@Request}", request);
                 throw;
             }
 
@@ -771,35 +913,35 @@ namespace AargonTools.Controllers
         }
 
 
+
         /// <summary>
-        ///  This endpoint can insert Bland results (JSON body request).(Prod.)
+        ///  This endpoint can insert Bland results bypassing the IP filter (JSON body request).(Prod.)
         /// </summary>
         /// 
         /// <remarks>
         /// **Details**:
-        /// By using this endpoint you can insert Bland call results.
+        /// By using this endpoint, you can insert Bland call results while bypassing the IP filter. 
         /// And please don't forget about a valid token.
-        ///You can pass the parameter with API client like https://g14.aargontools.com/api/Test/SetAccountsDetails/SetBlandResults
+        /// You can pass the parameter with API client like https://g14.aargontools.com/no-ip-filter/SetBlandResults
         /// (pass JSON body like the request example)
         /// 
         ///**GET Table/Fields Details**
         ///
-
         /// Insert:
         /// 
-        /// note_master->AI_call_results,note_text 
-        /// 
+        /// note_master->AI_call_results,note_text  
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
         ///
+
         [AllowAnonymous]
         [HttpPost("/no-ip-filter/SetBlandResults")]
-        //[ProducesResponseType(typeof(SetUpdateAddressResponseModel
-        //), 200)]
+
         public async Task<IActionResult> SetBlandResults([FromBody] List<BlandResultsViewModel> request)
         {
-            Serilog.Log.Information("SetBlandResults => POST from ->" + _userService.GetClientIpAddress());
+            Serilog.Log.Information("SetBlandResults => POST request received from IP: {ClientIpAddress}", _userService.GetClientIpAddress());
+
             try
             {
                 if (ModelState.IsValid)
@@ -824,12 +966,16 @@ namespace AargonTools.Controllers
                         ClockSkew = TimeSpan.Zero
                     };
 
+
+
                     try
                     {
                         tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+                        Serilog.Log.Information("Token validation successful.");
                     }
                     catch (Exception e)
                     {
+                        Serilog.Log.Warning(e, "Token validation failed.");
                         return Unauthorized("Invalid token");
                     }
 
@@ -837,7 +983,7 @@ namespace AargonTools.Controllers
 
                     //
                     var data = await _setBlandsResults.SetBlandResults(request, "P");
-
+                    Serilog.Log.Information("SetBlandResults executed successfully. Returning data: {data}", data);
                     return Ok(data);
 
 
@@ -845,7 +991,7 @@ namespace AargonTools.Controllers
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                Serilog.Log.Error(e, "An error occurred while processing SetBlandResults request.");
                 throw;
             }
 
@@ -853,33 +999,44 @@ namespace AargonTools.Controllers
             return new JsonResult("Something went wrong") { StatusCode = 500 };
         }
 
+        /// <summary>
+        ///  This endpoint can insert Bland results (JSON body request).(Prod.)
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint, you can insert Bland call results. 
+        /// And please don't forget about a valid token.
+        /// You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetBlandResults
+        /// (pass JSON body like the request example)
+        /// 
+        ///**GET Table/Fields Details**
+        ///
         /// Insert:
         /// 
-        /// note_master->AI_call_results,note_text 
-        /// 
+        /// note_master->AI_call_results,note_text  
         /// </remarks>
         /// <response code="200">Successful Request.</response>
         /// <response code="401">Invalid Token/Token Not Available</response>
         ///
         [HttpPost("SetBlandResults")]
-        //[ProducesResponseType(typeof(SetUpdateAddressResponseModel
-        //), 200)]
+
         public async Task<IActionResult> SetBlandResultsV2([FromBody] List<BlandResultsViewModel> request)
         {
-            Serilog.Log.Information("SetBlandResults => POST from ->" + _userService.GetClientIpAddress());
+            Serilog.Log.Information("SetBlandResults => POST request received with request: {@Request}", request);
             try
             {
                 if (ModelState.IsValid)
                 {
                     var data = await _setBlandsResults.SetBlandResults(request, "P");
-
+                    Serilog.Log.Information("SetBlandResults executed successfully. Returning data: {@Data}", data);
                     return Ok(data);
 
                 }
             }
             catch (Exception e)
             {
-                Serilog.Log.Information(e.InnerException, e.Message, e.Data);
+                Serilog.Log.Error(e, "An error occurred while processing SetBlandResults request with request: {@Request}", request);
                 throw;
             }
 

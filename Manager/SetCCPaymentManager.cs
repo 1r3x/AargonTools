@@ -11,12 +11,12 @@ namespace AargonTools.Manager
 {
     public class SetCCPaymentManager:ISetCCPayment
     {
-        private static ExistingDataDbContext _context;
-        private static TestEnvironmentDbContext _contextTest;
-        private static ProdOldDbContext _contextProdOld;
+        private readonly ExistingDataDbContext _context;
+        private readonly TestEnvironmentDbContext _contextTest;
+        private readonly ProdOldDbContext _contextProdOld;
         private static ResponseModel _response;
         private readonly AdoDotNetConnection _adoConnection;
-        private readonly IUserService _userService;
+        private static IUserService _userService;
 
         public SetCCPaymentManager(ExistingDataDbContext context, ResponseModel response,
             TestEnvironmentDbContext contextTest, IAddNotes addNotes, AdoDotNetConnection adoConnection, IUserService userService,
@@ -86,7 +86,9 @@ namespace AargonTools.Manager
                         ApprovalCode = request.approvalCode,
                         OrderNumber = request.orderNumber,
                         RefNumber = request.refNo,
-                        Sif = request.sif
+                        Sif = request.sif,
+                        VoidSale=request.void_sale
+                        
                     };
                     await _context.CcPayments.AddAsync(ccPayment);
                     await _context.SaveChangesAsync();
@@ -107,7 +109,8 @@ namespace AargonTools.Manager
                         ApprovalCode = request.approvalCode,
                         OrderNumber = request.orderNumber,
                         RefNumber = request.refNo,
-                        Sif = request.sif
+                        Sif = request.sif,
+                        VoidSale = request.void_sale
                     };
                     await _contextProdOld.CcPayments.AddAsync(ccPayment);
                     await _contextProdOld.SaveChangesAsync();
@@ -128,7 +131,8 @@ namespace AargonTools.Manager
                         ApprovalCode = request.approvalCode,
                         OrderNumber = request.orderNumber,
                         RefNumber = request.refNo,
-                        Sif = request.sif
+                        Sif = request.sif,
+                        VoidSale = request.void_sale
                     };
                     await _contextTest.CcPayments.AddAsync(ccPayment);
                     await _contextTest.SaveChangesAsync();
