@@ -983,7 +983,7 @@ namespace AargonTools.Controllers
 
                     //
                     var data = await _setBlandsResults.SetBlandResults(request, "P");
-                    Serilog.Log.Information("SetBlandResults executed successfully. Returning data: {data}", data);
+                    Serilog.Log.Information("SetBlandResults executed successfully. Returning data: {@data}", data);
                     return Ok(data);
 
 

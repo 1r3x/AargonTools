@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Principal;
 using System.Threading.Tasks;
 using AargonTools.Data.ADO;
 using AargonTools.Interfaces;
@@ -51,13 +52,18 @@ namespace AargonTools.Manager
         }
 
         //for tokenize the cc
-        public async Task<ResponseModel> TokenizeCc(string cardNo, string expireDate, bool hsa, string environment)
+        public async Task<ResponseModel> TokenizeCc(string debtorAccount, string cardNo, string expireDate, bool hsa, string environment)
         {
             if (environment == "P")
             {
                 string tempkey;
                 string tempPin;
-                if (hsa == false)
+                if (await _context.ClientMasterPs.Where(x => x.ClientAcct == debtorAccount.Substring(0, 4)).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    tempkey = _centralizeVariablesModel.Value.USAePayDefault.KeyProd_Psuffex;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.PinProd;
+                }
+                else if (hsa == false)
                 {
                     tempkey = _centralizeVariablesModel.Value.USAePayDefault.KeyProd;
                     tempPin = _centralizeVariablesModel.Value.USAePayDefault.PinProd;
@@ -92,7 +98,12 @@ namespace AargonTools.Manager
             {
                 string tempKey;
                 string tempPin;
-                if (hsa == false)
+                if (await _context.ClientMasterPs.Where(x => x.ClientAcct == debtorAccount.Substring(0, 4)).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    tempKey = _centralizeVariablesModel.Value.USAePayDefault.Key;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.Pin;
+                }
+                else if (hsa == false)
                 {
                     tempKey = _centralizeVariablesModel.Value.USAePayDefault.Key;
                     tempPin = _centralizeVariablesModel.Value.USAePayDefault.Pin;
@@ -211,11 +222,18 @@ namespace AargonTools.Manager
         public async Task<ResponseModel> ProcessingTransactionV2(string tokenizeCc, decimal amount, bool hsa,
             string debtorAccount, string cardHolder, string environment)
         {
+            
+
             if (environment == "P")
             {
                 string tempkey;
                 string tempPin;
-                if (hsa == false)
+                if (await _context.ClientMasterPs.Where(x => x.ClientAcct == debtorAccount.Substring(0, 4)).Select(x => x.ClientAcct).FirstOrDefaultAsync() != null)
+                {
+                    tempkey = _centralizeVariablesModel.Value.USAePayDefault.KeyProd_Psuffex;
+                    tempPin = _centralizeVariablesModel.Value.USAePayDefault.PinProd;
+                }
+                else if (hsa == false)
                 {
                     tempkey = _centralizeVariablesModel.Value.USAePayDefault.KeyProd;
                     tempPin = _centralizeVariablesModel.Value.USAePayDefault.PinProd;
@@ -328,6 +346,7 @@ namespace AargonTools.Manager
             {
                 string tempKey;
                 string tempPin;
+
                 if (hsa == false)
                 {
                     tempKey = _centralizeVariablesModel.Value.USAePayDefault.Key;
@@ -626,7 +645,7 @@ namespace AargonTools.Manager
             //todo
             try
             {
-                var tokenizeDataJsonResult = TokenizeCc(request.ccNumber, request.expiredDate, request.hsa != null && (bool)request.hsa, environment).Result;
+                var tokenizeDataJsonResult = TokenizeCc(request.debtorAcc,request.ccNumber, request.expiredDate, request.hsa != null && (bool)request.hsa, environment).Result;
                 SaveCard tokenizeCObj = new SaveCard()
                 {
                     CardNumber = "",

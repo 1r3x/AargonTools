@@ -342,7 +342,7 @@ namespace AargonTools.Controllers.TestEnvironment
                                 //must be break the implementtaion 
                                 //var data = await _processCcPayment.ProcessCcPayment(requestForUsaEPay, "P");
                                 //
-                                var tokenizeDataJsonResult = _usaEPay.TokenizeCc(requestForUsaEPay.ccNumber, requestForUsaEPay.expiredDate,
+                                var tokenizeDataJsonResult = _usaEPay.TokenizeCc(requestForUsaEPay.debtorAcc,requestForUsaEPay.ccNumber, requestForUsaEPay.expiredDate,
                                     requestForUsaEPay.hsa != null && (bool)requestForUsaEPay.hsa, "T").Result;
                                 SaveCard tokenizeCObj = new SaveCard()
                                 {

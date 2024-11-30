@@ -33,7 +33,7 @@ namespace AargonTools.Manager
             {
                 try
                 {
-                    Serilog.Log.Debug("Processing item: {@Item}", item);//debug log
+                    //Serilog.Log.Debug("Processing item: {@Item}", item);//debug log
                     var supportText = "";
                     int maxLength = 255;
 
@@ -45,7 +45,7 @@ namespace AargonTools.Manager
                     {
                         supportText = item.summary;
                     }
-                    Serilog.Log.Debug("Support text generated: {SupportText}", supportText);//debug log
+                    //Serilog.Log.Debug("Support text generated: {SupportText}", supportText);//debug log
 
 
                     //// Initialize an empty string to hold the support text
@@ -156,6 +156,7 @@ namespace AargonTools.Manager
                 }
                 catch (Exception e)
                 {
+                    Serilog.Log.Error(e, "Error processing item: {@Item}", item);
                     return _response.Response(true, false, e);
                 }
             }
@@ -163,5 +164,7 @@ namespace AargonTools.Manager
 
             return _response.Response(true, true, "Successfully added interact results");
         }
+
+
     }
 }

@@ -197,8 +197,8 @@ namespace AargonTools
             services.AddTransient<ISetInteractResults, InteractResultsManager>();
 
 
-
-
+            //for VPN lookup
+            services.AddHttpClient();
 
 
         }
@@ -218,16 +218,19 @@ namespace AargonTools
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "AargonTools v1"));
             }
-            else
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "AargonTools v1"));
-            }
-            app.UseHttpsRedirection();
 
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "AargonTools v1"));
+            app.UseHttpsRedirection();
+            // Add security headers
+            app.Use(async (context, next) =>
+            {
+                context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+                context.Response.Headers.Add("X-Frame-Options", "DENY");
+                context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+                await next();
+            });
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
@@ -263,6 +266,9 @@ namespace AargonTools
                 endpoints.MapControllers();
             });
         }
+
+
+
     }
 
     internal class AuthResponsesOperationFilter : IOperationFilter

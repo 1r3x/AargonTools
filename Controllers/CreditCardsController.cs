@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AargonTools.Data.ADO;
 using AargonTools.Data.ExamplesForDocumentation.Response;
@@ -17,6 +18,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 
 namespace AargonTools.Controllers
@@ -339,7 +341,7 @@ namespace AargonTools.Controllers
                                     //must be break the implementtaion 
                                     //var data = await _processCcPayment.ProcessCcPayment(requestForUsaEPay, "P");
                                     //
-                                    var tokenizeDataJsonResult = _usaEPay.TokenizeCc(requestForUsaEPay.ccNumber, requestForUsaEPay.expiredDate,
+                                    var tokenizeDataJsonResult = _usaEPay.TokenizeCc(requestForUsaEPay.debtorAcc, requestForUsaEPay.ccNumber, requestForUsaEPay.expiredDate,
                                         requestForUsaEPay.hsa != null && (bool)requestForUsaEPay.hsa, "P").Result;
                                     SaveCard tokenizeCObj = new SaveCard()
                                     {
@@ -514,6 +516,47 @@ namespace AargonTools.Controllers
         public async Task<IActionResult> ProcessCcV2([FromBody] ProcessCcPaymentUniversalRequestModel requestCcPayment)
         {
             Serilog.Log.Information("ProcessCcV2 => POST request received with Debtor Account: {@debtorAcct}", requestCcPayment.debtorAcct);
+
+            // Validate debtor account format
+            var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
+            if (!debtorAcctRegex.IsMatch(requestCcPayment.debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", requestCcPayment.debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+
+            // Remove any non-digit characters
+
+            requestCcPayment.ccNumber = Regex.Replace(requestCcPayment.ccNumber, @"\D", "");
+
+            // Regular expression to match credit card numbers
+
+            string pattern = @"^(?:4[0-9]{12}(?:[0-9]{3})?          # Visa
+                           |  5[1-5][0-9]{14}                  # MasterCard
+                           |  3[47][0-9]{13}                   # American Express
+                           |  3(?:0[0-5]|[68][0-9])[0-9]{11}   # Diners Club
+                           |  6(?:011|5[0-9]{2})[0-9]{12}      # Discover
+                           |  (?:2131|1800|35\d{3})\d{11}      # JCB
+                          )$";
+
+            // Validate the card number format
+            
+            if (!Regex.IsMatch(requestCcPayment.ccNumber, pattern, RegexOptions.IgnorePatternWhitespace))
+            {
+                Serilog.Log.Warning("Invalid credit card format for ccNumber: {CcNumber}", requestCcPayment.ccNumber);
+                return BadRequest("Invalid credit card format.");
+            }
+
+            // Validate cvv
+            var cvvRegex = new Regex(@"^\d{3,4}$");
+            if (!cvvRegex.IsMatch(requestCcPayment.cvv))
+            {
+                Serilog.Log.Warning("Invalid CVV format for cvv: {cvv}", requestCcPayment.cvv);
+                return BadRequest("Invalid CVV format. It must be 3 or 4 digits.");
+            }
+
+
+
             try
             {
                 if (ModelState.IsValid)

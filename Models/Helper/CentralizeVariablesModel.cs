@@ -21,6 +21,7 @@ namespace AargonTools.Models.Helper
         public string Key { get; set; }
         public string KeyProd { get; set; }
         public string KeyProdHSA { get; set; }
+        public string KeyProd_Psuffex { get; set; }
         public string Pin { get; set; }
         public string PinProd { get; set; }
     }

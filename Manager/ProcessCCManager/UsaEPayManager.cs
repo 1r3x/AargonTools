@@ -68,7 +68,7 @@ namespace AargonTools.Manager.ProcessCCManager
             //must be break the implementtaion 
             //var data = await _processCcPayment.ProcessCcPayment(requestForUsaEPay, "P");
             //
-            var tokenizeDataJsonResult = _usaEPay.TokenizeCc(requestForUsaEPay.ccNumber, requestForUsaEPay.expiredDate,
+            var tokenizeDataJsonResult = _usaEPay.TokenizeCc(requestForUsaEPay.debtorAcc,requestForUsaEPay.ccNumber, requestForUsaEPay.expiredDate,
                 requestForUsaEPay.hsa != null && (bool)requestForUsaEPay.hsa, environment).Result;
             SaveCard tokenizeCObj = new SaveCard()
             {
@@ -101,7 +101,7 @@ namespace AargonTools.Manager.ProcessCCManager
                 TransactionId = obj.refnum
             };
             var noteText = "";
-            if (response.ResponseCode != null)
+            if (response.ResponseCode == "A")
             {
                 noteText = "USAEPAY CC APPROVED FOR $" + request.amount + " " +
                           response.ResponseMessage.ToUpper() +
@@ -165,7 +165,7 @@ namespace AargonTools.Manager.ProcessCCManager
             var paymentDate = paymentScheduleObj.EffectiveDate;
             for (var i = 1; i <= requestForUsaEPay.numberOfPayments; i++)
             {
-                var lcgPaymentScheduleObj = new LcgPaymentSchedule()
+                var lcgPaymentScheduleObj = new LcgPaymentSchedule() //UCG_PaymentSchedule
                 {
                     CardInfoId = paymentScheduleObj.CardInfoId,
                     EffectiveDate = paymentDate,
@@ -199,22 +199,43 @@ namespace AargonTools.Manager.ProcessCCManager
 
             await _cardTokenizationHelper.CreatePaymentScheduleHistory(paymentScheduleHistoryObj, environment);
 
-
-            //cc payment insert 
-            await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
+            if (response.ResponseCode == "A")
             {
-                debtorAcc = request.debtorAcct,
-                approvalCode = response.AuthorizationNumber,
-                approvalStatus = "APPROVED",
-                chargeTotal = (decimal)request.amount,
-                company = "AARGON AGENCY",
-                sif = request.sif,
-                paymentDate = DateTime.Now,
-                refNo = "USAEPAY2",
-                orderNumber = response.TransactionId,
-                userId = "WEB",
-                void_sale = "N"
-            }, environment);
+                //cc payment insert 
+                await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
+                {
+                    debtorAcc = request.debtorAcct,
+                    approvalCode = response.AuthorizationNumber,
+                    approvalStatus = "APPROVED",
+                    chargeTotal = (decimal)request.amount,
+                    company = "AARGON AGENCY",
+                    sif = request.sif,
+                    paymentDate = DateTime.Now,
+                    refNo = "USAEPAY2",
+                    orderNumber = response.TransactionId,
+                    userId = "WEB",
+                    void_sale = "N"
+                }, environment);
+            }
+            else
+            {
+                //cc payment insert 
+                await _setCcPayment.SetCCPayment(new CcPaymnetRequestModel()
+                {
+                    debtorAcc = request.debtorAcct,
+                    approvalCode = response.AuthorizationNumber,
+                    approvalStatus = "DECLINED",
+                    chargeTotal = (decimal)request.amount,
+                    company = "AARGON AGENCY",
+                    sif = request.sif,
+                    paymentDate = DateTime.Now,
+                    refNo = "USAEPAY2",
+                    orderNumber = response.TransactionId,
+                    userId = "WEB",
+                    void_sale = "N"
+                }, environment);
+            }
+           
 
 
             return _response.Response(true, true, response);
@@ -237,7 +258,7 @@ namespace AargonTools.Manager.ProcessCCManager
             //must be break the implementtaion 
             //var data = await _processCcPayment.ProcessCcPayment(requestForUsaEPay, "P");
             //
-            var tokenizeDataJsonResult = _usaEPay.TokenizeCc(requestForUsaEPay.ccNumber, requestForUsaEPay.expiredDate,
+            var tokenizeDataJsonResult = _usaEPay.TokenizeCc(requestForUsaEPay.debtorAcc, requestForUsaEPay.ccNumber, requestForUsaEPay.expiredDate,
                 requestForUsaEPay.hsa != null && (bool)requestForUsaEPay.hsa, environment).Result;
             SaveCard tokenizeCObj = new SaveCard()
             {

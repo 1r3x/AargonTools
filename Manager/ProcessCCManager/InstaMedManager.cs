@@ -135,7 +135,7 @@ namespace AargonTools.Manager.ProcessCCManager
             var acctLimitTemp = request.debtorAcct.Split('-');
             var acctLimitCheck = Convert.ToInt64(acctLimitTemp[0] + acctLimitTemp[1]);
 
-            var patientBalanceCheck = await _getTheCompanyFlag.GetFlagForDebtorAccount(request.debtorAcct, "P")
+            var patientBalanceCheck = await _getTheCompanyFlag.GetFlagForDebtorAccount(request.debtorAcct, environment)
                 .Result.Where(x => x.DebtorAcct == request.debtorAcct).Select(i =>
                        new DebtorAcctInfoT()
                        {
@@ -146,6 +146,7 @@ namespace AargonTools.Manager.ProcessCCManager
             //if (Convert.ToDecimal(request.numberOfPayments) * Convert.ToDecimal(request.amount) <= patientBalanceCheck?.Balance)
             if (0 <= patientBalanceCheck?.Balance)  //for testing remove before publish
             {
+
                 string merchantId;
                 string storeId;
                 string terminalId;
@@ -328,7 +329,11 @@ namespace AargonTools.Manager.ProcessCCManager
             }
             else
             {
-                return _response.Response(false, false, "Not ");
+                Serilog.Log.Information("ProcessCcV2 => POST request received with Debtor Account: {@debtorAcct} and" +
+                    " Total amount to be paid multiplying the number of payments by the amount of each payment is" +
+                    " bigger than the customer’s available balance", request.debtorAcct);
+                return _response.Response(false, false, "Total amount to be paid multiplying the number " +
+                    "of payments by the amount of each payment is bigger than the customer’s available balance");
             }
         }
 
@@ -426,6 +431,95 @@ namespace AargonTools.Manager.ProcessCCManager
 
 
                 var paymentDate = paymentScheduleObj.EffectiveDate;
+
+
+
+                //--------------new logic on 7 nov 24
+
+
+
+                //var patientBalanceCheck = await _getTheCompanyFlag.GetFlagForDebtorAccount(request.debtorAcct, environment)
+                //.Result.Where(x => x.DebtorAcct == request.debtorAcct).Select(i =>
+                //       new DebtorAcctInfoT()
+                //       {
+                //           SuppliedAcct = i.SuppliedAcct,
+                //           Balance = i.Balance
+                //       }).SingleOrDefaultAsync();
+
+                //if (request.numberOfPayments * request.amount > patientBalanceCheck.Balance)
+                //{
+                //    if (patientBalanceCheck.Balance % request.amount > 0)
+                //    {
+                //        // Adjust final payment amount to be the remainder of the balance after the prior payments
+                //        for (var i = 1; i <= request.numberOfPayments; i++)
+                //        {
+                //            var lcgPaymentScheduleObj = new LcgPaymentSchedule()
+                //            {
+                //                CardInfoId = paymentScheduleObj.CardInfoId,
+                //                EffectiveDate = paymentDate,
+                //                IsActive = true,
+                //                NumberOfPayments = i,
+                //                PatientAccount = paymentScheduleObj.PatientAccount,
+                //                Amount = paymentScheduleObj.Amount
+                //            };
+                //            await _cardTokenizationHelper.CreatePaymentSchedule(lcgPaymentScheduleObj, environment);
+
+                //            if (i == 1)
+                //            {
+                //                _lcgPaymentScheduleId = lcgPaymentScheduleObj.Id;
+                //            }
+
+                //            paymentDate = paymentDate.AddMonths(1);
+
+                //        }
+                //        // Implement the logic to adjust the final payment
+                //         var FinallcgPaymentScheduleObj = new LcgPaymentSchedule()
+                //        {
+                //            CardInfoId = paymentScheduleObj.CardInfoId,
+                //            EffectiveDate = paymentDate,
+                //            IsActive = true,
+                //            NumberOfPayments = (int)(request.numberOfPayments+1),
+                //            PatientAccount = paymentScheduleObj.PatientAccount,
+                //            Amount = patientBalanceCheck.Balance % request.amount
+                //         };
+                //        await _cardTokenizationHelper.CreatePaymentSchedule(FinallcgPaymentScheduleObj, environment);
+                //    }
+                //    else
+                //    {
+                //        // Error - Overpayment
+                //        throw new InvalidOperationException("Overpayment error: The total payment amount exceeds the balance.");
+                //    }
+                //}
+                //else
+                //{
+                //    for (var i = 1; i <= request.numberOfPayments; i++)
+                //    {
+                //        var lcgPaymentScheduleObj = new LcgPaymentSchedule()
+                //        {
+                //            CardInfoId = paymentScheduleObj.CardInfoId,
+                //            EffectiveDate = paymentDate,
+                //            IsActive = true,
+                //            NumberOfPayments = i,
+                //            PatientAccount = paymentScheduleObj.PatientAccount,
+                //            Amount = paymentScheduleObj.Amount
+                //        };
+                //        await _cardTokenizationHelper.CreatePaymentSchedule(lcgPaymentScheduleObj, environment);
+
+                //        if (i == 1)
+                //        {
+                //            _lcgPaymentScheduleId = lcgPaymentScheduleObj.Id;
+                //        }
+
+                //        paymentDate = paymentDate.AddMonths(1);
+
+                //    }
+                //}
+
+
+
+                //----------commented out as an old business logic 
+
+
                 for (var i = 1; i <= request.numberOfPayments; i++)
                 {
                     var lcgPaymentScheduleObj = new LcgPaymentSchedule()
@@ -447,6 +541,8 @@ namespace AargonTools.Manager.ProcessCCManager
                     paymentDate = paymentDate.AddMonths(1);
 
                 }
+
+                //----------commented out end
 
                 var paymentScheduleHistoryObj = new LcgPaymentScheduleHistory()
                 {
