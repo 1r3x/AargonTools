@@ -23,14 +23,14 @@ namespace AargonTools.Manager.ProcessCCManager
     {
 
 
-        private static HttpClient _clientForInstaMed = new();
+        private readonly HttpClient _clientForInstaMed = new();
         private readonly IOptions<CentralizeVariablesModel> _centralizeVariablesModel;
-        private static ResponseModel _response;
-        private static IAddNotesV3 _addNotes;
-        private static IAddCcPaymentV2 _addCcPayment;
-        private static ICardTokenizationDataHelper _cardTokenizationHelper;
-        private static ICryptoGraphy _crypto;
-        private static GetTheCompanyFlag _getTheCompanyFlag;
+        private readonly ResponseModel _response;
+        private readonly IAddNotesV3 _addNotes;
+        private readonly IAddCcPaymentV2 _addCcPayment;
+        private readonly ICardTokenizationDataHelper _cardTokenizationHelper;
+        private readonly ICryptoGraphy _crypto;
+        private readonly GetTheCompanyFlag _getTheCompanyFlag;
 
         private readonly AdoDotNetConnection _adoConnection;
         //
@@ -39,10 +39,10 @@ namespace AargonTools.Manager.ProcessCCManager
         private readonly ProdOldDbContext _contextProdOld;
         private readonly CurrentBackupTestEnvironmentDbContext _currentTestEnvironment;
 
-        private static PostPaymentA _postPaymentAHelper;
+        private readonly PostPaymentA _postPaymentAHelper;
 
         //
-        private static GatewaySelectionHelper _gatewaySelectionHelper;
+        private readonly GatewaySelectionHelper _gatewaySelectionHelper;
 
         public ElavonManager(HttpClient clientForInstaMed,
             IOptions<CentralizeVariablesModel> centralizeVariablesModel, IAddNotesV3 addNotes,
@@ -225,7 +225,7 @@ namespace AargonTools.Manager.ProcessCCManager
                 }
                 else
                 {
-                    
+
                     ElavonclientPass = (from r in _context.LarryCcIndex2s
                                         where (r.AcctStatus == "A" && r.ClientAcct == request.debtorAcct.Substring(0, 4))
                                         select r.ClientPass).ToString();
@@ -337,7 +337,7 @@ namespace AargonTools.Manager.ProcessCCManager
                            _deserializeObjForElavon.ssl_result_message.ToUpper() +
                            " AUTH #:" + _deserializeObjForElavon.ssl_approval_code;
 
-               
+
                 var ccPaymentObj = new CcPayment()
                 {
                     DebtorAcct = request.debtorAcct,
@@ -394,7 +394,7 @@ namespace AargonTools.Manager.ProcessCCManager
             var noteObj = new NoteMaster()
             {
                 DebtorAcct = request.debtorAcct,
-                Employee = await _gatewaySelectionHelper.CcProcessEmployeeNumberAccordingToFlag(request.debtorAcct,environment),
+                Employee = await _gatewaySelectionHelper.CcProcessEmployeeNumberAccordingToFlag(request.debtorAcct, environment),
                 ActivityCode = "RA",
                 NoteText = noteText,
                 Important = "N",
@@ -502,13 +502,13 @@ namespace AargonTools.Manager.ProcessCCManager
 
                 await _cardTokenizationHelper.CreatePaymentScheduleHistory(paymentScheduleHistoryObj, environment);
 
-               
+
 
 
 
                 if (_scheduleDateTime.Date == DateTime.Now.Date)
                 {
-                  
+
                     _adoConnection.GetData("INSERT INTO cc_payment " +
                         "(debtor_acct,company, user_id,user_name,charge_total,subtotal,payment_date," +
                         "approval_status,approval_code, order_number,billing_name, ref_number, sif)" +
@@ -598,7 +598,7 @@ namespace AargonTools.Manager.ProcessCCManager
                         interestAmountC, feePctSimplified, request.sif,
                         qFromC, qToC, remitC,
                         paymentType, companyFlag, adminAmountC, request.debtorAcct, environment);
-                   
+
                 }
                 return _response.Response(false, false, "dasdasd");
 

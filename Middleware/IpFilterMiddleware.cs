@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,68 +21,74 @@ namespace AargonTools.Middleware
         private readonly ApplicationsOptions _applicationOptions;
         private readonly IUserService _userService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ConcurrentDictionary<IPAddress, bool> _whitelist;
+
         public IpFilterMiddleware(RequestDelegate next, IOptions<ApplicationsOptions> applicationOptionsAccessor, IUserService userService, IHttpClientFactory httpClientFactory)
         {
             _next = next;
             _applicationOptions = applicationOptionsAccessor.Value;
             _userService = userService;
             _httpClientFactory = httpClientFactory;
+            _whitelist = new ConcurrentDictionary<IPAddress, bool>();
+
+            InitializeWhitelist();
+        }
+
+        private void InitializeWhitelist()
+        {
+            var whiteListIpList = _applicationOptions.Whitelist;
+            foreach (var ipRange in whiteListIpList)
+            {
+                if (ipRange.Contains("/"))
+                {
+                    var ipList = GetAllIp(ipRange);
+                    foreach (var ip in ipList)
+                    {
+                        _whitelist.TryAdd(ip, true);
+                    }
+                }
+                else
+                {
+                    if (IPAddress.TryParse(ipRange, out var ip))
+                    {
+                        _whitelist.TryAdd(ip, true);
+                    }
+                }
+
+            }
         }
 
         public async Task Invoke(HttpContext context)
         {
             var ipAddress = context.Connection.RemoteIpAddress;
-            var whiteListIpList = _applicationOptions.Whitelist;
-            var finalListOfIpAddress = new List<IPAddress>();
-            foreach (var t in whiteListIpList)
+            if (ipAddress != null && !_whitelist.ContainsKey(ipAddress))
             {
-                if (t.Contains("/"))
-                {
-                    var ipList = GetAllIp(t);
-                    finalListOfIpAddress.AddRange(ipList);
-                }
-                else
-                {
-                    finalListOfIpAddress.Add(IPAddress.Parse((string)t));
-                }
-            }
-
-            var isInWhiteListIpList = finalListOfIpAddress.Any(a => a.Equals(ipAddress));
-            if (!isInWhiteListIpList)
-            {
-
-
                 context.Request.EnableBuffering();
                 var requestBody = await new StreamReader(context.Request.Body).ReadToEndAsync();
                 context.Request.Body.Position = 0;
 
                 var userAgent = context.Request.Headers["User-Agent"].ToString();
                 var userLanguage = context.Request.Headers["Accept-Language"].ToString();
-                var ipBehindTheMask = await CheckIPQSDatabase(Convert.ToString(ipAddress), userAgent, userLanguage);
+                var ipBehindTheMask = await CheckIPQSDatabase(ipAddress.ToString(), userAgent, userLanguage);
 
                 string hostName = null;
-
                 try
                 {
-                    // Perform reverse DNS lookup
                     var hostEntry = await Dns.GetHostEntryAsync(ipAddress);
                     hostName = hostEntry.HostName;
                 }
-                catch (SocketException ex)
+                catch (SocketException)
                 {
-                    //Serilog.Log.Warning("DNS lookup failed for IP {IpAddress}: {Message}", ipAddress, ex.Message);
+                    // Log DNS lookup failure
                 }
 
-                // Check if the hostname belongs to a known search engine
                 if (hostName != null && (hostName.EndsWith("googlebot.com") || hostName.EndsWith("bingbot.com")))
                 {
-                    // It's a legitimate search engine bot
                     Serilog.Log.Warning("Forbidden IP [{IpAddress}], IP Status:{@ipBehindTheMask}, Payload: {Payload}, UserAgent: {UserAgent}, HostName: {HostName} ThreatLevel: Possible search engine bot",
                         ipAddress, ipBehindTheMask, requestBody, userAgent, hostName);
                 }
                 else
                 {
-                    // Handle as a potential intruder
                     Serilog.Log.Warning("Forbidden IP [{IpAddress}], IP Status:{@ipBehindTheMask}, Payload: {Payload}, UserAgent: {UserAgent} ThreatLevel: Potential intruder",
                         ipAddress, ipBehindTheMask, requestBody, userAgent);
                 }
@@ -89,10 +96,9 @@ namespace AargonTools.Middleware
                 context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                 return;
             }
+
             await _next.Invoke(context);
         }
-
-        //VPN experiments 
 
         private async Task<object> CheckIPQSDatabase(string ipAddress, string userAgent, string userLanguage)
         {
@@ -125,7 +131,6 @@ namespace AargonTools.Middleware
             }
             return null;
         }
-
 
         public class IpQualityScoreResponse
         {
@@ -163,19 +168,9 @@ namespace AargonTools.Middleware
             public int RiskScore { get; set; }
             [JsonProperty("risk_factors")]
             public List<string> RiskFactors { get; set; }
-
         }
 
-
-
-
-
-
-
-
-        //for ip range implementation
-
-        public IEnumerable<IPAddress> GetAllIp(string ipRange)
+        private IEnumerable<IPAddress> GetAllIp(string ipRange)
         {
             try
             {
@@ -184,16 +179,12 @@ namespace AargonTools.Middleware
 
                 if (!TryParseCidrNotation(ipRange) && !TryParseSimpleRange(ipRange))
                     throw new ArgumentException();
-
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
                 throw;
             }
-
-
-
 
             var capacity = 1;
             for (int i = 0; i < 4; i++)
@@ -217,71 +208,44 @@ namespace AargonTools.Middleware
             return ips;
         }
 
-        /// <summary>
-        /// Parse IP-range string in CIDR notation.
-        /// For example "12.15.0.0/16".
-        /// </summary>
-        /// <param name="ipRange"></param>
-        /// <returns></returns>
         private bool TryParseCidrNotation(string ipRange)
         {
-            string[] x = ipRange.Split('/');
+            string[] ipParts = ipRange.Split('/');
+            if (ipParts.Length != 2) return false;
 
-            if (x.Length != 2)
-                return false;
+            if (!byte.TryParse(ipParts[1], out byte bits) || bits > 32) return false;
 
-            byte bits = byte.Parse(x[1]);
             uint ip = 0;
-            String[] ipParts0 = x[0].Split('.');
+            string[] ipSegments = ipParts[0].Split('.');
             for (int i = 0; i < 4; i++)
             {
-                ip = ip << 8;
-                ip += uint.Parse(ipParts0[i]);
+                if (!uint.TryParse(ipSegments[i], out uint segment) || segment > 255) return false;
+                ip = (ip << 8) + segment;
             }
 
             byte shiftBits = (byte)(32 - bits);
-            uint ip1 = (ip >> shiftBits) << shiftBits;
+            uint networkAddress = (ip >> shiftBits) << shiftBits;
+            uint broadcastAddress = networkAddress | ((1u << shiftBits) - 1);
 
-            if (ip1 != ip) // Check correct subnet address
-                return false;
-
-            uint ip2 = ip1 >> shiftBits;
-            for (int k = 0; k < shiftBits; k++)
-            {
-                ip2 = (ip2 << 1) + 1;
-            }
-
-            _beginIp = new byte[4];
-            _endIp = new byte[4];
-
-            for (int i = 0; i < 4; i++)
-            {
-                _beginIp[i] = (byte)((ip1 >> (3 - i) * 8) & 255);
-                _endIp[i] = (byte)((ip2 >> (3 - i) * 8) & 255);
-            }
+            _beginIp = BitConverter.GetBytes(networkAddress).Reverse().ToArray();
+            _endIp = BitConverter.GetBytes(broadcastAddress).Reverse().ToArray();
 
             return true;
         }
 
-        /// <summary>
-        /// Parse IP-range string "12.15-16.1-30.10-255"
-        /// </summary>
-        /// <param name="ipRange"></param>
-        /// <returns></returns>
         private bool TryParseSimpleRange(string ipRange)
         {
             var ipParts = ipRange.Split('.');
+            if (ipParts.Length != 4) return false;
 
             _beginIp = new byte[4];
             _endIp = new byte[4];
             for (var i = 0; i < 4; i++)
             {
                 var rangeParts = ipParts[i].Split('-');
+                if (rangeParts.Length < 1 || rangeParts.Length > 2) return false;
 
-                if (rangeParts.Length < 1 || rangeParts.Length > 2)
-                    return false;
-
-                _beginIp[i] = byte.Parse(rangeParts[0]);
+                if (!byte.TryParse(rangeParts[0], out _beginIp[i])) return false;
                 _endIp[i] = (rangeParts.Length == 1) ? _beginIp[i] : byte.Parse(rangeParts[1]);
             }
 
@@ -290,8 +254,5 @@ namespace AargonTools.Middleware
 
         private byte[] _beginIp;
         private byte[] _endIp;
-
-
-
     }
 }

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using AargonTools.Interfaces;
 using AargonTools.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace AargonTools.Manager.GenericManager
 {
@@ -11,7 +12,8 @@ namespace AargonTools.Manager.GenericManager
         private readonly ExistingDataDbContext _context;
         private readonly TestEnvironmentDbContext _contextTest;
         private readonly ProdOldDbContext _contextProdOld;
-        public GetTheCompanyFlag(ExistingDataDbContext context, TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld)
+        public GetTheCompanyFlag(ExistingDataDbContext context, TestEnvironmentDbContext contextTest,
+            ProdOldDbContext contextProdOld)
         {
             _context = context;
             _contextTest = contextTest;
@@ -62,6 +64,7 @@ namespace AargonTools.Manager.GenericManager
                 {
                     return null;
                 }
+
             }
             else if (environment == "PO")
             {

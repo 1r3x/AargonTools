@@ -29,12 +29,12 @@ namespace AargonTools.Manager.ProcessCCManager
 
 
 
-        private static ResponseModel _response;
-        private static IAddNotesV3 _addNotes;
-        private static IAddCcPaymentV2 _addCcPayment;
-        private static ICardTokenizationDataHelper _cardTokenizationHelper;
-        private static ICryptoGraphy _crypto;
-        private static GetTheCompanyFlag _getTheCompanyFlag;
+        private readonly ResponseModel _response;
+        private readonly IAddNotesV3 _addNotes;
+        private readonly IAddCcPaymentV2 _addCcPayment;
+        private readonly ICardTokenizationDataHelper _cardTokenizationHelper;
+        private readonly ICryptoGraphy _crypto;
+        private readonly GetTheCompanyFlag _getTheCompanyFlag;
 
         private readonly AdoDotNetConnection _adoConnection;
         //
@@ -43,9 +43,9 @@ namespace AargonTools.Manager.ProcessCCManager
         private readonly ProdOldDbContext _contextProdOld;
         private readonly CurrentBackupTestEnvironmentDbContext _currentTestEnvironment;
 
-        private static PostPaymentA _postPaymentAHelper;
+        private readonly PostPaymentA _postPaymentAHelper;
 
-        private static GatewaySelectionHelper _gatewaySelectionHelper;
+        private readonly GatewaySelectionHelper _gatewaySelectionHelper;
 
         public IProClassManager(HttpClient clientForInstaMed,
             IOptions<CentralizeVariablesModel> centralizeVariablesModel, IAddNotesV3 addNotes,
@@ -281,7 +281,7 @@ namespace AargonTools.Manager.ProcessCCManager
             var noteObj = new NoteMaster()
             {
                 DebtorAcct = request.debtorAcct,
-                Employee = await _gatewaySelectionHelper.CcProcessEmployeeNumberAccordingToFlag(request.debtorAcct,environment),
+                Employee = await _gatewaySelectionHelper.CcProcessEmployeeNumberAccordingToFlag(request.debtorAcct, environment),
                 ActivityCode = "RA",
                 NoteText = noteText,
                 Important = "N",

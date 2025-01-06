@@ -25,7 +25,7 @@ namespace AargonTools.Manager.BackgroundJobs
             using (var client = new HttpClient())
             {
                 client.Timeout = TimeSpan.FromMinutes(10);
-                var response = await client.GetAsync("https://g14.aargontools.com/api/Test/CreditCards/PreScheduledPaymentProcessing");
+                //var response = await client.GetAsync("https://g14.aargontools.com/api/Test/CreditCards/PreScheduledPaymentProcessing");
                 //var response = await client.GetAsync("https://localhost/api/Test/CreditCards/PreScheduledPaymentProcessing");
                 //var response = await client.GetAsync("https://localhost:44357/api/Test/CreditCards/PreScheduledPaymentProcessing");
                 //if (response.IsSuccessStatusCode)

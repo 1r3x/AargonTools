@@ -576,7 +576,7 @@ namespace AargonTools.Controllers
         [HttpPost("SetPostDateChecks")]
         public async Task<IActionResult> SetPostDateChecks([FromBody] SetPostDateChecksRequestModel requestModel)
         {
-           
+
             Serilog.Log.Information("SetPostDateChecks => POST request received with requestModel: {@RequestModel}", requestModel);
 
             // Validate debtor account format
@@ -586,7 +586,7 @@ namespace AargonTools.Controllers
                 Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", requestModel.debtorAcct);
                 return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
             }
-            
+
             try
             {
                 if (ModelState.IsValid)
@@ -653,7 +653,7 @@ namespace AargonTools.Controllers
             var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
             if (!debtorAcctRegex.IsMatch(debtorAcct))
             {
-                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}",debtorAcct);
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
                 return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
             }
             try
@@ -817,7 +817,7 @@ namespace AargonTools.Controllers
         public async Task<IActionResult> SetDialing([FromBody] SetDialingRequestModel request)
         {
             Serilog.Log.Information("SetDialing => POST request received with request: {@Request}", request);
-            
+
             // Validate debtor account format
             var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
             if (!debtorAcctRegex.IsMatch(request.DebtorAccount))
@@ -935,13 +935,99 @@ namespace AargonTools.Controllers
         /// <response code="401">Invalid Token/Token Not Available</response>
         ///
 
-        [AllowAnonymous]
-        [HttpPost("/no-ip-filter/SetBlandResults")]
+        //[AllowAnonymous]
+        //[HttpPost("/no-ip-filter/SetBlandResults")]
 
-        public async Task<IActionResult> SetBlandResults([FromBody] List<BlandResultsViewModel> request)
+        //public async Task<IActionResult> SetBlandResults([FromBody] List<BlandResultsViewModel> request)
+        //{
+        //    Serilog.Log.Information("SetBlandResults => POST request received from IP: {ClientIpAddress}", _userService.GetClientIpAddress());
+
+        //    try
+        //    {
+        //        if (ModelState.IsValid)
+        //        {
+        //            //
+        //            // Extract the token from the request
+        //            var token = request[0].variables.token;
+
+        //            // Perform your token validation logic here
+        //            var tokenHandler = new JwtSecurityTokenHandler();
+        //            //get the kay from centralize json 
+        //            var key = _configuration["JwtConfig:Secret"];
+
+        //            var validationParameters = new TokenValidationParameters
+        //            {
+        //                ValidateIssuerSigningKey = true,
+        //                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+        //                ValidateIssuer = false,
+        //                ValidateAudience = false,
+        //                ValidateLifetime = true,
+        //                RequireExpirationTime = false,
+        //                ClockSkew = TimeSpan.Zero
+        //            };
+
+
+
+        //            try
+        //            {
+        //                tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+        //                Serilog.Log.Information("Token validation successful.");
+        //            }
+        //            catch (Exception e)
+        //            {
+        //                Serilog.Log.Warning(e, "Token validation failed.");
+        //                return Unauthorized("Invalid token");
+        //            }
+
+
+
+        //            //
+        //            var data = await _setBlandsResults.SetBlandResults(request, "P");
+        //            Serilog.Log.Information("SetBlandResults executed successfully. Returning data: {@data}", data);
+        //            return Ok(data);
+
+
+        //        }
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Serilog.Log.Error(e, "An error occurred while processing SetBlandResults request.");
+        //        throw;
+        //    }
+
+
+        //    return new JsonResult("Something went wrong") { StatusCode = 500 };
+        //}
+
+        /// <summary>
+        ///  This endpoint can insert Bland results (JSON body request).(Prod.)
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// By using this endpoint, you can insert Bland call results. 
+        /// And please don't forget about a valid token.
+        /// You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetBlandResults
+        /// (pass JSON body like the request example)
+        /// 
+        ///**GET Table/Fields Details**
+        ///
+        /// Insert:
+        /// 
+        /// note_master->AI_call_results,note_text  
+        /// </remarks>
+        /// <response code="200">Successful Request.</response>
+        /// <response code="401">Invalid Token/Token Not Available</response>
+        ///
+
+
+        [AllowAnonymous]
+        [HttpPost("SetBlandResults")]
+
+        public async Task<IActionResult> SetBlandResultsV2([FromBody] List<BlandResultsViewModel> request)
         {
             Serilog.Log.Information("SetBlandResults => POST request received from IP: {ClientIpAddress}", _userService.GetClientIpAddress());
-
+            
             try
             {
                 if (ModelState.IsValid)
@@ -949,7 +1035,7 @@ namespace AargonTools.Controllers
                     //
                     // Extract the token from the request
                     var token = request[0].variables.token;
-
+                    Serilog.Log.Debug("SetBlandResults => POST request with token : {token}", token);
                     // Perform your token validation logic here
                     var tokenHandler = new JwtSecurityTokenHandler();
                     //get the kay from centralize json 
@@ -975,61 +1061,10 @@ namespace AargonTools.Controllers
                     }
                     catch (Exception e)
                     {
-                        Serilog.Log.Warning(e, "Token validation failed.");
+                        Serilog.Log.Error(e, "Token validation failed.");
                         return Unauthorized("Invalid token");
                     }
-
-
-
-                    //
                     var data = await _setBlandsResults.SetBlandResults(request, "P");
-                    Serilog.Log.Information("SetBlandResults executed successfully. Returning data: {@data}", data);
-                    return Ok(data);
-
-
-                }
-            }
-            catch (Exception e)
-            {
-                Serilog.Log.Error(e, "An error occurred while processing SetBlandResults request.");
-                throw;
-            }
-
-
-            return new JsonResult("Something went wrong") { StatusCode = 500 };
-        }
-
-        /// <summary>
-        ///  This endpoint can insert Bland results (JSON body request).(Prod.)
-        /// </summary>
-        /// 
-        /// <remarks>
-        /// **Details**:
-        /// By using this endpoint, you can insert Bland call results. 
-        /// And please don't forget about a valid token.
-        /// You can pass the parameter with API client like https://g14.aargontools.com/api/SetAccountsDetails/SetBlandResults
-        /// (pass JSON body like the request example)
-        /// 
-        ///**GET Table/Fields Details**
-        ///
-        /// Insert:
-        /// 
-        /// note_master->AI_call_results,note_text  
-        /// </remarks>
-        /// <response code="200">Successful Request.</response>
-        /// <response code="401">Invalid Token/Token Not Available</response>
-        ///
-        [HttpPost("SetBlandResults")]
-
-        public async Task<IActionResult> SetBlandResultsV2([FromBody] List<BlandResultsViewModel> request)
-        {
-            Serilog.Log.Information("SetBlandResults => POST request received with request: {@Request}", request);
-            try
-            {
-                if (ModelState.IsValid)
-                {
-                    var data = await _setBlandsResults.SetBlandResults(request, "P");
-                    Serilog.Log.Information("SetBlandResults executed successfully. Returning data: {@Data}", data);
                     return Ok(data);
 
                 }

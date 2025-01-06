@@ -13,7 +13,7 @@ namespace AargonTools.Manager
         private readonly TestEnvironmentDbContext _contextTest;
         private readonly ProdOldDbContext _contextProdOld;
         private static ResponseModel _response;
-        private static GetTheCompanyFlag _companyFlag;
+        private readonly GetTheCompanyFlag _companyFlag;
         private static IUserService _userService;
 
         public SetMoveAccount(ExistingDataDbContext context, ResponseModel response, GetTheCompanyFlag companyFlag, IUserService userService,

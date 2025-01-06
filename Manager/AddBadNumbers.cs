@@ -14,7 +14,7 @@ namespace AargonTools.Manager
         private readonly TestEnvironmentDbContext _contextTest;
         private readonly ProdOldDbContext _contextProdOld;
         private static ResponseModel _response;
-        private static IAddNotes _addNotes;
+        private readonly IAddNotes _addNotes;
 
         public AddBadNumbers(ExistingDataDbContext context, ResponseModel response, TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld,
             IAddNotes addNotes)

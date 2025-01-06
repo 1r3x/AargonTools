@@ -15,8 +15,8 @@ namespace AargonTools.Manager
         private readonly ExistingDataDbContext _context;
         private readonly TestEnvironmentDbContext _contextTest;
         private readonly ProdOldDbContext _contextProdOld;
-        private static ResponseModel _response;
-        private static IAddNotesV2 _addNotesV2;
+        private readonly ResponseModel _response;
+        private readonly IAddNotesV2 _addNotesV2;
 
         public SetBlandResultsManager(ExistingDataDbContext context, ResponseModel response, TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld, IAddNotesV2 addNotesV2)
         {
@@ -76,6 +76,13 @@ namespace AargonTools.Manager
 
                     if (environment == "P")
                     {
+                        //Serilog.Log.Debug("For Debugging : {@Item}", item);
+
+                        decimal amount99Value;
+                        if (!decimal.TryParse(item.variables.amount99, out amount99Value))
+                        {
+                            amount99Value = 0; // Default to 0 if the conversion fails
+                        }
 
                         var aiCallResult = new AiCallResult()
                         {
@@ -84,7 +91,7 @@ namespace AargonTools.Manager
                             CallPhoneNumber = item.inbound ? item.variables.short_from : item.variables.short_to,
                             CallTime = item.variables.timestamp,
                             CallLength = Convert.ToInt32(item.corrected_duration),
-                            CallPaymentAmt = Convert.ToDecimal(item.variables.amount99),
+                            CallPaymentAmt = amount99Value, // Use the processed amount99 value
                             CallStatus = item.status,
                             CallDisposition = item.disposition_tag,
                             CallrecordingUrl = item.recording_url,
@@ -161,7 +168,7 @@ namespace AargonTools.Manager
                 }
             }
 
-
+            Serilog.Log.Information("SetBlandResults executed successfully");
             return _response.Response(true, true, "Successfully added interact results");
         }
 

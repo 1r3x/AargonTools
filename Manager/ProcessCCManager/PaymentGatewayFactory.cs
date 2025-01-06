@@ -8,7 +8,7 @@ namespace AargonTools.Manager.ProcessCCManager
     public class PaymentGatewayFactory
     {
         private readonly IServiceProvider _serviceProvider;
-        private static GatewaySelectionHelper _gatewaySelectionHelper;
+        private readonly GatewaySelectionHelper _gatewaySelectionHelper;
 
         public PaymentGatewayFactory(IServiceProvider serviceProvider, GatewaySelectionHelper gatewaySelectionHelper)
         {

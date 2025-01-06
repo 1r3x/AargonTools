@@ -17,18 +17,18 @@ namespace AargonTools.Manager.ProcessCCManager
 {
     public class UsaEPayManager : IPaymentGateway
     {
-        private static HttpClient _clientForInstaMed = new();
+        private readonly HttpClient _clientForInstaMed = new();
         private readonly IOptions<CentralizeVariablesModel> _centralizeVariablesModel;
-        private static ResponseModel _response;
-        private static ICardTokenizationDataHelper _cardTokenizationHelper;
+        private readonly ResponseModel _response;
+        private readonly ICardTokenizationDataHelper _cardTokenizationHelper;
 
-        private static IProcessCcPayment _usaEPay;
-        private static PostPaymentA _postPaymentAHelper;
+        private readonly IProcessCcPayment _usaEPay;
+        private readonly PostPaymentA _postPaymentAHelper;
         private readonly ISetCCPayment _setCcPayment;
 
         //
-        private static IAddNotesV3 _addNotes;
-        private static GatewaySelectionHelper _gatewaySelectionHelper;
+        private readonly IAddNotesV3 _addNotes;
+        private readonly GatewaySelectionHelper _gatewaySelectionHelper;
 
         public UsaEPayManager(HttpClient clientForInstaMed,
             IOptions<CentralizeVariablesModel> centralizeVariablesModel,
@@ -68,7 +68,7 @@ namespace AargonTools.Manager.ProcessCCManager
             //must be break the implementtaion 
             //var data = await _processCcPayment.ProcessCcPayment(requestForUsaEPay, "P");
             //
-            var tokenizeDataJsonResult = _usaEPay.TokenizeCc(requestForUsaEPay.debtorAcc,requestForUsaEPay.ccNumber, requestForUsaEPay.expiredDate,
+            var tokenizeDataJsonResult = _usaEPay.TokenizeCc(requestForUsaEPay.debtorAcc, requestForUsaEPay.ccNumber, requestForUsaEPay.expiredDate,
                 requestForUsaEPay.hsa != null && (bool)requestForUsaEPay.hsa, environment).Result;
             SaveCard tokenizeCObj = new SaveCard()
             {
@@ -235,7 +235,7 @@ namespace AargonTools.Manager.ProcessCCManager
                     void_sale = "N"
                 }, environment);
             }
-           
+
 
 
             return _response.Response(true, true, response);

@@ -318,7 +318,7 @@ namespace AargonTools.Controllers
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(50), //todo  Use a configuration value
+                Expires = DateTime.UtcNow.AddMinutes(100), //expiration time increased to 100 min
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 

@@ -67,6 +67,9 @@ namespace AargonTools
             services.AddDbContext<CurrentBackupTestEnvironmentDbContext>(
                 options => options.UseSqlServer("name=ConnectionStrings:CurrentBackupTestConnection"), ServiceLifetime.Scoped);
 
+
+
+
             var key = Encoding.ASCII.GetBytes(Configuration["JwtConfig:Secret"]);
 
             var tokenValidationParams = new TokenValidationParameters
