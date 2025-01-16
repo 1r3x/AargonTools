@@ -237,6 +237,7 @@ namespace AargonTools
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseMiddleware<RateLimitingMiddleware>();
 
 
 

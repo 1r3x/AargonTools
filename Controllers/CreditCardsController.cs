@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using AargonTools.Data.ADO;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
+using AargonTools.Interfaces.ProcessCC;
 using AargonTools.Manager.GenericManager;
 using AargonTools.Manager.ProcessCCManager;
 using AargonTools.Models;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 
@@ -39,14 +41,16 @@ namespace AargonTools.Controllers
         private static ICryptoGraphy _crypto;
         private static ICardTokenizationDataHelper _cardTokenizationHelper;
         private static IProcessCcPayment _usaEPay;
-        private static GetTheCompanyFlag _getTheCompanyFlag;
+        private readonly GetTheCompanyFlag _getTheCompanyFlag;
         private static IViewingSchedulePayments _viewingSchedulePaymnets;
         private readonly PaymentGatewayFactory _gatewayFactory;
+        private readonly IServiceProvider _serviceProvider;
 
         public CreditCardsController(IProcessCcPayment processCcPayment, ISetCCPayment setCcPayment,
             IUniversalCcProcessApiService processCcUniversal, GatewaySelectionHelper gatewaySelectionHelper, IPreSchedulePaymentProcessing preSchedulePaymentProcessing,
             ResponseModel response, AdoDotNetConnection adoConnection, ICryptoGraphy crypto, ICardTokenizationDataHelper cardTokenizationHelper,
-            IProcessCcPayment usaEPayIMlementtaions, GetTheCompanyFlag getTheCompanyFlag, IViewingSchedulePayments viewingSchedulePaymnets, PaymentGatewayFactory gatewayFactory)
+            IProcessCcPayment usaEPayIMlementtaions, GetTheCompanyFlag getTheCompanyFlag, IViewingSchedulePayments viewingSchedulePaymnets, PaymentGatewayFactory gatewayFactory,
+            IServiceProvider serviceProvider)
         {
             _processCcPayment = processCcPayment;
             _setCcPayment = setCcPayment;
@@ -61,6 +65,7 @@ namespace AargonTools.Controllers
             _getTheCompanyFlag = getTheCompanyFlag;
             _viewingSchedulePaymnets = viewingSchedulePaymnets;
             _gatewayFactory = gatewayFactory;
+            _serviceProvider = serviceProvider;
         }
 
         /// <summary>
@@ -540,7 +545,7 @@ namespace AargonTools.Controllers
                           )$";
 
             // Validate the card number format
-            
+
             if (!Regex.IsMatch(requestCcPayment.ccNumber, pattern, RegexOptions.IgnorePatternWhitespace))
             {
                 Serilog.Log.Warning("Invalid credit card format for ccNumber: {CcNumber}", requestCcPayment.ccNumber);
@@ -580,7 +585,7 @@ namespace AargonTools.Controllers
             catch (Exception e)
             {
                 Serilog.Log.Error(e, "An error occurred while processing ProcessCcV2 request with Debtor Account: {@debtorAcct}", requestCcPayment.debtorAcct);
-                return Ok("Oops, something went wrong. For more details, see the log.");
+                return StatusCode(500, "An internal server error occurred. Please try again later.");
             }
 
 
@@ -589,7 +594,111 @@ namespace AargonTools.Controllers
 
         }
 
+        /// <summary>
+        ///  Can process TCR Payments.
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// **Details**:
+        /// You can process TCR payments by passing required parameters.
+        /// This endpoint can process through multiple gateways.It will automatically choose the desire gateways by debtor acct number.
+        /// You need a valid token for this endpoint .
+        ///You can pass the parameter with API client like https://g14.aargontools.com/api/CreditCards/TCRProcessCC
+        /// (pass JSON body like the request example)
+        /// </remarks>
+        /// <response code="200">Execution Successful</response>
+        /// <response code="401">Unauthorized , please login or refresh your token.</response>
+        /// 
+        ///
 
+        [ProducesResponseType(typeof(ProcessCCResponse), 200)]
+        [HttpPost("TCRProcessCC")]
+        public async Task<IActionResult> TCRProcessCC([FromBody] ProcessCcPaymentUniversalRequestModel requestCcPayment)
+        {
+            Serilog.Log.Information("TCRProcessCC => POST request received with Debtor Account: {@debtorAcct}", requestCcPayment.debtorAcct);
+
+            // Validate debtor account format
+            var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
+            if (!debtorAcctRegex.IsMatch(requestCcPayment.debtorAcct))
+            {
+                Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", requestCcPayment.debtorAcct);
+                return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+            }
+
+            // Remove any non-digit characters
+
+            requestCcPayment.ccNumber = Regex.Replace(requestCcPayment.ccNumber, @"\D", "");
+
+            // Regular expression to match credit card numbers
+
+            string pattern = @"^(?:4[0-9]{12}(?:[0-9]{3})?          # Visa
+                           |  5[1-5][0-9]{14}                  # MasterCard
+                           |  3[47][0-9]{13}                   # American Express
+                           |  3(?:0[0-5]|[68][0-9])[0-9]{11}   # Diners Club
+                           |  6(?:011|5[0-9]{2})[0-9]{12}      # Discover
+                           |  (?:2131|1800|35\d{3})\d{11}      # JCB
+                          )$";
+
+            // Validate the card number format
+
+            if (!Regex.IsMatch(requestCcPayment.ccNumber, pattern, RegexOptions.IgnorePatternWhitespace))
+            {
+                Serilog.Log.Warning("Invalid credit card format for ccNumber: {CcNumber}", requestCcPayment.ccNumber);
+                return BadRequest("Invalid credit card format.");
+            }
+
+            // Validate cvv
+            var cvvRegex = new Regex(@"^\d{3,4}$");
+            if (!cvvRegex.IsMatch(requestCcPayment.cvv))
+            {
+                Serilog.Log.Warning("Invalid CVV format for cvv: {cvv}", requestCcPayment.cvv);
+                return BadRequest("Invalid CVV format. It must be 3 or 4 digits.");
+            }
+
+
+
+            try
+            {
+                var companyFlagString =await _getTheCompanyFlag.GetStringFlag(requestCcPayment.debtorAcct, "P");
+               
+                if (ModelState.IsValid)
+                {
+                    if (companyFlagString == "T")
+                    {
+                        var gateway = _serviceProvider.GetService<UsaEPayManager>();
+                        var response = await gateway.ProcessPayment(requestCcPayment, "P");
+                        //if transaction is successful
+                        if (response is ResponseWithTransaction responseWithTransaction)
+                        {
+                            if (responseWithTransaction.TransactionStatus == true)
+                            {
+                                Serilog.Log.Information("Transaction successful. Saving card info...");
+                                var status = await gateway.SaveCardInfo(requestCcPayment, "P");
+                                Serilog.Log.Information("Card info saved");
+                            }
+                        }
+                        Serilog.Log.Information("Returning response: {@Response}", response);
+                        return Ok(response);
+                    }
+                    else
+                    {
+                        Serilog.Log.Warning("Invalid debtor account as TCR: {debtorAcct}", requestCcPayment.debtorAcct);
+                        return BadRequest("Invalid debtor account as TCR");
+                    }
+                   
+                }
+            }
+            catch (Exception e)
+            {
+                Serilog.Log.Error(e, "An error occurred while processing TCRProcessCC request with Debtor Account: {@debtorAcct}", requestCcPayment.debtorAcct);
+                return StatusCode(500, "An internal server error occurred. Please try again later.");
+            }
+
+
+            return new JsonResult("Something went wrong") { StatusCode = 500 };
+
+
+        }
 
         //[ProducesResponseType(typeof(SetProcessCCResponse), 200)]
         [HttpPost("ViewingSchedulePayments")]
