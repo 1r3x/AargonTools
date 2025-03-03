@@ -83,6 +83,11 @@ namespace AargonTools.Manager
                         {
                             amount99Value = 0; // Default to 0 if the conversion fails
                         }
+                        int corrected_duration;
+                        if (!int.TryParse(item.corrected_duration, out corrected_duration))
+                        {
+                            corrected_duration = 0; // Default to 0 if the conversion fails
+                        }
 
                         var aiCallResult = new AiCallResult()
                         {
@@ -90,7 +95,7 @@ namespace AargonTools.Manager
                             CallType = item.inbound ? "1" : "0",
                             CallPhoneNumber = item.inbound ? item.variables.short_from : item.variables.short_to,
                             CallTime = item.variables.timestamp,
-                            CallLength = Convert.ToInt32(item.corrected_duration),
+                            CallLength = corrected_duration,
                             CallPaymentAmt = amount99Value, // Use the processed amount99 value
                             CallStatus = item.status,
                             CallDisposition = item.disposition_tag,
