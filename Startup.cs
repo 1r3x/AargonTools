@@ -29,6 +29,9 @@ using Microsoft.AspNetCore.Authorization;
 using Serilog.Context;
 using Swashbuckle.AspNetCore.Filters;
 using AargonTools.Manager.ProcessCCManager;
+using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 
 namespace AargonTools
 {
@@ -209,6 +212,51 @@ namespace AargonTools
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+                // Log Request Body
+                app.Use(async (context, next) =>
+                {
+                    context.Request.EnableBuffering(); // Enable rewinding the request stream
+                    var requestBody = await new StreamReader(context.Request.Body).ReadToEndAsync();
+                    Serilog.Log.Debug("Request body: {RequestBody}", requestBody);
+                    context.Request.Body.Position = 0; // Reset the stream position
+                    await next();
+                });
+            }
+
+
+            // global exceptionalhandler 
+            app.UseExceptionHandler(errorApp =>
+            {
+                errorApp.Run(async context =>
+                {
+                    var exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
+                    var exception = exceptionHandlerFeature?.Error;
+
+                    if (exception is ConnectionResetException)
+                    {
+                        Serilog.Log.Warning("Client disconnected (global ex handler): {Message}", exception.Message);
+                        context.Response.StatusCode = StatusCodes.Status408RequestTimeout;
+                        await context.Response.WriteAsync("Client disconnected");
+
+                    }
+                    else
+                    {
+                        Serilog.Log.Error(exception, "Unhandled exception (global ex handler)");
+                        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                        await context.Response.WriteAsync("An unexpected error occurred");
+                    }
+                });
+            });
+
+
+
+
+
+
             //app.UseIPFilter();
 
             //Apply IP filtering middleware conditionally
@@ -217,16 +265,23 @@ namespace AargonTools
                 appBuilder.UseIPFilter();
             });
 
-
-            if (env.IsDevelopment())
+            // Catch Model Binding Errors
+            app.Use(async (context, next) =>
             {
-                app.UseDeveloperExceptionPage();
-            }
+                try
+                {
+                    await next();
+                }
+                catch (ConnectionResetException ex)
+                {
+                    Serilog.Log.Warning("Client disconnected (model binding ex): {Message}", ex.Message);
+                    context.Response.StatusCode = StatusCodes.Status408RequestTimeout;
+                    await context.Response.WriteAsync("Client disconnected");
 
-            app.UseSwagger();
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "AargonTools v1"));
-            app.UseHttpsRedirection();
-            // Add security headers
+                }
+            });
+
+            // Security Headers
             app.Use(async (context, next) =>
             {
                 context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
@@ -234,6 +289,12 @@ namespace AargonTools
                 context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
                 await next();
             });
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "AargonTools v1"));
+            app.UseHttpsRedirection();
+
+
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
@@ -241,7 +302,7 @@ namespace AargonTools
 
 
 
-            //this is for picking up the user nad send it to log.
+            //this is for picking up the user and send it to log.
             app.Use(async (httpContext, next) =>
             {
                 var claims = httpContext.User.Claims;
