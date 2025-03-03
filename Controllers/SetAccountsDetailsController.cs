@@ -15,6 +15,8 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using AargonTools.Manager.GenericManager;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Http;
+
 
 namespace AargonTools.Controllers
 {
@@ -759,6 +761,16 @@ namespace AargonTools.Controllers
         {
             Serilog.Log.Information("SetNotesV2 => POST request received with request: {@Request}", request);
 
+            // Check if the client is still connected
+            if (HttpContext.RequestAborted.IsCancellationRequested)
+            {
+                Serilog.Log.Warning("Client disconnected before processing");
+                return StatusCode(StatusCodes.Status408RequestTimeout);
+            }
+
+
+
+
             // Validate debtor account format
             var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
             if (!debtorAcctRegex.IsMatch(request.DebtorAcct))
@@ -777,6 +789,7 @@ namespace AargonTools.Controllers
 
                 }
             }
+
             catch (Exception e)
             {
                 Serilog.Log.Error(e, "An error occurred while processing SetNotesV2 request with request: {@Request}", request);
@@ -1027,7 +1040,8 @@ namespace AargonTools.Controllers
         public async Task<IActionResult> SetBlandResultsV2([FromBody] List<BlandResultsViewModel> request)
         {
             Serilog.Log.Information("SetBlandResults => POST request received from IP: {ClientIpAddress}", _userService.GetClientIpAddress());
-            
+            //for invertigating 
+            //Serilog.Log.Debug("Payload {@Request}", request);
             try
             {
                 if (ModelState.IsValid)
