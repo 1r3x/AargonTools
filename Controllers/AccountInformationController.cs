@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
-using AargonTools.Data.ExamplesForDocumentation.Request;
 using AargonTools.Data.ExamplesForDocumentation.Response;
 using AargonTools.Interfaces;
 using AargonTools.ViewModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using System.Text.RegularExpressions;
+using System.Data.SqlClient;
+using Microsoft.AspNetCore.Http;
 
 namespace AargonTools.Controllers
 {
@@ -295,11 +296,44 @@ namespace AargonTools.Controllers
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
         ///<param name="debtorAcct"> Enter Debtor Account</param>
         /// 
+        //[ProducesResponseType(typeof(GetMultiplesResponseModel), 200)]
+        //[HttpGet("GetMultiples/{debtorAcct}")]
+        //public async Task<IActionResult> GetMultiples(string debtorAcct)
+        //{
+
+        //    Serilog.Log.Information("Entering GetMultiples => GET with debtorAcct: {DebtorAcct}", debtorAcct);
+
+        //    // Validate debtor account format
+        //    var regex = new Regex(@"^\d{4}-\d{6}$");
+        //    if (!regex.IsMatch(debtorAcct))
+        //    {
+        //        Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
+        //        return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
+        //    }
+
+        //    try
+        //    {
+        //        //P for prod.
+        //        var item = await _context.GetMultiples(debtorAcct, "P");
+        //        Serilog.Log.Information("Successfully retrieved multiples for debtorAcct: {DebtorAcct}", debtorAcct);
+        //        return Ok(item);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Serilog.Log.Error(e, "Error retrieving multiples for debtorAcct: {DebtorAcct}", debtorAcct);
+        //        throw;
+        //    }
+        //    finally
+        //    {
+        //        Serilog.Log.Information("Exiting GetMultiples => GET with debtorAcct: {DebtorAcct}", debtorAcct);
+        //    }
+
+        //}
+
         [ProducesResponseType(typeof(GetMultiplesResponseModel), 200)]
         [HttpGet("GetMultiples/{debtorAcct}")]
         public async Task<IActionResult> GetMultiples(string debtorAcct)
         {
-
             Serilog.Log.Information("Entering GetMultiples => GET with debtorAcct: {DebtorAcct}", debtorAcct);
 
             // Validate debtor account format
@@ -310,24 +344,43 @@ namespace AargonTools.Controllers
                 return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
             }
 
-            try
+            const int maxRetryCount = 3;
+            int retryCount = 0;
+
+            while (retryCount < maxRetryCount)
             {
-                //P for prod.
-                var item = await _context.GetMultiples(debtorAcct, "P");
-                Serilog.Log.Information("Successfully retrieved multiples for debtorAcct: {DebtorAcct}", debtorAcct);
-                return Ok(item);
-            }
-            catch (Exception e)
-            {
-                Serilog.Log.Error(e, "Error retrieving multiples for debtorAcct: {DebtorAcct}", debtorAcct);
-                throw;
-            }
-            finally
-            {
-                Serilog.Log.Information("Exiting GetMultiples => GET with debtorAcct: {DebtorAcct}", debtorAcct);
+                try
+                {
+                    //P for prod.
+                    var item = await _context.GetMultiples(debtorAcct, "P");
+                    Serilog.Log.Information("Successfully retrieved multiples for debtorAcct: {DebtorAcct}", debtorAcct);
+                    return Ok(item);
+                }
+                catch (SqlException ex) when (ex.Number == 1205) // Deadlock
+                {
+                    retryCount++;
+                    Serilog.Log.Warning("Deadlock encountered, retrying... Attempt {RetryCount}", retryCount);
+                    if (retryCount >= maxRetryCount)
+                    {
+                        Serilog.Log.Error(ex, "Max retry attempts reached for debtorAcct: {DebtorAcct}", debtorAcct);
+                        return StatusCode(500, "A deadlock occurred. Please try again later.");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Serilog.Log.Error(e, "Error retrieving multiples for debtorAcct: {DebtorAcct}", debtorAcct);
+                    throw;
+                }
+                finally
+                {
+                    Serilog.Log.Information("Exiting GetMultiples => GET with debtorAcct: {DebtorAcct}", debtorAcct);
+                }
             }
 
+            return StatusCode(500, "An unexpected error occurred.");
         }
+
+
 
         /// <summary>
         ///  Returns account Info of a debtor account.(Prod.)
@@ -425,7 +478,6 @@ namespace AargonTools.Controllers
                 Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
                 return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
             }
-
 
             try
             {
@@ -585,6 +637,14 @@ namespace AargonTools.Controllers
 
             Serilog.Log.Information("Entering GetInteractionsAcctData => POST with request: {@Request}", request);
 
+            // Check if the client is still connected
+            if (HttpContext.RequestAborted.IsCancellationRequested)
+            {
+                Serilog.Log.Warning("Client disconnected before processing");
+                return StatusCode(StatusCodes.Status408RequestTimeout);
+            }
+
+
             try
             {
                 //P for prod.
@@ -595,6 +655,7 @@ namespace AargonTools.Controllers
 
                 return Ok(item);
             }
+
             catch (Exception e)
             {
                 Serilog.Log.Error(e, "Error retrieving interactions account data for request: {@Request}", request);
