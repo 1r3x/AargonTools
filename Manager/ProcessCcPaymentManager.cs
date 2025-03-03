@@ -372,14 +372,14 @@ namespace AargonTools.Manager
 
 
                 var processSaleObjects = await USAePay.API.Transactions.PostAsync(request);
-                var json = JsonConvert.SerializeObject(processSaleObjects.Values, Formatting.Indented);
-                var test = json.Contains("Approved");
-                if (json.Contains("Approved"))
-                {
-                    return _response.Response(processSaleObjects);
-                }
+                //var json = JsonConvert.SerializeObject(processSaleObjects.Values, Formatting.Indented);
+                //var test = json.Contains("Approved");
+                //if (json.Contains("Approved"))
+                //{
+                //    return _response.Response(processSaleObjects);
+                //}
 
-                return _response.Response("Error 404");
+                return _response.Response(processSaleObjects);
 
             }
 
