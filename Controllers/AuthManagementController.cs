@@ -47,55 +47,54 @@ namespace AargonTools.Controllers
             _userService = userService;
         }
 
+
+
         [HttpPost]
         [Route("Register_Hide_Out")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> Register_Hide_Out([FromBody] UserRegistrationDto user)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                // We can utilise the model
-                var existingUser = await _userManager.FindByEmailAsync(user.Email);
-
-                if (existingUser != null)
+                Serilog.Log.Information("Register_Hide_Out ----[Invalid payload]");
+                return BadRequest(new RegistrationResponse
                 {
-                    return BadRequest(new RegistrationResponse()
-                    {
-                        Errors = new List<string>() {
-                                "Email already in use"
-                            },
-                        Success = false
-                    });
-                }
-
-                var newUser = new IdentityUser() { Email = user.Email, UserName = user.Username };
-                var isCreated = await _userManager.CreateAsync(newUser, user.Password);
-                if (isCreated.Succeeded)
-                {
-                    var jwtToken = await GenerateJwtToken(newUser);
-
-                    return Ok(jwtToken);
-                }
-                else
-                {
-                    return BadRequest(new RegistrationResponse()
-                    {
-                        Errors = isCreated.Errors.Select(x => x.Description).ToList(),
-                        Success = false
-                    });
-                }
+                    Errors = new List<string> { "Invalid payload" },
+                    Success = false
+                });
             }
 
-            return BadRequest(new RegistrationResponse()
+            Serilog.Log.Information("Register_Hide_Out => POST[{ClientIp}]--> {Email}", _userService.GetClientIpAddress(), user.Email);
+
+            var existingUser = await _userManager.FindByEmailAsync(user.Email);
+            if (existingUser != null)
             {
-                Errors = new List<string>() {
-                        "Invalid payload"
-                    },
-                Success = false
-            });
+                Serilog.Log.Information("Register_Hide_Out ----[Email already in use]");
+                return BadRequest(new RegistrationResponse
+                {
+                    Errors = new List<string> { "Email already in use" },
+                    Success = false
+                });
+            }
+
+            var newUser = new IdentityUser { Email = user.Email, UserName = user.Username };
+            var isCreated = await _userManager.CreateAsync(newUser, user.Password);
+            if (isCreated.Succeeded)
+            {
+                Serilog.Log.Information("Register_Hide_Out ----[User created successfully]");
+                var jwtToken = await GenerateJwtToken(newUser);
+                return Ok(jwtToken);
+            }
+            else
+            {
+                Serilog.Log.Information("Register_Hide_Out ----[User creation failed]");
+                return BadRequest(new RegistrationResponse
+                {
+                    Errors = isCreated.Errors.Select(x => x.Description).ToList(),
+                    Success = false
+                });
+            }
         }
-
-
 
         /// <summary>
         ///  Can generate a token and a refresh token.
