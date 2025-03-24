@@ -292,6 +292,11 @@ namespace AargonTools.Manager.ProcessCCManager
             var json = JsonConvert.SerializeObject(processTransactionJsonResult.Data, Formatting.Indented);
             var obj = JsonConvert.DeserializeObject<SetProcessCCResponse.TransactionDetails>(json);
 
+            if (obj.result_code!="A")
+            {
+                Serilog.Log.Warning("Payment request for {debtorAcct} has failed with error code {error_code}.  The message is:  {error}", request.debtorAcct, obj.error_code, obj.error);
+            }
+
             var response = new CommonResponseModelForCCProcess()
             {
                 AuthorizationNumber = obj.authcode,

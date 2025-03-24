@@ -16,6 +16,9 @@ using Microsoft.Extensions.Configuration;
 using AargonTools.Manager.GenericManager;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
+using System.Data.SqlClient;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace AargonTools.Controllers
@@ -42,11 +45,13 @@ namespace AargonTools.Controllers
         private readonly ISetBlandResults _setBlandsResults;
         private readonly IConfiguration _configuration;
         private readonly IUserService _userService;
+        private readonly ExistingDataDbContext _context;
 
         public SetAccountsDetailsController(IAddBadNumbers contextBadNumbers, ISetMoveAccount contextSetMoveAccount, IAddNotes contextAddNotes
         , ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute, ISetPostDateChecks setPostDateChecks
         , ISetMoveToQueue setMoveToQueue, ISetInteractResults setInteractionResults, IAddNotesV2 contextAddNotesV2, ISetDialing contextSetDialing,
-        ISetUpdateAddress contextSetUpdateAddress, ISetBlandResults setBlandsResults, IConfiguration configuration, IUserService userService)
+        ISetUpdateAddress contextSetUpdateAddress, ISetBlandResults setBlandsResults, IConfiguration configuration, IUserService userService,
+        ExistingDataDbContext context)
         {
             _contextBadNumbers = contextBadNumbers;
             _contextSetMoveAccount = contextSetMoveAccount;
@@ -64,6 +69,7 @@ namespace AargonTools.Controllers
             _setBlandsResults = setBlandsResults;
             _configuration = configuration;
             _userService = userService;
+            _context = context;
         }
 
         /// <summary>
@@ -207,6 +213,9 @@ namespace AargonTools.Controllers
             }
 
         }
+
+
+
 
         /// <summary>
         ///  This endpoint can add a note.(Prod.)
@@ -1040,59 +1049,68 @@ namespace AargonTools.Controllers
         public async Task<IActionResult> SetBlandResultsV2([FromBody] List<BlandResultsViewModel> request)
         {
             Serilog.Log.Information("SetBlandResults => POST request received from IP: {ClientIpAddress}", _userService.GetClientIpAddress());
-            //for invertigating 
-            //Serilog.Log.Debug("Payload {@Request}", request);
-            try
+
+            const int maxRetryCount = 3;
+            int retryCount = 0;
+
+            while (retryCount < maxRetryCount)
             {
-                if (ModelState.IsValid)
+                try
                 {
-                    //
-                    // Extract the token from the request
-                    var token = request[0].variables.token;
-                    Serilog.Log.Debug("SetBlandResults => POST request with token : {token}", token);
-                    // Perform your token validation logic here
-                    var tokenHandler = new JwtSecurityTokenHandler();
-                    //get the kay from centralize json 
-                    var key = _configuration["JwtConfig:Secret"];
-
-                    var validationParameters = new TokenValidationParameters
+                    if (ModelState.IsValid)
                     {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
-                        ValidateIssuer = false,
-                        ValidateAudience = false,
-                        ValidateLifetime = true,
-                        RequireExpirationTime = false,
-                        ClockSkew = TimeSpan.Zero
-                    };
+                        // Extract the token from the request
+                        var token = request[0].variables.token;
+                        Serilog.Log.Debug("SetBlandResults => POST request with token : {token}", token);
+                        // Perform your token validation logic here
+                        var tokenHandler = new JwtSecurityTokenHandler();
+                        // Get the key from centralized JSON
+                        var key = _configuration["JwtConfig:Secret"];
 
+                        var validationParameters = new TokenValidationParameters
+                        {
+                            ValidateIssuerSigningKey = true,
+                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+                            ValidateIssuer = false,
+                            ValidateAudience = false,
+                            ValidateLifetime = true,
+                            RequireExpirationTime = false,
+                            ClockSkew = TimeSpan.Zero
+                        };
 
+                        try
+                        {
+                            tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+                            Serilog.Log.Information("Token validation successful.");
+                        }
+                        catch (Exception e)
+                        {
+                            Serilog.Log.Error(e, "Token validation failed.");
+                            return Unauthorized("Invalid token");
+                        }
 
-                    try
-                    {
-                        tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
-                        Serilog.Log.Information("Token validation successful.");
+                        var data = await _setBlandsResults.SetBlandResults(request, "P");
+                        return Ok(data);
                     }
-                    catch (Exception e)
+                }
+                catch (SqlException ex) when (ex.Number == 1205) // Deadlock
+                {
+                    retryCount++;
+                    Serilog.Log.Warning("Deadlock encountered, retrying... Attempt {RetryCount}", retryCount);
+                    if (retryCount >= maxRetryCount)
                     {
-                        Serilog.Log.Error(e, "Token validation failed.");
-                        return Unauthorized("Invalid token");
+                        Serilog.Log.Error(ex, "Max retry attempts reached for set bland result CallTime: {CallTime}", request.Select(x => x.variables.timestamp));
+                        return StatusCode(500, "A deadlock occurred. Please try again later.");
                     }
-                    var data = await _setBlandsResults.SetBlandResults(request, "P");
-                    return Ok(data);
-
+                }
+                catch (Exception e)
+                {
+                    Serilog.Log.Error(e, "An error occurred while processing SetBlandResults request with request: {@Request}", request);
+                    throw;
                 }
             }
-            catch (Exception e)
-            {
-                Serilog.Log.Error(e, "An error occurred while processing SetBlandResults request with request: {@Request}", request);
-                throw;
-            }
-
 
             return new JsonResult("Something went wrong") { StatusCode = 500 };
         }
-
-
     }
 }

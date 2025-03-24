@@ -69,6 +69,8 @@ namespace AargonTools.Data.ExamplesForDocumentation.Response
             public string is_duplicate { get; set; }
             public string result_code { get; set; }
             public string result { get; set; }
+            public string error { get; set; }
+            public string error_code { get; set; }
             public string authcode { get; set; }
             public Creditcard creditcard { get; set; }
             public Avs avs { get; set; }

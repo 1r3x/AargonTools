@@ -222,7 +222,7 @@ namespace AargonTools.Manager
         public async Task<ResponseModel> ProcessingTransactionV2(string tokenizeCc, decimal amount, bool hsa,
             string debtorAccount, string cardHolder, string environment)
         {
-            
+
 
             if (environment == "P")
             {
@@ -257,7 +257,7 @@ namespace AargonTools.Manager
 
                 var patientInfo = await _companyFlag
                                         .GetFlagForDebtorMaster(debtorAccount, environment).Result
-                                        .Where(x => x.DebtorAcct == debtorAccount).Select (x=>
+                                        .Where(x => x.DebtorAcct == debtorAccount).Select(x =>
                                         new DebtorMaster()
                                         {
                                             FirstName = x.FirstName,
@@ -269,19 +269,6 @@ namespace AargonTools.Manager
                                             City = x.City,
 
                                         }).SingleOrDefaultAsync();
-
-
-                //var patientInfo_fake = await _context.PatientMasters.Where(x => x.DebtorAcct == debtorAccount).Select(i =>
-                // new PatientMaster()
-                // {
-                //     FirstName = i.FirstName,
-                //     LastName = i.LastName,
-                //     StateCode = i.StateCode,
-                //     Zip = i.Zip,
-                //     Address1 = i.Address1,
-                //     Address2 = i.Address2,
-                //     City = i.City,
-                // }).SingleOrDefaultAsync();
 
                 if (patientInfo == null)
                 {
@@ -327,7 +314,8 @@ namespace AargonTools.Manager
                     ["send_receipt"] = "false",
                     ["amount"] = amount,
                     ["creditcard"] = creditCardObj,
-                    ["billing_address"] = billingAddressObj
+                    ["billing_address"] = billingAddressObj,
+                    ["UMtimeout"] = 30 // Set the timeout value in seconds
 
                 };
 
@@ -358,26 +346,86 @@ namespace AargonTools.Manager
                     tempPin = _centralizeVariablesModel.Value.USAePayDefault.Pin;
 
                 }
+
+                var patientAccountInfo = await _companyFlag.GetFlagForDebtorAccount(debtorAccount, environment)
+                .Result.Where(a => a.DebtorAcct == debtorAccount)
+                .Select(a => new
+                {
+                    a.Balance,
+                    a.SuppliedAcct,
+                }).SingleOrDefaultAsync();
+
+                var patientInfo = await _companyFlag
+                                        .GetFlagForDebtorMaster(debtorAccount, environment).Result
+                                        .Where(x => x.DebtorAcct == debtorAccount).Select(x =>
+                                        new DebtorMaster()
+                                        {
+                                            FirstName = x.FirstName,
+                                            LastName = x.LastName,
+                                            StateCode = x.StateCode,
+                                            Zip = x.Zip,
+                                            Address1 = x.Address1,
+                                            Address2 = x.Address2,
+                                            City = x.City,
+
+                                        }).SingleOrDefaultAsync();
+
+                if (patientInfo == null)
+                {
+                    patientInfo = new DebtorMaster()
+                    {
+                        FirstName = "Not",
+                        LastName = "Available",
+                        StateCode = "",
+                        Zip = "",
+                        Address1 = "",
+                        Address2 = "",
+                        City = ""
+                    };
+                }
+                var cardHolderTemp = cardHolder;
+                if (cardHolder == "" || cardHolder == null)
+                {
+                    cardHolderTemp = patientInfo.FirstName + " " + patientInfo.LastName;
+                }
+
+
                 USAePay.API.SetURL(_centralizeVariablesModel.Value.USAePayDefault.Url);
                 USAePay.API.SetAuthentication(tempKey, tempPin);
 
-                var creditCardObj = new Dictionary<string, object> { ["number"] = tokenizeCc };
+                var creditCardObj = new Dictionary<string, object> { ["number"] = tokenizeCc, ["cardholder"] = cardHolderTemp };
+                var billingAddressObj = new Dictionary<string, object>
+                {
+                    ["firstname"] = patientInfo.FirstName,
+                    ["lastname"] = patientInfo.LastName,
+                    ["street"] = patientInfo.Address1,
+                    ["city"] = patientInfo.City,
+                    ["state"] = patientInfo.StateCode,
+                    ["postalcode"] = ""
+                };
 
                 var request = new Dictionary<string, object>
                 {
                     ["command"] = "cc:sale",
+                    ["invoice"] = debtorAccount.Replace("-", ""),
+                    ["customerid"] = debtorAccount.Replace("-", ""),
+                    ["ponum"] = debtorAccount.Replace("-", ""),
+                    ["orderid"] = debtorAccount.Replace("-", ""),
+                    ["description"] = "Repayment of Debt for account " + debtorAccount.Replace("-", ""),
+                    ["send_receipt"] = "false",
                     ["amount"] = amount,
-                    ["creditcard"] = creditCardObj
+                    ["creditcard"] = creditCardObj,
+                    ["billing_address"] = billingAddressObj,
+                    ["UMtimeout"] = 30 // Set the timeout value in seconds
                 };
 
-
                 var processSaleObjects = await USAePay.API.Transactions.PostAsync(request);
-                //var json = JsonConvert.SerializeObject(processSaleObjects.Values, Formatting.Indented);
-                //var test = json.Contains("Approved");
-                //if (json.Contains("Approved"))
-                //{
-                //    return _response.Response(processSaleObjects);
-                //}
+                var json = JsonConvert.SerializeObject(processSaleObjects.Values, Formatting.Indented);
+
+                if (json.Contains("Approved"))
+                {
+                    return _response.Response(processSaleObjects);
+                }
 
                 return _response.Response(processSaleObjects);
 
@@ -645,7 +693,7 @@ namespace AargonTools.Manager
             //todo
             try
             {
-                var tokenizeDataJsonResult = TokenizeCc(request.debtorAcc,request.ccNumber, request.expiredDate, request.hsa != null && (bool)request.hsa, environment).Result;
+                var tokenizeDataJsonResult = TokenizeCc(request.debtorAcc, request.ccNumber, request.expiredDate, request.hsa != null && (bool)request.hsa, environment).Result;
                 SaveCard tokenizeCObj = new SaveCard()
                 {
                     CardNumber = "",

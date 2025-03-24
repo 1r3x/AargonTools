@@ -296,39 +296,7 @@ namespace AargonTools.Controllers
         /// <response code="401">Unauthorized , please login or refresh your token.</response>
         ///<param name="debtorAcct"> Enter Debtor Account</param>
         /// 
-        //[ProducesResponseType(typeof(GetMultiplesResponseModel), 200)]
-        //[HttpGet("GetMultiples/{debtorAcct}")]
-        //public async Task<IActionResult> GetMultiples(string debtorAcct)
-        //{
 
-        //    Serilog.Log.Information("Entering GetMultiples => GET with debtorAcct: {DebtorAcct}", debtorAcct);
-
-        //    // Validate debtor account format
-        //    var regex = new Regex(@"^\d{4}-\d{6}$");
-        //    if (!regex.IsMatch(debtorAcct))
-        //    {
-        //        Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
-        //        return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
-        //    }
-
-        //    try
-        //    {
-        //        //P for prod.
-        //        var item = await _context.GetMultiples(debtorAcct, "P");
-        //        Serilog.Log.Information("Successfully retrieved multiples for debtorAcct: {DebtorAcct}", debtorAcct);
-        //        return Ok(item);
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        Serilog.Log.Error(e, "Error retrieving multiples for debtorAcct: {DebtorAcct}", debtorAcct);
-        //        throw;
-        //    }
-        //    finally
-        //    {
-        //        Serilog.Log.Information("Exiting GetMultiples => GET with debtorAcct: {DebtorAcct}", debtorAcct);
-        //    }
-
-        //}
 
         [ProducesResponseType(typeof(GetMultiplesResponseModel), 200)]
         [HttpGet("GetMultiples/{debtorAcct}")]
@@ -478,102 +446,41 @@ namespace AargonTools.Controllers
                 Serilog.Log.Warning("Invalid debtor account format for debtorAcct: {DebtorAcct}", debtorAcct);
                 return BadRequest("Invalid debtor account format. It must be in the format 0000-000000.");
             }
+            const int maxRetryCount = 3;
+            int retryCount = 0;
 
-            try
+            while (retryCount < maxRetryCount)
             {
-                //P for prod.
-                var item = await _context.GetSIF(debtorAcct, "P");
-                Serilog.Log.Information("Successfully retrieved SIF for debtorAcct: {DebtorAcct}", debtorAcct);
-                return Ok(item);
+                try
+                {
+                    //P for prod.
+                    var item = await _context.GetSIF(debtorAcct, "P");
+                    Serilog.Log.Information("Successfully retrieved SIF for debtorAcct: {DebtorAcct}", debtorAcct);
+                    return Ok(item);
+                }
+                catch (SqlException ex) when (ex.Number == 1205) // Deadlock
+                {
+                    retryCount++;
+                    Serilog.Log.Warning("Deadlock encountered, retrying... Attempt {RetryCount}", retryCount);
+                    if (retryCount >= maxRetryCount)
+                    {
+                        Serilog.Log.Error(ex, "Max retry attempts reached for debtorAcct: {DebtorAcct}", debtorAcct);
+                        return StatusCode(500, "A deadlock occurred. Please try again later.");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Serilog.Log.Error(e, "Error retrieving SIF for debtorAcct: {DebtorAcct}", debtorAcct);
+                    throw;
+                }
+                finally
+                {
+                    Serilog.Log.Information("Exiting GetSIF => GET with debtorAcct: {DebtorAcct}", debtorAcct);
+                }
             }
-            catch (Exception e)
-            {
-                Serilog.Log.Error(e, "Error retrieving SIF for debtorAcct: {DebtorAcct}", debtorAcct);
-                throw;
-            }
-            finally
-            {
-                Serilog.Log.Information("Exiting GetSIF => GET with debtorAcct: {DebtorAcct}", debtorAcct);
-            }
-
+            return StatusCode(500, "An unexpected error occurred.");
         }
 
-
-
-        /// <summary>
-        ///  Returns Interactions Account Data.(Prod.)
-        /// </summary>
-        /// 
-        /// <remarks>
-        /// **Details**:
-        /// Gets the  interactions account data by passing JSON body like the request example. All parameters are not required
-        /// but one
-        /// for this endpoint . You can call with an API client like  https://g14.aargontools.com/api/AccountInformation/GetInteractionsAcctData
-        /// and it's POST request for getting the data.
-        ///
-        /// **Details**:
-        /// Regular expression for debtorAcct [@"\d{4}-\d{6}"] ex. 0001-000001, for phone [@"\d{10}"] ex. 2123037334,
-        /// please don't forget about valid token.
-        ///  **GET Table/Fields Details**
-        ///  debtor_phone_info,
-        ///  
-        ///  check_detail,
-        ///  
-        ///  larry_cc_payments,
-        ///  
-        ///  debtor_pp_info,
-        ///  
-        ///  debtor_acct_info(flag),
-        ///  
-        ///  debtor_master(flag),
-        ///  
-        ///  client_master(flag),
-        ///  
-        ///  client_acct_info(flag)
-        ///  
-        /// 
-        /// Pull--> 
-        /// debtor_phone_info->home_area_code,home_phone,work_area_code,work_phone,cell_area_code,cell_phone,other_area_code,other_phone,
-        /// relative_area_code,relative_phone,debtor_acct
-        /// 
-        /// check_detail->check_date
-        /// 
-        /// larry_cc_payments->date_process
-        /// 
-        /// debtor_pp_info->pp_date1
-        /// 
-        /// debtor_acct_info(flag)->debtor_acct,balance,email_address,acct_status
-        /// 
-        /// debtor_master(flag)->ssn,address1,address2,city,state_code,zip,birth_date,first_name,last_name,
-        /// 
-        /// client_master(flag)->client_name
-        /// 
-        /// client_acct_info(flag)->acct_type
-        /// </remarks>
-        /// <response code="200">Execution Successful</response>
-        /// <response code="401">Unauthorized , please login or refresh your token.</response>
-        /// 
-        //[ProducesResponseType(typeof(GetInteractionAcctDataExample), 200)]
-        //[HttpPost("GetInteractionsAcctData")]
-        //public async Task<IActionResult> GetInteractionsAcctData([FromBody] GetInteractionAcctDateRequestModel request)
-        //{
-        //    Serilog.Log.Information("GetInteractionsAcctData => GET");
-        //    try
-        //    {
-        //        //P for prod.
-
-        //        //original
-        //        var item = await _contextGetInteractionsAcctData.GetInteractionsAcctData(request, "P");
-
-        //        return Ok(item);
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        Serilog.Log.Error(e.InnerException, e.Message);
-        //        throw;
-        //    }
-
-        //}
 
 
         /// <summary>
@@ -644,28 +551,42 @@ namespace AargonTools.Controllers
                 return StatusCode(StatusCodes.Status408RequestTimeout);
             }
 
+            const int maxRetryCount = 3;
+            int retryCount = 0;
 
-            try
+            while (retryCount < maxRetryCount)
             {
-                //P for prod.
+                try
+                {
+                    //P for prod.
 
-                var item = await _contextGetInteractionsAcctData.GetInteractionsAcctDataSpeedRun(request, "P");
+                    var item = await _contextGetInteractionsAcctData.GetInteractionsAcctDataSpeedRun(request, "P");
 
-                Serilog.Log.Information("Successfully retrieved interactions account data for request: {@Request} ", request);
+                    Serilog.Log.Information("Successfully retrieved interactions account data for request: {@Request} ", request);
 
-                return Ok(item);
+                    return Ok(item);
+                }
+                catch (SqlException ex) when (ex.Number == 1205) // Deadlock
+                {
+                    retryCount++;
+                    Serilog.Log.Warning("Deadlock encountered, retrying... Attempt {RetryCount}", retryCount);
+                    if (retryCount >= maxRetryCount)
+                    {
+                        Serilog.Log.Error(ex, "Max retry attempts reached for debtorAcct: {DebtorAcct}", request.debtorAcct);
+                        return StatusCode(500, "A deadlock occurred. Please try again later.");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Serilog.Log.Error(e, "Error retrieving interactions account data for request: {@Request}", request);
+                    throw;
+                }
+                finally
+                {
+                    Serilog.Log.Information("Exiting GetInteractionsAcctData => POST with request: {@Request}", request);
+                }
             }
-
-            catch (Exception e)
-            {
-                Serilog.Log.Error(e, "Error retrieving interactions account data for request: {@Request}", request);
-                throw;
-            }
-            finally
-            {
-                Serilog.Log.Information("Exiting GetInteractionsAcctData => POST with request: {@Request}", request);
-            }
-
+            return StatusCode(500, "An unexpected error occurred.");
         }
 
 
