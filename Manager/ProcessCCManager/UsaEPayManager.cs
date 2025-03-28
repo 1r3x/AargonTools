@@ -29,12 +29,13 @@ namespace AargonTools.Manager.ProcessCCManager
         //
         private readonly IAddNotesV3 _addNotes;
         private readonly GatewaySelectionHelper _gatewaySelectionHelper;
+        private readonly Sp_larry_cc_postdateV2 _Sp_larry_cc_postdateV2;
 
         public UsaEPayManager(HttpClient clientForInstaMed,
             IOptions<CentralizeVariablesModel> centralizeVariablesModel,
             ICardTokenizationDataHelper cardTokenizationHelper, ResponseModel response,
              PostPaymentA postPaymentAHelper, IProcessCcPayment usaEPay, ISetCCPayment setCcPayment, IAddNotesV3 addNotes,
-             GatewaySelectionHelper gatewaySelectionHelper)
+             GatewaySelectionHelper gatewaySelectionHelper, Sp_larry_cc_postdateV2 sp_larry_cc_postdateV2)
         {
 
             _cardTokenizationHelper = cardTokenizationHelper;
@@ -47,6 +48,7 @@ namespace AargonTools.Manager.ProcessCCManager
             _setCcPayment = setCcPayment;
             _gatewaySelectionHelper = gatewaySelectionHelper;
             _addNotes = addNotes;
+            _Sp_larry_cc_postdateV2 = sp_larry_cc_postdateV2;
         }
 
 
@@ -292,7 +294,7 @@ namespace AargonTools.Manager.ProcessCCManager
             var json = JsonConvert.SerializeObject(processTransactionJsonResult.Data, Formatting.Indented);
             var obj = JsonConvert.DeserializeObject<SetProcessCCResponse.TransactionDetails>(json);
 
-            if (obj.result_code!="A")
+            if (obj.result_code != "A")
             {
                 Serilog.Log.Warning("Payment request for {debtorAcct} has failed with error code {error_code}.  The message is:  {error}", request.debtorAcct, obj.error_code, obj.error);
             }
@@ -335,14 +337,14 @@ namespace AargonTools.Manager.ProcessCCManager
             await _addNotes.CreateNotes(noteObj, environment);
 
             var ccNumber = requestForUsaEPay.ccNumber;
-
+            var expSplit = request.expiredDate.Split("/");
             var cardInfoObj = new LcgCardInfo()
             {
                 IsActive = true,
                 EntryMode = "key",
                 BinNumber = requestForUsaEPay.cvv,
-                ExpirationMonth = 1, //todo 
-                ExpirationYear = 2, //todo
+                ExpirationMonth = Convert.ToInt32(expSplit[0]),
+                ExpirationYear = Convert.ToInt32(expSplit[1]),
                 LastFour = ccNumber.Substring(ccNumber.Length - 4),
                 PaymentMethodId = tokenizeCObj.Key,
                 Type = tokenizeCObj.Type,
@@ -364,6 +366,14 @@ namespace AargonTools.Manager.ProcessCCManager
 
             int _USAePayPaymentScheduleId = 0;
             var paymentDate = paymentScheduleObj.EffectiveDate;
+
+            //automated postdate from old website 
+            if (requestForUsaEPay.numberOfPayments > 1)
+            {
+                await _Sp_larry_cc_postdateV2.PostDateCCProcess(request.debtorAcct, DateTime.Now, Convert.ToDouble(request.amount), obj.refnum
+                    , "", "", "", Convert.ToInt32(request.numberOfPayments) - 1, environment);
+            }
+
 
             for (var i = 1; i <= requestForUsaEPay.numberOfPayments; i++)
             {

@@ -521,7 +521,6 @@ namespace AargonTools.Controllers
         public async Task<IActionResult> ProcessCcV2([FromBody] ProcessCcPaymentUniversalRequestModel requestCcPayment)
         {
             Serilog.Log.Information("ProcessCcV2 => POST request received with Debtor Account: {@debtorAcct}", requestCcPayment.debtorAcct);
-
             // Validate debtor account format
             var debtorAcctRegex = new Regex(@"^\d{4}-\d{6}$");
             if (!debtorAcctRegex.IsMatch(requestCcPayment.debtorAcct))
@@ -659,8 +658,8 @@ namespace AargonTools.Controllers
 
             try
             {
-                var companyFlagString =await _getTheCompanyFlag.GetStringFlag(requestCcPayment.debtorAcct, "P");
-               
+                var companyFlagString = await _getTheCompanyFlag.GetStringFlag(requestCcPayment.debtorAcct, "P");
+
                 if (ModelState.IsValid)
                 {
                     if (companyFlagString == "T")
@@ -685,7 +684,7 @@ namespace AargonTools.Controllers
                         Serilog.Log.Warning("Invalid debtor account as TCR: {debtorAcct}", requestCcPayment.debtorAcct);
                         return BadRequest("Invalid debtor account as TCR");
                     }
-                   
+
                 }
             }
             catch (Exception e)

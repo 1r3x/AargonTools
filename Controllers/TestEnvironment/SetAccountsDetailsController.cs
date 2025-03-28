@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AargonTools.Data.ExamplesForDocumentation;
 using AargonTools.Data.ExamplesForDocumentation.Response;
@@ -13,6 +14,7 @@ using AargonTools.ViewModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
@@ -40,11 +42,12 @@ namespace AargonTools.Controllers.TestEnvironment
         private readonly ISetBlandResults _setBlandsResults;
         private readonly IConfiguration _configuration;
         private readonly IUserService _userService;
+        private readonly TestEnvironmentDbContext _contextTest;
 
         public SetAccountsDetailsController(IAddBadNumbers contextBadNumbers, ISetMoveAccount contextSetMoveAccount, IAddNotes contextAddNotes
             , ISetDoNotCall setDoNotCall, ISetNumber setNumber, ISetMoveToHouse setMoveToHouse, ISetMoveToDispute setMoveToDispute, ISetPostDateChecks setPostDateChecks
             , ISetMoveToQueue setMoveToQueue, ISetInteractResults setInteractionResults, IAddNotesV2 contextAddNotesV2, ISetDialing contextSetDialing,
-            ISetUpdateAddress contextSetUpdateAddress, ISetBlandResults setBlandsResults, IConfiguration configuration, IUserService userService)
+            ISetUpdateAddress contextSetUpdateAddress, ISetBlandResults setBlandsResults, IConfiguration configuration, IUserService userService, TestEnvironmentDbContext contextTest)
         {
             _contextBadNumbers = contextBadNumbers;
             _contextSetMoveAccount = contextSetMoveAccount;
@@ -62,6 +65,7 @@ namespace AargonTools.Controllers.TestEnvironment
             _setBlandsResults = setBlandsResults;
             _configuration = configuration;
             _userService = userService;
+            _contextTest = contextTest;
         }
 
         /// <summary>
@@ -804,7 +808,7 @@ namespace AargonTools.Controllers.TestEnvironment
         ///
         [AllowAnonymous]
         [HttpPost("/no-ip-filter/test/SetBlandResults")]
-        
+
         public async Task<IActionResult> SetBlandResults([FromBody] List<BlandResultsViewModel> request)
         {
             Serilog.Log.Information("SetBlandResults Test => POST from ->" + _userService.GetClientIpAddress());
@@ -907,8 +911,6 @@ namespace AargonTools.Controllers.TestEnvironment
 
             return new JsonResult("Something went wrong") { StatusCode = 500 };
         }
-
-
 
     }
 }

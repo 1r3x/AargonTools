@@ -152,6 +152,7 @@ namespace AargonTools
             services.AddScoped<GetTheCompanyFlag>();
             services.AddScoped<GatewaySelectionHelper>();
             services.AddScoped<PostPaymentA>();
+            services.AddScoped<Sp_larry_cc_postdateV2>();
 
             //injected getAccountInformation v1.0
             services.AddScoped<IGetAccountInformation, GetAccountInformation>();
