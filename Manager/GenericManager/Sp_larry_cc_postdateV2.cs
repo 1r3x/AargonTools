@@ -29,11 +29,11 @@ namespace AargonTools.Manager.GenericManager
                         "@Exp_Month ='" + expMonth + "'," +
                         "@Exp_Year ='" + expYear + "'," +
                         "@Total_PD ='" + totalPd + "';", environment);
-                Serilog.Log.Information("sp_larry_cc_postdateV2 exicuted with ", exicutionResult);
+                Serilog.Log.Information("sp_larry_cc_postdateV2 exicuted successfully.");
             }
             catch (Exception ex)
             {
-                Serilog.Log.Information("sp_larry_cc_postdateV2 exicuted with error  ", ex);
+                Serilog.Log.Information("sp_larry_cc_postdateV2 exicuted with error : ", ex);
             }
 
         }

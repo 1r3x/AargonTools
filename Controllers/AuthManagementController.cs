@@ -20,6 +20,9 @@ using AargonTools.Manager.GenericManager;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http;
 using System.Text.Json;
+using System.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace AargonTools.Controllers
 {
@@ -48,7 +51,8 @@ namespace AargonTools.Controllers
         }
 
 
-
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [Route("Register_Hide_Out")]
         [ApiExplorerSettings(IgnoreApi = true)]
@@ -56,7 +60,7 @@ namespace AargonTools.Controllers
         {
             if (!ModelState.IsValid)
             {
-                Serilog.Log.Information("Register_Hide_Out ----[Invalid payload]");
+                Serilog.Log.Warning("Register_Hide_Out ----[Invalid payload]");
                 return BadRequest(new RegistrationResponse
                 {
                     Errors = new List<string> { "Invalid payload" },
@@ -69,7 +73,7 @@ namespace AargonTools.Controllers
             var existingUser = await _userManager.FindByEmailAsync(user.Email);
             if (existingUser != null)
             {
-                Serilog.Log.Information("Register_Hide_Out ----[Email already in use]");
+                Serilog.Log.Warning("Register_Hide_Out ----[Email already in use]");
                 return BadRequest(new RegistrationResponse
                 {
                     Errors = new List<string> { "Email already in use" },
@@ -81,13 +85,16 @@ namespace AargonTools.Controllers
             var isCreated = await _userManager.CreateAsync(newUser, user.Password);
             if (isCreated.Succeeded)
             {
-                Serilog.Log.Information("Register_Hide_Out ----[User created successfully]");
+                //default role user added 
+                await _userManager.AddToRoleAsync(newUser, "User");
+
+                Serilog.Log.Warning("Register_Hide_Out ----[User created successfully]");
                 var jwtToken = await GenerateJwtToken(newUser);
                 return Ok(jwtToken);
             }
             else
             {
-                Serilog.Log.Information("Register_Hide_Out ----[User creation failed]");
+                Serilog.Log.Warning("Register_Hide_Out ----[User creation failed]");
                 return BadRequest(new RegistrationResponse
                 {
                     Errors = isCreated.Errors.Select(x => x.Description).ToList(),
@@ -265,18 +272,18 @@ namespace AargonTools.Controllers
             };
         }
 
-        private async Task<AuthResult> GenerateJwtToken(IdentityUser user)
+        private async Task<AuthResult> GenerateJwtTokenOld2(IdentityUser user)
         {
             var key = Encoding.ASCII.GetBytes(_jwtConfig.Secret);
             var tokenHandler = new JwtSecurityTokenHandler();
 
             var claims = new[]
             {
-        new Claim("Id", user.Id),
-        new Claim(JwtRegisteredClaimNames.Email, user.Email),
-        new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-    };
+            new Claim("Id", user.Id),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -296,6 +303,65 @@ namespace AargonTools.Controllers
                 UserId = user.Id,
                 AddedDate = DateTime.UtcNow,
                 ExpiryDate = DateTime.UtcNow.AddMonths(6), // todo Use a configuration value
+                Token = $"{RandomString(35)}{Guid.NewGuid()}"
+            };
+
+            await _apiDbContext.RefreshTokens.AddAsync(refreshToken);
+            await _apiDbContext.SaveChangesAsync();
+
+            return new AuthResult
+            {
+                Token = jwtToken,
+                Success = true,
+                RefreshToken = refreshToken.Token
+            };
+        }
+
+        private async Task<AuthResult> GenerateJwtToken(IdentityUser user)
+        {
+            var key = Encoding.ASCII.GetBytes(_jwtConfig.Secret);
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            // Get user roles
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+
+            var claims = new List<Claim>
+            {
+                new Claim("Id", user.Id),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            // Add role claims
+            foreach (var userRole in userRoles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, userRole));
+            }
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddMinutes(_jwtConfig.ExpiryInMinutes),
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature),
+                Issuer = _jwtConfig.Issuer,  // Add this
+                Audience = _jwtConfig.Audience  // Add this
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var jwtToken = tokenHandler.WriteToken(token);
+
+            var refreshToken = new RefreshToken
+            {
+                JwtId = token.Id,
+                IsUsed = false,
+                IsRevorked = false,
+                UserId = user.Id,
+                AddedDate = DateTime.UtcNow,
+                ExpiryDate = DateTime.UtcNow.AddMonths(6),
                 Token = $"{RandomString(35)}{Guid.NewGuid()}"
             };
 

@@ -1061,20 +1061,23 @@ namespace AargonTools.Controllers
                     {
                         // Extract the token from the request
                         var token = request[0].variables.token;
-                        Serilog.Log.Debug("SetBlandResults => POST request with token : {token}", token);
+                        //Serilog.Log.Debug("SetBlandResults => POST request with token : {token}", token);
+
+
                         // Perform your token validation logic here
                         var tokenHandler = new JwtSecurityTokenHandler();
-                        // Get the key from centralized JSON
-                        var key = _configuration["JwtConfig:Secret"];
+
 
                         var validationParameters = new TokenValidationParameters
                         {
                             ValidateIssuerSigningKey = true,
-                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
-                            ValidateIssuer = false,
-                            ValidateAudience = false,
+                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["JwtConfig:Secret"])),
+                            ValidateIssuer = true,  // Enable issuer validation
+                            ValidIssuer = _configuration["JwtConfig:Issuer"],
+                            ValidateAudience = true,  // Enable audience validation
+                            ValidAudience = _configuration["JwtConfig:Audience"],
                             ValidateLifetime = true,
-                            RequireExpirationTime = false,
+                            RequireExpirationTime = true,  // Require expiration time
                             ClockSkew = TimeSpan.Zero
                         };
 

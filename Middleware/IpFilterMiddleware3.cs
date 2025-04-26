@@ -6,41 +6,32 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using AargonTools.Manager.GenericManager;
 using AargonTools.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using USAePay;
 
 namespace AargonTools.Middleware
 {
-    public class IpFilterMiddleware
+    public class IpFilterMiddleware3
     {
         private readonly RequestDelegate _next;
         private readonly ApplicationsOptions _applicationOptions;
         private readonly IUserService _userService;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ConcurrentDictionary<IPAddress, bool> _whitelist;
-        private readonly ConcurrentDictionary<string, HashSet<IPAddress>> _userWhitelists;
 
-        public IpFilterMiddleware(
-            RequestDelegate next,
-            IOptions<ApplicationsOptions> applicationOptionsAccessor,
-            IUserService userService,
-            IHttpClientFactory httpClientFactory)
+        public IpFilterMiddleware3(RequestDelegate next, IOptions<ApplicationsOptions> applicationOptionsAccessor, IUserService userService, IHttpClientFactory httpClientFactory)
         {
             _next = next;
             _applicationOptions = applicationOptionsAccessor.Value;
             _userService = userService;
             _httpClientFactory = httpClientFactory;
             _whitelist = new ConcurrentDictionary<IPAddress, bool>();
-            _userWhitelists = new ConcurrentDictionary<string, HashSet<IPAddress>>();
 
             InitializeWhitelist();
-            InitializeUserWhitelists();
         }
 
         private void InitializeWhitelist()
@@ -63,120 +54,51 @@ namespace AargonTools.Middleware
                         _whitelist.TryAdd(ip, true);
                     }
                 }
-            }
-        }
 
-        private void InitializeUserWhitelists()
-        {
-            if (_applicationOptions.UserWhitelists != null)
-            {
-                foreach (var userWhitelist in _applicationOptions.UserWhitelists)
-                {
-                    var ipSet = new HashSet<IPAddress>();
-                    foreach (var ipRange in userWhitelist.IPRanges)
-                    {
-                        if (ipRange.Contains("/"))
-                        {
-                            var ipList = GetAllIp(ipRange);
-                            foreach (var ip in ipList)
-                            {
-                                ipSet.Add(ip);
-                            }
-                        }
-                        else
-                        {
-                            if (IPAddress.TryParse(ipRange, out var ip))
-                            {
-                                ipSet.Add(ip);
-                            }
-                        }
-                    }
-                    _userWhitelists.TryAdd(userWhitelist.UserId, ipSet);
-                }
             }
         }
 
         public async Task Invoke(HttpContext context)
         {
             var ipAddress = context.Connection.RemoteIpAddress;
-
-            // Check user-specific whitelist if authenticated
-            if (context.User.Identity.IsAuthenticated)
+            if (ipAddress != null && !_whitelist.ContainsKey(ipAddress))
             {
-                var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                context.Request.EnableBuffering();
+                var requestBody = await new StreamReader(context.Request.Body).ReadToEndAsync();
+                context.Request.Body.Position = 0;
 
-                if (!string.IsNullOrEmpty(userId) && _userWhitelists.TryGetValue(userId, out var userWhitelist))
+                var userAgent = context.Request.Headers["User-Agent"].ToString();
+                var userLanguage = context.Request.Headers["Accept-Language"].ToString();
+                var ipBehindTheMask = await CheckIPQSDatabase(ipAddress.ToString(), userAgent, userLanguage);
+
+                string hostName = null;
+                try
                 {
-                    if (userWhitelist.Contains(ipAddress))
-                    {
-                        await _next.Invoke(context);
-                        return;
-                    }
-                    
-
-                    // Log user-specific IP violation
-                    await LogAndBlock(context, ipAddress, $"User-specific IP restriction violation for user {userId}");
-                    return;
+                    var hostEntry = await Dns.GetHostEntryAsync(ipAddress);
+                    hostName = hostEntry.HostName;
+                }
+                catch (SocketException)
+                {
+                    // Log DNS lookup failure
                 }
 
-                // Optionally, sometimes i might want to allow access if no user-specific restrictions exist
-                // await _next.Invoke(context);
-                // return;
-            }
+                if (hostName != null && (hostName.EndsWith("googlebot.com") || hostName.EndsWith("bingbot.com")))
+                {
+                    Serilog.Log.Warning("Forbidden IP [{IpAddress}], IP Status:{@ipBehindTheMask}, Payload: {Payload}, UserAgent: {UserAgent}, HostName: {HostName} ThreatLevel: Possible search engine bot",
+                        ipAddress, ipBehindTheMask, requestBody, userAgent, hostName);
+                }
+                else
+                {
+                    Serilog.Log.Warning("Forbidden IP [{IpAddress}], IP Status:{@ipBehindTheMask}, Payload: {Payload}, UserAgent: {UserAgent} ThreatLevel: Potential intruder",
+                        ipAddress, ipBehindTheMask, requestBody, userAgent);
+                }
 
-            // Check general whitelist first
-            if (ipAddress != null && _whitelist.ContainsKey(ipAddress))
-            {
-                await _next.Invoke(context);
+                context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                 return;
             }
 
-
-
-
-
-
-            // Existing IP check logic for non-whitelisted IPs
-            await HandleNonWhitelistedIp(context, ipAddress);
+            await _next.Invoke(context);
         }
-
-        private async Task HandleNonWhitelistedIp(HttpContext context, IPAddress ipAddress)
-        {
-            context.Request.EnableBuffering();
-            var requestBody = await new StreamReader(context.Request.Body).ReadToEndAsync();
-            context.Request.Body.Position = 0;
-
-            var userAgent = context.Request.Headers["User-Agent"].ToString();
-            var userLanguage = context.Request.Headers["Accept-Language"].ToString();
-            var ipBehindTheMask = await CheckIPQSDatabase(ipAddress.ToString(), userAgent, userLanguage);
-
-
-            var userId = context.User.Identity.IsAuthenticated
-                ? context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                : "Anonymous";
-
-            Serilog.Log.Warning("Forbidden IP [{IpAddress}], User: {UserId}, IP Status:{@ipBehindTheMask}, Payload: {Payload}, UserAgent: {UserAgent} ThreatLevel: Potential intruder",
-                ipAddress, userId, ipBehindTheMask, requestBody, userAgent);
-
-
-            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-        }
-
-        private async Task LogAndBlock(HttpContext context, IPAddress ipAddress, string message)
-        {
-            context.Request.EnableBuffering();
-            var requestBody = await new StreamReader(context.Request.Body).ReadToEndAsync();
-            context.Request.Body.Position = 0;
-
-            var userAgent = context.Request.Headers["User-Agent"].ToString();
-
-            Serilog.Log.Warning("IP Access Violation: {Message}. IP: {IpAddress}, User: {UserId} ,Request Body: {requestBody} ,User Agent: {userAgent}",
-                message, ipAddress, context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value,requestBody,userAgent);
-
-            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-            await context.Response.WriteAsync(message);
-        }
-
 
         private async Task<object> CheckIPQSDatabase(string ipAddress, string userAgent, string userLanguage)
         {

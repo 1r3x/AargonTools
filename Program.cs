@@ -36,15 +36,7 @@ namespace AargonTools
             };
 
 
-            //this is the log controller
-            //Log.Logger = new LoggerConfiguration()
-            //    .Enrich.FromLogContext()
-            //    .WriteTo.MSSqlServer(connectionString,
-            //        sinkOptions: new SinkOptions { TableName = "WebApiLogs" }
-            //        , null, null, LogEventLevel.Information, null, columnOptions: columnOptions, null, null)
-            //    .WriteTo.Seq("http://localhost:5341") // Add this line to configure Seq
-            //    .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
-            //    .CreateLogger();
+
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug() // Set global minimum log level

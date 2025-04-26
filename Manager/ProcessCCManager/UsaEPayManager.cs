@@ -367,35 +367,42 @@ namespace AargonTools.Manager.ProcessCCManager
             int _USAePayPaymentScheduleId = 0;
             var paymentDate = paymentScheduleObj.EffectiveDate;
 
-            //automated postdate from old website 
-            if (requestForUsaEPay.numberOfPayments > 1)
+            if (requestForUsaEPay.numberOfPayments > 1 && response.ResponseCode != "A")
             {
-                await _Sp_larry_cc_postdateV2.PostDateCCProcess(request.debtorAcct, DateTime.Now, Convert.ToDouble(request.amount), obj.refnum
-                    , "", "", "", Convert.ToInt32(request.numberOfPayments) - 1, environment);
+                Serilog.Log.Warning("Payment scheduler is not activated because of the response  : {ResponseCode}", response.ResponseCode);
             }
 
 
-            for (var i = 1; i <= requestForUsaEPay.numberOfPayments; i++)
+            //automated postdate from old website 
+            if (requestForUsaEPay.numberOfPayments > 1 && response.ResponseCode == "A")
             {
-                var lcgPaymentScheduleObj = new LcgPaymentSchedule()
-                {
-                    CardInfoId = paymentScheduleObj.CardInfoId,
-                    EffectiveDate = paymentDate,
-                    IsActive = true,
-                    NumberOfPayments = i,
-                    PatientAccount = paymentScheduleObj.PatientAccount,
-                    Amount = paymentScheduleObj.Amount
-                };
+                
+                await _Sp_larry_cc_postdateV2.PostDateCCProcess(request.debtorAcct, DateTime.Now.AddMonths(1), Convert.ToDouble(request.amount), obj.refnum
+                    , "", "", "", Convert.ToInt32(request.numberOfPayments) - 1, environment);
 
-                Serilog.Log.Information("Creating payment schedule for payment number: {paymentNumber}", i);
-                await _cardTokenizationHelper.CreatePaymentSchedule(lcgPaymentScheduleObj, environment);
 
-                if (i == 1)
+                for (var i = 1; i <= requestForUsaEPay.numberOfPayments; i++)
                 {
-                    _USAePayPaymentScheduleId = lcgPaymentScheduleObj.Id;
+                    var lcgPaymentScheduleObj = new LcgPaymentSchedule()
+                    {
+                        CardInfoId = paymentScheduleObj.CardInfoId,
+                        EffectiveDate = paymentDate,
+                        IsActive = true,
+                        NumberOfPayments = i,
+                        PatientAccount = paymentScheduleObj.PatientAccount,
+                        Amount = paymentScheduleObj.Amount
+                    };
+
+                    Serilog.Log.Information("Creating payment schedule for payment number: {paymentNumber}", i);
+                    await _cardTokenizationHelper.CreatePaymentSchedule(lcgPaymentScheduleObj, environment);
+
+                    if (i == 1)
+                    {
+                        _USAePayPaymentScheduleId = lcgPaymentScheduleObj.Id;
+                    }
+
+                    paymentDate = paymentDate.AddMonths(1);
                 }
-
-                paymentDate = paymentDate.AddMonths(1);
             }
 
             var paymentScheduleHistoryObj = new LcgPaymentScheduleHistory()

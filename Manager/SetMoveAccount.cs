@@ -4,6 +4,7 @@ using AargonTools.Interfaces;
 using AargonTools.Manager.GenericManager;
 using AargonTools.Models;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace AargonTools.Manager
 {
@@ -15,9 +16,10 @@ namespace AargonTools.Manager
         private static ResponseModel _response;
         private readonly GetTheCompanyFlag _companyFlag;
         private static IUserService _userService;
+        private readonly GatewaySelectionHelper _gatewaySelectionHelper;
 
         public SetMoveAccount(ExistingDataDbContext context, ResponseModel response, GetTheCompanyFlag companyFlag, IUserService userService,
-            TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld)
+            TestEnvironmentDbContext contextTest, ProdOldDbContext contextProdOld, GatewaySelectionHelper gatewaySelectionHelper)
         {
             _context = context;
             _contextTest = contextTest;
@@ -25,6 +27,7 @@ namespace AargonTools.Manager
             _companyFlag = companyFlag;
             _userService = userService;
             _contextProdOld = contextProdOld;
+            _gatewaySelectionHelper = gatewaySelectionHelper;
         }
 
         async Task<ResponseModel> ISetMoveAccount.SetMoveAccount(string debtorAcct, int toQueue, string environment)
@@ -77,7 +80,8 @@ namespace AargonTools.Manager
                 {
                     DebtorAcct = debtorAcct,
                     NoteDate = datetimeNow.AddSeconds(-datetimeNow.Second).AddMilliseconds(-datetimeNow.Millisecond),
-                    Employee = 1994,
+                    //change from 1994 to processccV2 employee 
+                    Employee = await _gatewaySelectionHelper.CcProcessEmployeeNumberAccordingToFlag(debtorAcct, environment),
                     ActivityCode = "RA",
                     NoteText = "ONLINE MOVE ACCOUNT (" + oldQueue.Employee + " -> " + toQueueResult.Employee + ")"
                 };
@@ -136,7 +140,8 @@ namespace AargonTools.Manager
                 {
                     DebtorAcct = debtorAcct,
                     NoteDate = datetimeNow.AddSeconds(-datetimeNow.Second).AddMilliseconds(-datetimeNow.Millisecond),
-                    Employee = 1994,
+                    //change from 1994 to processccV2 employee 
+                    Employee = await _gatewaySelectionHelper.CcProcessEmployeeNumberAccordingToFlag(debtorAcct, environment),
                     ActivityCode = "RA",
                     NoteText = "ONLINE MOVE ACCOUNT (" + oldQueue.Employee + " -> " + toQueueResult.Employee + ")"
                 };
@@ -216,7 +221,8 @@ namespace AargonTools.Manager
                 {
                     DebtorAcct = debtorAcct,
                     NoteDate = datetimeNow.AddSeconds(-datetimeNow.Second).AddMilliseconds(-datetimeNow.Millisecond),
-                    Employee = 1994,
+                    //change from 1994 to processccV2 employee 
+                    Employee = await _gatewaySelectionHelper.CcProcessEmployeeNumberAccordingToFlag(debtorAcct, environment),
                     ActivityCode = "RA",
                     NoteText = "ONLINE MOVE ACCOUNT (" + oldQueue.Employee + " -> " + toQueueResult.Employee + ")"
                 };
