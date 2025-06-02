@@ -565,7 +565,16 @@ namespace AargonTools.Controllers
             {
                 if (ModelState.IsValid)
                 {
+                    //to prevent TCR accounts 
+                    var companyFlag = await _getTheCompanyFlag.GetStringFlag(requestCcPayment.debtorAcct, "P");
+                    if (companyFlag=="T")
+                    {
+                        Serilog.Log.Warning("Trying to run TCR accounts :{DebtorAcct}",requestCcPayment.debtorAcct);
+                        return new JsonResult("You can't run TCR accounts on this endpoint.") { StatusCode = 403 };
+                    }
+
                     var gateway = _gatewayFactory.GetPaymentGateway(requestCcPayment.debtorAcct, "P");
+
                     var response = await gateway.ProcessPayment(requestCcPayment, "P");
                     //if transaction is successful
                     if (response is ResponseWithTransaction responseWithTransaction)
