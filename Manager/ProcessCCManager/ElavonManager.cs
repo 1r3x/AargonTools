@@ -333,7 +333,7 @@ namespace AargonTools.Manager.ProcessCCManager
             string noteText = null;
             if (_deserializeObjForElavon != null && _deserializeObjForElavon.ssl_issuer_response == "00")
             {
-                noteText = "Converge CC APPROVED FOR $" + request.amount + " " +
+                noteText = "Converge CC APPROVED FOR $" + request.amount + "( 1 of " + request.numberOfPayments + ") " +
                            _deserializeObjForElavon.ssl_result_message.ToUpper() +
                            " AUTH #:" + _deserializeObjForElavon.ssl_approval_code;
 
@@ -362,7 +362,7 @@ namespace AargonTools.Manager.ProcessCCManager
             else
             {
                 if (_responseModelForInstamed != null)
-                    noteText = "Converge CC DECLINED FOR $" + request.amount + " " +
+                    noteText = "Converge CC DECLINED FOR $" + request.amount + "( 1 of " + request.numberOfPayments + ") " +
                                _deserializeObjForElavon.ssl_result_message.ToUpper() +
                                " AUTH #:" + _deserializeObjForElavon.ssl_approval_code;
                 // for DECLINED

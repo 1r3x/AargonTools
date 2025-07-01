@@ -239,7 +239,7 @@ namespace AargonTools.Manager.ProcessCCManager
             string noteText = null;
             if (_responseModelForIProGateway != null && _responseModelForIProGateway.response_code == "100")
             {
-                noteText = "ICLASSPRO CC APPROVED FOR $" + request.amount + " " +
+                noteText = "ICLASSPRO CC APPROVED FOR $" + request.amount + "( 1 of " + request.numberOfPayments + ") " +
                            _responseModelForIProGateway.responsetext.ToUpper() +
                            " AUTH #:" + _responseModelForIProGateway.authcode;
 
@@ -249,7 +249,7 @@ namespace AargonTools.Manager.ProcessCCManager
             else
             {
                 if (_responseModelForIProGateway != null)
-                    noteText = "ICLASSPRO CC DECLINED FOR $" + request.amount + " " +
+                    noteText = "ICLASSPRO CC DECLINED FOR $" + request.amount + "( 1 of " + request.numberOfPayments + ") " +
                                _responseModelForIProGateway.responsetext.ToUpper() +
                                " AUTH #:" + _responseModelForIProGateway.authcode;
                 // for DECLINED

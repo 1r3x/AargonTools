@@ -253,7 +253,7 @@ namespace AargonTools.Manager.ProcessCCManager
                 string noteText = null;
                 if (_responseModelForInstamed != null && _responseModelForInstamed.ResponseCode == "000")
                 {
-                    noteText = "INSTAMED CC APPROVED FOR $" + request.amount + " " +
+                    noteText = "INSTAMED CC APPROVED FOR $" + request.amount + "( 1 of " + request.numberOfPayments + ") " +
                                _responseModelForInstamed.ResponseMessage.ToUpper() +
                                " AUTH #:" + _responseModelForInstamed.AuthorizationNumber;
 
@@ -282,7 +282,7 @@ namespace AargonTools.Manager.ProcessCCManager
                 else
                 {
                     if (_responseModelForInstamed != null)
-                        noteText = "INSTAMED CC DECLINED FOR $" + request.amount + " " +
+                        noteText = "INSTAMED CC DECLINED FOR $" + request.amount + "( 1 of " + request.numberOfPayments + ") " +
                                    _responseModelForInstamed.ResponseMessage.ToUpper() +
                                    " AUTH #:" + _responseModelForInstamed.AuthorizationNumber;
                     // for DECLINED

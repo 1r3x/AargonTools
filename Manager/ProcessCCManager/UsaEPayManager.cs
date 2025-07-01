@@ -312,13 +312,13 @@ namespace AargonTools.Manager.ProcessCCManager
             var noteText = "";
             if (response.ResponseCode == "A")
             {
-                noteText = "USAEPAY CC APPROVED FOR $" + request.amount + " " +
+                noteText = "USAEPAY CC APPROVED FOR $" + request.amount + "( 1 of "+ request.numberOfPayments + ") " +
                            response.ResponseMessage.ToUpper() +
                            " AUTH #:" + response.AuthorizationNumber;
             }
             else
             {
-                noteText = "USAEPAY CC DECLINED FOR $" + request.amount + " " +
+                noteText = "USAEPAY CC DECLINED FOR $" + request.amount + "( 1 of " + request.numberOfPayments + ") " +
                            response.ResponseMessage.ToUpper() +
                            " AUTH #:" + response.AuthorizationNumber;
             }
